@@ -1,73 +1,86 @@
 import React from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
-import "../components/Home.css"; // Ensure you have the correct path to your CSS file
+import { useNavigate } from "react-router-dom"; // For navigation
+import shelfsharehome from "../assets/shelfsharehome.jpg"; // Import your image
+import Footer from "./Footer";
+
+
 
 function Home() {
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate(); // Initialize useNavigate for button actions
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-white relative overflow-hidden bg-gray-900">
-      {/* Animated Background Lines */}
-      <div className="absolute inset-0 z-0">
-        <svg
-          className="w-full h-full"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 1440 320"
-          preserveAspectRatio="none"
-        >
-          <path
-            fill="none"
-            stroke="rgba(255, 255, 255, 0.1)"
-            strokeWidth="2"
-            d="M0,160L60,165.3C120,171,240,181,360,186.7C480,192,600,192,720,186.7C840,181,960,171,1080,165.3C1200,160,1320,160,1380,160L1440,160L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"
+    <div className="min-h-screen bg-white text-gray-800 font-sans flex flex-col">
+      {/* Header */}
+      <header className="border-b shadow-sm">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          {/* Logo */}
+          <div
+            className="text-3xl font-bold text-gray-800 cursor-pointer"
+            onClick={() => navigate("/")} // Navigate to home or dashboard
           >
-            <animate
-              attributeName="d"
-              dur="10s"
-              repeatCount="indefinite"
-              values="
-                M0,160L60,165.3C120,171,240,181,360,186.7C480,192,600,192,720,186.7C840,181,960,171,1080,165.3C1200,160,1320,160,1380,160L1440,160L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z;
-                M0,160L60,180C120,200,240,240,360,250C480,260,600,240,720,220C840,200,960,180,1080,170C1200,160,1320,160,1380,160L1440,160L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z;
-                M0,160L60,165.3C120,171,240,181,360,186.7C480,192,600,192,720,186.7C840,181,960,171,1080,165.3C1200,160,1320,160,1380,160L1440,160L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z;
-              "
-            />
-          </path>
-        </svg>
-      </div>
 
-      {/* Content */}
-      <header className="text-center mb-12 relative z-10">
-        <h1 className="text-6xl font-extrabold mb-6 tracking-wide">
-          Welcome to <span className="text-yellow-400">LocalReads</span>
-        </h1>
-        <p className="text-xl font-light max-w-2xl mx-auto leading-relaxed">
-          Your gateway to discovering, borrowing, and buying books from an exclusive, curated collection. 
-          Join us to explore a world of stories and knowledge.
-        </p>
+            ShelfShare
+          </div>
+
+          {/* Navigation Links and Buttons */}
+          <nav className="space-x-4 sm:space-x-6 flex items-center">
+            
+          
+            <button
+              onClick={() => navigate("/signup")} // Navigate to Signup page
+              className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded text-sm sm:text-base transition-colors"
+            >
+              Sign Up
+            </button>
+            <button
+              onClick={() => navigate("/login")} // Navigate to Login page
+              className="text-gray-600 hover:text-yellow-500 font-semibold py-2 px-4 text-sm sm:text-base transition-colors"
+            >
+              Login
+            </button>
+          </nav>
+        </div>
       </header>
 
-      <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6 relative z-10">
-        <button
-          className="bg-yellow-500 text-indigo-900 font-bold py-3 px-8 rounded-full shadow-lg hover:bg-yellow-600 transition transform hover:scale-105"
-          onClick={() => navigate("/login")} // Navigate to Login page
-        >
-          Login
-        </button>
-        <button
-          className="bg-green-500 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-green-600 transition transform hover:scale-105"
-          onClick={() => navigate("/signup")} // Navigate to Signup page
-        >
-          Signup
-        </button>
-      </div>
+      {/* Main Content */}
+      <main className="flex-grow container mx-auto px-6 py-16 md:py-24 flex flex-col md:flex-row items-center">
+        {/* Image Section (Left) */}
+        <div className="w-full md:w-1/2 mb-12 md:mb-0 md:pr-8 lg:pr-12">
+         
+          <div className="bg-gray-100 rounded-lg shadow-md overflow-hidden">
+             <img
+              src={shelfsharehome} // Replace this with the actual path to your image
+              alt="Person at a bookshelf"
+              className="w-full h-auto object-cover aspect-[4/3] md:aspect-auto" // Adjust aspect ratio as needed
+              onError={(e) => {
+                // Fallback if image fails to load
+                e.target.outerHTML = `
+                  <div class="bg-gray-200 h-80 md:h-96 rounded-lg flex items-center justify-center text-gray-500">
+                    Image Placeholder: Bookshelf
+                  </div>`;
+              }}
+            />
+          </div>
+        </div>
 
-      <footer className="mt-16 text-center text-sm text-gray-300 relative z-10">
-        <p>© 2025 <span className="font-semibold text-white">LocalReads</span>. All rights reserved.</p>
-        <p className="mt-2">
-          <a href="/privacy" className="hover:underline">Privacy Policy</a> | 
-          <a href="/terms" className="hover:underline ml-2">Terms of Service</a>
-        </p>
-      </footer>
+        {/* Text Content Section (Right) */}
+        <div className="w-full md:w-1/2 text-center md:text-left md:pl-8 lg:pl-12">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-800 mb-6 leading-tight">
+            Share your shelf,<br />discover new reads
+          </h1>
+          <p className="text-lg text-gray-600 mb-10 leading-relaxed">
+            Connect with fellow book lovers, share your collection, and explore a world of stories. Join our community today and start your literary journey.
+          </p>
+          <button
+            onClick={() => navigate("/signup")} // Example: navigate to a registration or features page
+            className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 sm:py-4 sm:px-10 rounded-lg text-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50"
+          >
+            Get Started
+          </button>
+        </div>
+      </main>
+
+      <Footer />
     </div>
   );
 }
