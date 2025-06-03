@@ -36,9 +36,9 @@ const Sidebar = ({ activeItem, onNavigate }) => {
             <p className="text-[#171612] text-sm font-medium leading-normal">Books Available</p>
           </div>
           <div
-            onClick={() => onNavigate('anonymousBooks')}
+            onClick={() => onNavigate('anonymousBookOffers')}
             className={`flex items-center gap-3 px-3 py-2 cursor-pointer
-              ${activeItem === 'anonymousBooks' ? 'rounded-full bg-[#f4f3f1]' : 'hover:rounded-full hover:bg-[#f4f3f1]'}
+              ${activeItem === 'anonymousBookOffers' ? 'rounded-full bg-[#f4f3f1]' : 'hover:rounded-full hover:bg-[#f4f3f1]'}
             `}
           >
             <div className="text-[#171612]" data-icon="BookOpen" data-size="24px" data-weight="regular">
