@@ -1,31 +1,9 @@
 package com.example.shelfshare.entity;
 
 import java.util.List;
+import jakarta.persistence.*;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 
-enum BookStatus {
-    AVAILABLE,
-    BORROWED,
-    LOST,
-    ARCHIVED
-}
-
-enum BookGenre {
-    FICTION,
-    NON_FICTION,
-    SCIENCE,
-    HISTORY,
-    FANTASY,
-    MYSTERY,
-    BIOGRAPHY,
-    ROMANCE
-}
 
 @Entity
 public class Books {
@@ -34,26 +12,35 @@ public class Books {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer bookId;
 
+    @Column(nullable = false)
     private String bookTitle;
 
+    @Column(nullable = false)
     private String authorName;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "VARCHAR(255)")
     private BookGenre bookGenre;
-
+   
+    @Column(nullable = false)
     private Integer publicationYear;
 
-    @OneToOne
-    private Users currentOwner;
+    @ManyToOne
+    @JoinColumn(name = "current_owner_user_id", nullable = false)
+    private Users currentOwner; //to do
 
     @OneToMany
     private List<Users> previousOwners;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "VARCHAR(255)")
     private BookStatus bookStatus;
-
+    private Boolean enlisted;
+    
     public Books() {
     }
 
-    public Books(String bookTitle, String authorName, BookGenre bookGenre, Integer publicationYear, Users currentOwner, List<Users> previousOwners, BookStatus bookStatus) {
+    public Books(String bookTitle, String authorName, BookGenre bookGenre, Integer publicationYear, Users currentOwner, List<Users> previousOwners, BookStatus bookStatus, Boolean enlisted) {
         this.bookTitle = bookTitle;
         this.authorName = authorName;
         this.bookGenre = bookGenre;
@@ -61,6 +48,7 @@ public class Books {
         this.currentOwner = currentOwner;
         this.previousOwners = previousOwners;
         this.bookStatus = bookStatus;
+        this.enlisted=enlisted;
     }
 
     public Integer getBookId() {
@@ -127,17 +115,26 @@ public class Books {
         this.bookStatus = bookStatus;
     }
 
+    public Boolean getEnlisted() {
+        return enlisted;
+    }
+
+    public void setEnlisted(Boolean enlisted) {
+        this.enlisted = enlisted;
+    }
+
     @Override
     public String toString() {
         return "Books{" +
                 "bookId=" + bookId +
                 ", bookTitle='" + bookTitle + '\'' +
                 ", authorName='" + authorName + '\'' +
-                // ", bookGenre=" + bookGenre +
+                ", bookGenre=" + bookGenre +
                 ", publicationYear=" + publicationYear +
                 ", currentOwner=" + currentOwner +
                 ", previousOwners=" + previousOwners +
-                // ", bookStatus=" + bookStatus +
+                ", bookStatus=" + bookStatus +
+                ", enlisted=" + enlisted + 
                 '}';
     }
     

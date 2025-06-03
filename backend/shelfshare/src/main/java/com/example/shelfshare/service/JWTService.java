@@ -32,7 +32,7 @@ public class JWTService {
     public String createAccessToken(Users user) {
         return Jwts.builder()
                     .signWith(pair.getPrivate(), alg)
-                    .subject(String.valueOf(user.getUserId()))
+                    .subject(user.getUsername())
                     .claims(Map.of("name", user.getUsername(), "isAdmin", user.isAdmin()))
                     .expiration(Date.from(Instant.now().plusSeconds(ACCESS_EXPIRY_SECONDS)))
                     .compact();
@@ -54,7 +54,7 @@ public class JWTService {
     public String createRefreshToken(Users user) {
         return Jwts.builder()
                     .signWith(pair.getPrivate(), alg)
-                    .subject(String.valueOf(user.getUserId()))
+                    .subject(user.getUsername())
                     .claims(Map.of("name", user.getUsername(), "isAdmin", user.isAdmin()))
                     .expiration(Date.from(Instant.now().plusSeconds(REFERSH_EXPIRY_SECONDS)))
                     .compact();
