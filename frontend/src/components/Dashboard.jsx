@@ -4,6 +4,9 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
 import BooksAvailablePage from './BooksAvailablePage';
+import AnonymousBooksAvailablePage from './AnonymousBooksAvailablePage';
+import AnonymousBookDetailPage from './AnonymousBookDetailPage';
+
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -12,6 +15,7 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [activeSidebarItem, setActiveSidebarItem] = useState(null); // null for initial welcome page
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedBookOfferId, setSelectedBookOfferId] = useState(null);
 
   // Define header height for padding consistently
   const HEADER_HEIGHT_PX = 80;
@@ -19,55 +23,15 @@ const Dashboard = () => {
   const fetchUserData = async () => {
     setLoading(true);
     setError('');
-
-    // --- TEMPORARILY SIMULATE SUCCESS FOR UI PREVIEW ---
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setUserData({ username: 'ShelfSharer' });
-    setLoading(false);
-    // --- END SIMULATION ---
-
-    /*
-    // --- UNCOMMENT THIS BLOCK AND REMOVE THE SIMULATION WHEN YOU HAVE A BACKEND ---
-    const accessToken = localStorage.getItem('accessToken');
-
-    if (!accessToken) {
-      setError('No access token found. Please log in.');
-      navigate('/login');
-      setLoading(false);
-      return;
-    }
-
     try {
-      const response = await fetch('http://localhost:1234/api/user/profile', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.status === 401 || response.status === 403) {
-        setError('Session expired or unauthorized. Please log in again.');
-        localStorage.removeItem('accessToken');
-        navigate('/login');
-        return;
-      }
-
-      if (!response.ok) {
-        const errorDetail = await response.text();
-        throw new Error(`Failed to fetch user data: ${response.status} ${errorDetail}`);
-      }
-
-      const data = await response.json();
-      setUserData(data);
+      // In a real app, this would be an API call to get user info
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+      setUserData({ username: 'ShelfSharer' }); // Set mock user data
     } catch (err) {
-      console.error('Error fetching user data:', err);
-      setError(err.message);
+      setError('Failed to load user data.');
     } finally {
       setLoading(false);
     }
-    // --- END ACTUAL FETCH LOGIC ---
-    */
   };
 
   useEffect(() => {
@@ -87,11 +51,22 @@ const Dashboard = () => {
 
   const handleSearchChange = (query) => {
     setSearchQuery(query);
-    // When typing in search, it makes sense to show books,
-    // so let's automatically switch to 'booksAvailable' and highlight it.
-    setActiveSidebarItem('booksAvailable');
+    if (activeSidebarItem !== 'booksAvailable' && activeSidebarItem !== 'anonymousBookOffers') { 
+    }
+    setSelectedBookOfferId(null); 
   };
 
+  
+  const handleSelectBookOffer = (offerId) => {
+    setSelectedBookOfferId(offerId);
+    setActiveSidebarItem('anonymousBookOffers');
+  };
+
+  const handleBackToBookOffersList = () => {
+    setSelectedBookOfferId(null);
+  }; // <--- ADD THIS CLOSING CURLY BRACE
+
+  // --- Loading and Error States --- // <--- This is where the 'if (loading)' block should begin.
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white font-sans">
@@ -143,19 +118,19 @@ const Dashboard = () => {
         </div>
       );
     } else if (activeSidebarItem === 'profile') {
-        return (
-            <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                <h2 className="text-[#171612] tracking-light text-[28px] font-bold leading-tight mb-4">
-                    Hello, {username}!
-                </h2>
-                <p className="text-[#837c67] text-lg leading-normal max-w-lg">
-                    Your profile page is under construction. Stay tuned for updates!
-                    <br />
-                    (Content coming soon!)
-                </p>
-            </div>
-        );
-    } else if (activeSidebarItem === 'booksAvailable') {
+      return (
+          <div className="flex flex-col items-center justify-center h-full text-center p-8">
+              <h2 className="text-[#171612] tracking-light text-[28px] font-bold leading-tight mb-4">
+                  Hello, {username}!
+              </h2>
+              <p className="text-[#837c67] text-lg leading-normal max-w-lg">
+                  Your profile page is under construction. Stay tuned for updates!
+                  <br />
+                  (Content coming soon!)
+              </p>
+          </div>
+      );
+  } else if (activeSidebarItem === 'booksAvailable') {
       return (
         <BooksAvailablePage
           searchQuery={searchQuery}
@@ -175,19 +150,22 @@ const Dashboard = () => {
           </p>
         </div>
       );
-    } else if (activeSidebarItem === 'anonymousBooks') {
-      return (
-        <div className="flex flex-col items-center justify-center h-full text-center p-8">
-          <h2 className="text-[#171612] tracking-light text-[28px] font-bold leading-tight mb-4">
-            Anonymous Books
-          </h2>
-          <p className="text-[#837c67] text-lg leading-normal max-w-lg">
-            Explore books shared anonymously by others.
-            <br />
-            (Content coming soon!)
-          </p>
-        </div>
-      );
+    } else if (activeSidebarItem === 'anonymousBookOffers') {
+      if (selectedBookOfferId) {
+        return (
+          <AnonymousBookDetailPage // Corrected component name
+            bookOfferId={selectedBookOfferId}
+            onBackToList={handleBackToBookOffersList}
+          />
+        );
+      } else {
+        return (
+          <AnonymousBooksAvailablePage // Corrected component name
+            searchQuery={searchQuery}
+            onSelectBookOffer={handleSelectBookOffer}
+          />
+        );
+      }
     }
     return null;
   };
