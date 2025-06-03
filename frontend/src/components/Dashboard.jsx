@@ -4,6 +4,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
 import BooksAvailablePage from './BooksAvailablePage';
+import user from '../assets/user.jpg' // Placeholder for user profile image
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -143,19 +144,94 @@ const Dashboard = () => {
         </div>
       );
     } else if (activeSidebarItem === 'profile') {
-        return (
-            <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                <h2 className="text-[#171612] tracking-light text-[28px] font-bold leading-tight mb-4">
-                    Hello, {username}!
-                </h2>
-                <p className="text-[#837c67] text-lg leading-normal max-w-lg">
-                    Your profile page is under construction. Stay tuned for updates!
-                    <br />
-                    (Content coming soon!)
-                </p>
-            </div>
-        );
-    } else if (activeSidebarItem === 'booksAvailable') {
+      return (
+          <div className="flex flex-col items-center w-full p-8 bg-white"> {/* Changed background to white and adjusted padding/width as needed */}
+              <h2 className="text-3xl font-bold mb-10 self-start">Profile Dashboard</h2> {/* Added title */}
+  
+              <div className="flex flex-col items-center mb-8"> {/* Container for image and name/username */}
+                  <img
+                      src={user} // Replace with actual image source or a dynamic variable
+                      alt="Olivia Carter"
+                      className="w-24 h-24 rounded-full mb-4 object-cover" // Circular image
+                  />
+                  <h3 className="text-xl font-semibold text-gray-800">Name</h3>
+                  <p className="text-sm text-gray-500">username</p>
+              </div>
+  
+              <div className="w-full max-w-md"> {/* Form container */}
+                  <div className="mb-6">
+                      <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                          Username
+                      </label>
+                      <input
+                          type="text"
+                          id="username"
+                          name="username"
+                          // value={username} // Assuming you have a state for this
+                          // onChange={handleInputChange} // Assuming you have a change handler
+                          className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                          placeholder="" // Placeholder can be empty as per UI
+                      />
+                  </div>
+  
+                  <div className="mb-6">
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                          Email
+                      </label>
+                      <input
+                          type="email"
+                          id="email"
+                          name="email"
+                          // value={email}
+                          // onChange={handleInputChange}
+                          className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                          placeholder=""
+                      />
+                  </div>
+  
+                  <div className="mb-6">
+                      <label htmlFor="pincode" className="block text-sm font-medium text-gray-700 mb-1">
+                          Pincode
+                      </label>
+                      <input
+                          type="text"
+                          id="pincode"
+                          name="pincode"
+                          // value={pincode}
+                          // onChange={handleInputChange}
+                          className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                          placeholder=""
+                      />
+                  </div>
+  
+                  <div className="mb-8"> {/* Increased bottom margin before the button */}
+                      <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                          Password
+                      </label>
+                      <input
+                          type="password"
+                          id="password"
+                          name="password"
+                          // value={password}
+                          // onChange={handleInputChange}
+                          className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                          placeholder=""
+                      />
+                  </div>
+  
+                  <div className="flex justify-center"> {/* Centering the button */}
+                      <button
+                          type="submit" // Or "button" if it doesn't submit a form
+                          // onClick={handleUpdateProfile} // Assuming you have an update handler
+                          className="px-8 py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-75"
+                      >
+                          Update
+                      </button>
+                  </div>
+              </div>
+          </div>
+      );
+  } else if (activeSidebarItem === 'booksAvailable') {
       return (
         <BooksAvailablePage
           searchQuery={searchQuery}
