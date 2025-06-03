@@ -42,14 +42,46 @@ public class JWTSecurityConfiguration {
 
     @Bean
     @Order(1)
+    public SecurityFilterChain filterChainRegister(HttpSecurity http) throws Exception {
+        http.securityMatcher("/register/**").authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers("/register/**").permitAll())
+                .cors(Customizer.withDefaults())
+                .csrf((csrf) -> csrf.disable());
+        return http.build();
+    }
+
+    @Bean
+  @Order(2)
+  public SecurityFilterChain filterChainTokenRefresh(HttpSecurity http) throws Exception {
+    http.securityMatcher("/token/**")
+        .authorizeHttpRequests((authorize) -> authorize
+            .requestMatchers("/token/refresh").permitAll()
+            .anyRequest().authenticated())
+        .oauth2ResourceServer(oauth2 -> oauth2
+            .jwt(jwt -> jwt
+                .decoder(myJwtDecoder())
+                .jwtAuthenticationConverter(myJwtAuthenticationConverter())))
+        .cors(Customizer.withDefaults())
+        .csrf((csrf) -> csrf.disable());
+
+    return http.build();
+  }
+
+    @Bean
+    @Order(3)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests((authorize) -> authorize
-                .requestMatchers("/register/**").permitAll()
-                .requestMatchers("/**").authenticated())
+                        .requestMatchers("/books/enlist/**").authenticated()
+                        .requestMatchers("/books/add").authenticated()
+                        .requestMatchers("/user/**").authenticated()
+                        .requestMatchers("/books/my-books").authenticated()
+                        .requestMatchers("/books").permitAll()
+                        .anyRequest().authenticated()
+                )
                 .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt
-                    .decoder(myJwtDecoder())
-                    .jwtAuthenticationConverter(myJwtAuthenticationConverter())))
+                        .jwt(jwt -> jwt
+                                .decoder(myJwtDecoder())
+                                .jwtAuthenticationConverter(myJwtAuthenticationConverter())))
                 .cors(Customizer.withDefaults())
                 .csrf((csrf) -> csrf.disable());
         return http.build();
@@ -60,7 +92,7 @@ public class JWTSecurityConfiguration {
         var config = new CorsConfiguration();
         config.addAllowedOrigin("http://localhost:4200");
         config.addAllowedOrigin("http://127.0.0.1:4200");
-        config.setAllowedMethods(List.of("GET", "PUT", "POST", "OPTIONS", "DELETE"));
+        config.setAllowedMethods(List.of("GET", "PUT", "POST", "OPTIONS", "DELETE", "PATCH"));
         config.addExposedHeader("Token-Status");
         var src = new UrlBasedCorsConfigurationSource();
         src.registerCorsConfiguration("/**", config);
