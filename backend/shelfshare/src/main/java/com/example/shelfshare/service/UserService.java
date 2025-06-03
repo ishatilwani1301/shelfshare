@@ -44,4 +44,8 @@ public class UserService {
         }
     }
 
+    public Optional<Users> getUserByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
 }
