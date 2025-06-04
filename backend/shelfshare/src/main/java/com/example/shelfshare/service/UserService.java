@@ -48,4 +48,13 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
+    public Boolean checkPassword(Users user, String passwordFromRequest) {
+        return encoder.matches(passwordFromRequest, user.getPasswordDigest());
+    }
+
+    public Boolean changePassword(Users user, String newPassword) {
+        user.setPasswordDigest(encoder.encode(newPassword));
+        userRepository.save(user);
+        return true;
+    }
 }
