@@ -1,16 +1,17 @@
 package com.example.shelfshare.service;
 
-import com.example.shelfshare.entity.Books;
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.example.shelfshare.entity.BookGenre;
 import com.example.shelfshare.entity.BookStatus;
-import com.example.shelfshare.entity.Users;
+import com.example.shelfshare.entity.Books;
 import com.example.shelfshare.model.BookRequest;
 import com.example.shelfshare.repository.BooksRepository;
 import com.example.shelfshare.repository.UserRepository;
-import java.util.List;
-import java.util.NoSuchElementException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 @Service
 public class BookService {
