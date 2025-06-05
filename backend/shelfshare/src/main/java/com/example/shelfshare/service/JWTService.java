@@ -33,7 +33,7 @@ public class JWTService {
         return Jwts.builder()
                     .signWith(pair.getPrivate(), alg)
                     .subject(user.getUsername())
-                    .claims(Map.of("name", user.getUsername(), "isAdmin", user.isAdmin()))
+                    .claims(Map.of("name", user.getUsername(), "isAdmin", user.isIsAdmin()))
                     .expiration(Date.from(Instant.now().plusSeconds(ACCESS_EXPIRY_SECONDS)))
                     .compact();
     }
@@ -55,7 +55,7 @@ public class JWTService {
         return Jwts.builder()
                     .signWith(pair.getPrivate(), alg)
                     .subject(user.getUsername())
-                    .claims(Map.of("name", user.getUsername(), "isAdmin", user.isAdmin()))
+                    .claims(Map.of("name", user.getUsername(), "isAdmin", user.isIsAdmin()))
                     .expiration(Date.from(Instant.now().plusSeconds(REFERSH_EXPIRY_SECONDS)))
                     .compact();
     }

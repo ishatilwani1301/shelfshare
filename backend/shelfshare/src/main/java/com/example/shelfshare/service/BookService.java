@@ -6,10 +6,8 @@ import java.util.NoSuchElementException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.example.shelfshare.entity.BookGenre;
 import com.example.shelfshare.entity.BookStatus;
 import com.example.shelfshare.entity.Books;
-import com.example.shelfshare.model.BookRequest;
 import com.example.shelfshare.repository.BooksRepository;
 import com.example.shelfshare.repository.UserRepository;
 
@@ -38,22 +36,22 @@ public class BookService {
         return booksRepository.save(book);
     }
 
-    public Books addNewBook(BookRequest bookRequest, String username) {
-        var user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new NoSuchElementException("User not found"));
-            var bookStatus = bookRequest.enlist() ? BookStatus.AVAILABLE : BookStatus.OWNED_PRIVATE;
-            var newBook = new Books(
-            bookRequest.bookTitle(),
-            bookRequest.authorName(),
-            BookGenre.valueOf(bookRequest.bookGenre()),
-            bookRequest.publicationYear(),
-            user,
-            List.of(),
-            bookStatus,
-            bookRequest.enlist() 
-        );
-        return booksRepository.save(newBook);
-    }
+    // public Books addNewBook(BookRequest bookRequest, String username) {
+    //     var user = userRepository.findByUsername(username)
+    //         .orElseThrow(() -> new NoSuchElementException("User not found"));
+    //         var bookStatus = bookRequest.enlist() ? BookStatus.AVAILABLE : BookStatus.OWNED_PRIVATE;
+    //         var newBook = new Books(
+    //         bookRequest.bookTitle(),
+    //         bookRequest.authorName(),
+    //         BookGenre.valueOf(bookRequest.bookGenre()),
+    //         bookRequest.publicationYear(),
+    //         user,
+    //         List.of(),
+    //         bookStatus,
+    //         bookRequest.enlist() 
+    //     );
+    //     return booksRepository.save(newBook);
+    // }
 
     public List<Books> getAllAvailableBooks() {
         return booksRepository.findByBookStatus(BookStatus.AVAILABLE);
