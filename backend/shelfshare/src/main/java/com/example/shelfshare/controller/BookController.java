@@ -7,21 +7,23 @@ import com.example.shelfshare.entity.Books;
 
 import java.security.Principal;
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import com.example.shelfshare.model.BookCreationResponse;
+
 
 @RestController
 @RequestMapping("/books")
 public class BookController {
 
-    private final BookService bookService;
-
     @Autowired
-    public BookController(BookService bookService) {
-        this.bookService = bookService;
-    }
+    private BookService bookService;
 
     @PostMapping("/enlist/{bookId}")
     public ResponseEntity<BookResponse> enlistBook(@PathVariable Integer bookId, Principal principal) {
@@ -37,15 +39,19 @@ public class BookController {
         return new ResponseEntity<>(mapBookToDto(updatedBook, "Book enlisted successfully"), HttpStatus.OK);
     }
 
-    // @PostMapping("/add")
-    // public ResponseEntity<BookResponse> addNewBook(@RequestBody BookRequest bookRequest, Principal principal) {
-    //     if (principal == null) {
-    //         return new ResponseEntity<BookResponse>(new BookResponse("User not authenticated"), HttpStatus.UNAUTHORIZED);
-    //     }
+    @PostMapping("/addNewBook")
+    public ResponseEntity<BookCreationResponse> addNewBook(@RequestBody BookRequest req, Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<BookCreationResponse>(new BookCreationResponse("User not authenticated"), HttpStatus.UNAUTHORIZED);
+        }
 
-    //     var createdBook = bookService.addNewBook(bookRequest, principal.getName());
-    //     return new ResponseEntity<>(mapBookToDto(createdBook, "Book added successfully"), HttpStatus.CREATED);
-    // }
+        Boolean bookCreationStatus = bookService.addNewBook(req, principal.getName());
+        if(!bookCreationStatus) {
+            return new ResponseEntity<>(new BookCreationResponse("Failed to create book"), HttpStatus.BAD_REQUEST);
+        } else {
+            return new ResponseEntity<>(new BookCreationResponse("Book created successfully"), HttpStatus.CREATED);
+        }
+    }
 
     @GetMapping
     public ResponseEntity<List<BookResponse>> getAllBooks() {

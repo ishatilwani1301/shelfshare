@@ -32,7 +32,7 @@ public class UserController {
     public ResponseEntity<UserDetailsResponse> getUserDetails(Principal principal) {
         if (principal == null) {
             return new ResponseEntity<UserDetailsResponse>(
-                new UserDetailsResponse(null, null, null),
+                new UserDetailsResponse(null, null, null, null, null, null, null, null),
                 HttpStatus.UNAUTHORIZED
             );
         }
@@ -40,15 +40,20 @@ public class UserController {
         var user = userService.getUserByUsername(principal.getName());
         if (user.isEmpty()) {
             return new ResponseEntity<UserDetailsResponse>(
-                new UserDetailsResponse(null, null, null),
+                new UserDetailsResponse(null, null, null, null, null, null, null, null),
                 HttpStatus.NOT_FOUND
             );
         } else {
             var userDetails = user.get();
             return new ResponseEntity<UserDetailsResponse>(new UserDetailsResponse(
+                userDetails.getName(),
                 userDetails.getUsername(),
                 userDetails.getUserEmail(),
-                userDetails.getPincode()
+                userDetails.getPincode(),
+                userDetails.getArea(),
+                userDetails.getCity(),
+                userDetails.getState(),
+                userDetails.getCountry()
             ), HttpStatus.OK);
         }
     }

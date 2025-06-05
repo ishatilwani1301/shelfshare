@@ -1,27 +1,39 @@
 package com.example.shelfshare.service;
 
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.shelfshare.entity.BookGenre;
 import com.example.shelfshare.entity.BookStatus;
 import com.example.shelfshare.entity.Books;
+import com.example.shelfshare.entity.Notes;
+import com.example.shelfshare.model.BookRequest;
 import com.example.shelfshare.repository.BooksRepository;
+import com.example.shelfshare.repository.NotesRepository;
 import com.example.shelfshare.repository.UserRepository;
 
 @Service
 public class BookService {
 
-    private final BooksRepository booksRepository;
-    private final UserRepository userRepository;
+    @Autowired
+    private BooksRepository booksRepository;
 
     @Autowired
-    public BookService(BooksRepository booksRepository, UserRepository userRepository) {
-        this.booksRepository = booksRepository;
-        this.userRepository = userRepository;
-    }
+    private UserRepository userRepository;
+
+    @Autowired
+    private NotesRepository notesRepository;
+
+    // @Autowired
+    // public BookService(BooksRepository booksRepository, UserRepository userRepository) {
+    //     this.booksRepository = booksRepository;
+    //     this.userRepository = userRepository;
+    // }
 
     public Books enlistBook(Integer bookId, String username) {
         var user = userRepository.findByUsername(username)
@@ -30,28 +42,46 @@ public class BookService {
         var book = booksRepository.findById(bookId)
             .orElse(null);
         if (book == null || !book.getCurrentOwner().getUsername().equals(username)) {
-          return null;
+            return null;
         }
         book.setBookStatus(BookStatus.AVAILABLE);
         return booksRepository.save(book);
     }
 
-    // public Books addNewBook(BookRequest bookRequest, String username) {
-    //     var user = userRepository.findByUsername(username)
-    //         .orElseThrow(() -> new NoSuchElementException("User not found"));
-    //         var bookStatus = bookRequest.enlist() ? BookStatus.AVAILABLE : BookStatus.OWNED_PRIVATE;
-    //         var newBook = new Books(
-    //         bookRequest.bookTitle(),
-    //         bookRequest.authorName(),
-    //         BookGenre.valueOf(bookRequest.bookGenre()),
-    //         bookRequest.publicationYear(),
-    //         user,
-    //         List.of(),
-    //         bookStatus,
-    //         bookRequest.enlist() 
-    //     );
-    //     return booksRepository.save(newBook);
-    // }
+    public Boolean addNewBook(BookRequest request, String username) {
+        var user = userRepository.findByUsername(username);
+        if (user.isEmpty()) {
+            return false;
+        }
+
+        Books newBook = new Books();
+        newBook.setBookTitle(request.bookTitle());
+        newBook.setAuthorName(request.authorName());
+        newBook.setBookGenre(BookGenre.valueOf(request.bookGenre()));
+        newBook.setPublicationYear(request.publicationYear());
+        newBook.setCurrentOwner(user.get());
+        newBook.setPreviousOwners(List.of());
+        newBook.setBookStatus(BookStatus.AVAILABLE);
+        newBook.setEnlisted(true);
+        newBook.setNotesId(new ArrayList<Integer>());
+
+        var savedBook = booksRepository.save(newBook);
+
+        Notes newNote = new Notes();
+        newNote.setNoteContent(request.noteContent());
+        newNote.setCustomizedTitle(request.customizedTitle());
+        newNote.setBook(savedBook);
+        newNote.setUser(user.get());
+        newNote.setTimestamp(Instant.now());
+        
+        Notes savedNote = notesRepository.save(newNote);
+        var updatedNotesArray = savedBook.getNotesId();
+        updatedNotesArray.add(savedNote.getNoteId());
+        savedBook.setNotesId(updatedNotesArray);
+        booksRepository.save(savedBook);
+
+        return true;
+    }
 
     public List<Books> getAllAvailableBooks() {
         return booksRepository.findByBookStatus(BookStatus.AVAILABLE);

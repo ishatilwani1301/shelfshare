@@ -1,7 +1,5 @@
 package com.example.shelfshare.model;
 
-import com.example.shelfshare.entity.Books;
-
 public record BookResponse(
         Integer id,
         String bookTitle,
@@ -17,5 +15,5 @@ public record BookResponse(
 
 public BookResponse(String message) {
         this(null, null, null, null, null, null, null, null, message);
-    }
+}
 }

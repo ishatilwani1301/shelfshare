@@ -80,6 +80,12 @@ public class UserService {
     }
 
     public Boolean changeUserDetails(Users user, UserDetailsChangeRequest request) {
+        if (user == null || request == null) {
+            return false;
+        }
+        if (request.name() != null && !request.name().isEmpty()) {
+            user.setName(request.name());
+        }
         if (request.username() != null && !request.username().isEmpty()) {
             user.setUsername(request.username());
         }
@@ -88,6 +94,18 @@ public class UserService {
         }
         if (request.pincode() != null && !request.pincode().isEmpty()) {
             user.setPincode(request.pincode());
+        }
+        if (request.area() != null && !request.area().isEmpty()) {
+            user.setArea(request.area());
+        }
+        if (request.city() != null && !request.city().isEmpty()) {
+            user.setCity(request.city());
+        }
+        if (request.state() != null && !request.state().isEmpty()) {
+            user.setState(request.state());
+        }
+        if (request.country() != null && !request.country().isEmpty()) {
+            user.setCountry(request.country());
         }
         userRepository.save(user);
         return true;
