@@ -24,11 +24,35 @@ public class RegisterController {
     
     @PostMapping("/createNewUser")
     public ResponseEntity<RegisterResponse> postMethodName(@RequestBody RegisterRequest req) {
-        var createdUser = userService.createUser(req.username(), req.password(), req.email(), req.pincode());  
+        var createdUser = userService.createUser(req.username(), req.password(), req.email(), req.pincode());
+        if (createdUser.isEmpty()) {
+            return new ResponseEntity<RegisterResponse>(
+                new RegisterResponse(null, "Username already exists"), 
+                HttpStatus.BAD_REQUEST);
+        }
         return new ResponseEntity<RegisterResponse>(
-            new RegisterResponse(createdUser.getUserId(), "User created successfully"), 
+            new RegisterResponse(createdUser.get().getUserId(), "User created successfully"), 
             HttpStatus.CREATED);
     }
+
+    // @PostMapping("/pincodeToCity/{pincode}")
+    // public ResponseEntity<UserAddressResponse> pincodeToCity(@PathVariable String pincode) {
+    //     var address = userService.getAddressByPincode(pincode);
+    //     if (address.isEmpty()) {
+    //         return new ResponseEntity<UserAddressResponse>(
+    //             new UserAddressResponse(null, null, null, null), 
+    //             HttpStatus.NOT_FOUND);
+    //     }
+    //     return new ResponseEntity<UserAddressResponse>(
+    //         new UserAddressResponse(
+    //             address.get().getDistrict(),
+    //             address.get().getRegion(),
+    //             address.get().getState(),
+    //             address.get().getCountry()
+    //         ),
+    //         HttpStatus.OK);
+    // }
+    
     
     
 }
