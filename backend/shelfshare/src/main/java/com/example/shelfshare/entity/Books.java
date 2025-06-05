@@ -1,7 +1,20 @@
 package com.example.shelfshare.entity;
 
+import java.util.ArrayList;
 import java.util.List;
-import jakarta.persistence.*;
+
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 
 
@@ -21,26 +34,36 @@ public class Books {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "VARCHAR(255)")
     private BookGenre bookGenre;
-   
+
     @Column(nullable = false)
     private Integer publicationYear;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "current_owner_user_id", nullable = false)
-    private Users currentOwner; //to do
+    private Users currentOwner;
 
-    @OneToMany
+    @ElementCollection
+    @CollectionTable(name = "book_previous_owners", joinColumns = @JoinColumn(name = "book_id"))
+    @Column(name = "user_id")
     private List<Users> previousOwners;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "VARCHAR(255)")
     private BookStatus bookStatus;
     private Boolean enlisted;
+
+    @ElementCollection
+    @CollectionTable(name = "book_notes", joinColumns = @JoinColumn(name = "book_id"))
+    @Column(name = "note_id")
+    private List<Integer> notesId = new ArrayList<>();
     
     public Books() {
     }
 
-    public Books(String bookTitle, String authorName, BookGenre bookGenre, Integer publicationYear, Users currentOwner, List<Users> previousOwners, BookStatus bookStatus, Boolean enlisted) {
+    public Books(Integer bookId, String bookTitle, String authorName, BookGenre bookGenre, Integer publicationYear,
+            Users currentOwner, List<Users> previousOwners, BookStatus bookStatus, Boolean enlisted,
+            List<Integer> notesId) {
+        this.bookId = bookId;
         this.bookTitle = bookTitle;
         this.authorName = authorName;
         this.bookGenre = bookGenre;
@@ -48,7 +71,8 @@ public class Books {
         this.currentOwner = currentOwner;
         this.previousOwners = previousOwners;
         this.bookStatus = bookStatus;
-        this.enlisted=enlisted;
+        this.enlisted = enlisted;
+        this.notesId = notesId;
     }
 
     public Integer getBookId() {
@@ -123,19 +147,12 @@ public class Books {
         this.enlisted = enlisted;
     }
 
-    @Override
-    public String toString() {
-        return "Books{" +
-                "bookId=" + bookId +
-                ", bookTitle='" + bookTitle + '\'' +
-                ", authorName='" + authorName + '\'' +
-                ", bookGenre=" + bookGenre +
-                ", publicationYear=" + publicationYear +
-                ", currentOwner=" + currentOwner +
-                ", previousOwners=" + previousOwners +
-                ", bookStatus=" + bookStatus +
-                ", enlisted=" + enlisted + 
-                '}';
+    public List<Integer> getNotesId() {
+        return notesId;
+    }
+
+    public void setNotesId(List<Integer> notesId) {
+        this.notesId = notesId;
     }
     
 }

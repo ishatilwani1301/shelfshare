@@ -37,15 +37,15 @@ public class BookController {
         return new ResponseEntity<>(mapBookToDto(updatedBook, "Book enlisted successfully"), HttpStatus.OK);
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<BookResponse> addNewBook(@RequestBody BookRequest bookRequest, Principal principal) {
-        if (principal == null) {
-            return new ResponseEntity<BookResponse>(new BookResponse("User not authenticated"), HttpStatus.UNAUTHORIZED);
-        }
+    // @PostMapping("/add")
+    // public ResponseEntity<BookResponse> addNewBook(@RequestBody BookRequest bookRequest, Principal principal) {
+    //     if (principal == null) {
+    //         return new ResponseEntity<BookResponse>(new BookResponse("User not authenticated"), HttpStatus.UNAUTHORIZED);
+    //     }
 
-        var createdBook = bookService.addNewBook(bookRequest, principal.getName());
-        return new ResponseEntity<>(mapBookToDto(createdBook, "Book added successfully"), HttpStatus.CREATED);
-    }
+    //     var createdBook = bookService.addNewBook(bookRequest, principal.getName());
+    //     return new ResponseEntity<>(mapBookToDto(createdBook, "Book added successfully"), HttpStatus.CREATED);
+    // }
 
     @GetMapping
     public ResponseEntity<List<BookResponse>> getAllBooks() {

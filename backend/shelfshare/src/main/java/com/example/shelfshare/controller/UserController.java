@@ -5,10 +5,12 @@ import java.security.Principal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.shelfshare.model.UserDetailsChangeRequest;
 import com.example.shelfshare.model.UserDetailsResponse;
 import com.example.shelfshare.service.UserService;
 
@@ -20,6 +22,7 @@ import com.example.shelfshare.model.UserPasswordChangeResponse;
 
 @RestController
 @RequestMapping("/user")
+@CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
 
     @Autowired
@@ -87,4 +90,62 @@ public class UserController {
             }
         }
     }
+
+    @PostMapping("/changeUserDetails")
+    public ResponseEntity<UserPasswordChangeResponse> changeUserDetails(@RequestBody UserDetailsChangeRequest userDetails, Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<UserPasswordChangeResponse>(
+                new UserPasswordChangeResponse("User not authenticated"),
+                HttpStatus.UNAUTHORIZED
+            );
+        }
+
+        var user = userService.getUserByUsername(principal.getName());
+        if (user.isEmpty()) {
+            return new ResponseEntity<UserPasswordChangeResponse>(
+                new UserPasswordChangeResponse("User not found"),
+                HttpStatus.NOT_FOUND
+            );
+        }
+
+        var usernameExists = userService.getUserByUsername(userDetails.username());
+        if (usernameExists.isPresent() && !usernameExists.get().getUsername().equals(principal.getName())) {
+            return new ResponseEntity<UserPasswordChangeResponse>(
+                new UserPasswordChangeResponse("Username already exists"),
+                HttpStatus.BAD_REQUEST
+            );
+        }
+
+        var userInDb = user.get();
+        if (userService.changeUserDetails(userInDb, userDetails)) {
+            return new ResponseEntity<UserPasswordChangeResponse>(
+                new UserPasswordChangeResponse("User details changed successfully"),
+                HttpStatus.OK
+            );
+        } else {
+            return new ResponseEntity<UserPasswordChangeResponse>(
+                new UserPasswordChangeResponse("Failed to change user details"),
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @PostMapping("/deleteUser")
+    public ResponseEntity<UserPasswordChangeResponse> deleteUser(Principal principal) {
+        var username = principal.getName();
+        var user = userService.getUserByUsername(username);
+        if (user.isEmpty()) {
+            return new ResponseEntity<UserPasswordChangeResponse>(
+                new UserPasswordChangeResponse("User not found"),
+                HttpStatus.NOT_FOUND
+            );
+        }
+        var userInDb = user.get();
+        userService.deleteUser(userInDb);
+        return new ResponseEntity<UserPasswordChangeResponse>(
+            new UserPasswordChangeResponse("User deleted successfully"),
+            HttpStatus.OK
+        );
+    }
+    
 }
