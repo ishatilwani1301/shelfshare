@@ -37,7 +37,7 @@ public class LoginController {
         Optional<Users> maybeAuthenticatedUser = userService.getAuthenticatedUser(req.username(), req.password());
         if (maybeAuthenticatedUser.isEmpty()) {
             return new ResponseEntity<LoginResponse>(
-                new LoginResponse("", "Invalid username or password"),
+                new LoginResponse("", "Invalid username or password", ""),
                 HttpStatus.FORBIDDEN);
         }
         var accessToken = jwtService.createAccessToken(maybeAuthenticatedUser.get());
@@ -48,7 +48,7 @@ public class LoginController {
         response.addCookie(refreshTokenCookie);
         return new ResponseEntity<LoginResponse>(
             new LoginResponse(accessToken,
-            "Successful login, use token for further comms"),
+            "Successful login, use token for further comms", req.username()),
             HttpStatus.CREATED);
     }
     
