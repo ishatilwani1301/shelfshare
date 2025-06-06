@@ -9,8 +9,8 @@ function Profile() {
     password: '',
   });
 
-  const token = localStorage.getItem('accessToken');
-  console.log('here is Token:', token);
+  const AccessToken = localStorage.getItem('accessToken');
+  console.log('here is Token:', AccessToken);
   useEffect(() => {
     // Fetch user details from the API
     const fetchUserDetails = async () => {

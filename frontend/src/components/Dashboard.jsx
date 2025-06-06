@@ -18,22 +18,62 @@ const Dashboard = () => {
   // Define header height for padding consistently
   const HEADER_HEIGHT_PX = 80;
 
-  const fetchUserData = async () => {
-    setLoading(true);
-    setError('');
+  const AccessToken = localStorage.getItem('accessToken');
+
+  const fetchUserDetails = async () => {
+    if (!AccessToken) {
+      setError('No access token found. Please log in.');
+      setLoading(false);
+      navigate('/login'); // Redirect to login if no token
+      return;
+    }
+
     try {
-      // In a real app, this would be an API call to get user info
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-      setUserData({ username: 'ShelfSharer' }); // Set mock user data
-    } catch (err) {
-      setError('Failed to load user data.');
+      const response = await fetch('http://localhost:1234/user/userDetails', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${AccessToken}`,
+        },
+        credentials: 'include',
+      });
+
+      console.log('Response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json(); // Await the JSON parsing
+        throw new Error(errorData.message || 'Failed to fetch user details');
+      }
+
+      const data = await response.json(); // Await the JSON parsing
+      console.log('User details:', data); // This will log the resolved object
+
+      setUserData(data); // Update the userData state
+      setFormData({
+        username: data.username || '',
+        email: data.email || '',
+        pincode: data.pincode || '',
+        area: data.area || '',
+        city: data.city || '',
+        state: data.state || '',
+        country: data.country || '',
+        password: '', // Do not pre-fill the password for security reasons
+      });
+      setError('');
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      setError(error.message || 'Failed to fetch user details.');
+      if (error.message.includes('Unauthorized')) {
+        localStorage.removeItem('accessToken');
+        setUserData(null);
+        navigate('/login');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUserData();
+    fetchUserDetails();
   }, []);
 
   const handleLogout = () => {
@@ -117,93 +157,147 @@ const Dashboard = () => {
       );
     } else if (activeSidebarItem === 'profile') {
       return (
-          <div className="flex flex-col items-center w-full p-8 bg-white"> {/* Changed background to white and adjusted padding/width as needed */}
-              <h2 className="text-3xl font-bold mb-10 self-start">Profile Dashboard</h2> {/* Added title */}
-  
-              <div className="flex flex-col items-center mb-8"> {/* Container for image and name/username */}
-                  <img
-                      src={user} // Replace with actual image source or a dynamic variable
-                      alt="Olivia Carter"
-                      className="w-24 h-24 rounded-full mb-4 object-cover" // Circular image
-                  />
-                  <h3 className="text-xl font-semibold text-gray-800">Name</h3>
-                  <p className="text-sm text-gray-500">username</p>
-              </div>
-  
-              <div className="w-full max-w-md"> {/* Form container */}
-                  <div className="mb-6">
-                      <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                          Username
-                      </label>
-                      <input
-                          type="text"
-                          id="username"
-                          name="username"
-                          // value={username} // Assuming you have a state for this
-                          // onChange={handleInputChange} // Assuming you have a change handler
-                          className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
-                          placeholder="" // Placeholder can be empty as per UI
-                      />
-                  </div>
-  
-                  <div className="mb-6">
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                          Email
-                      </label>
-                      <input
-                          type="email"
-                          id="email"
-                          name="email"
-                          // value={email}
-                          // onChange={handleInputChange}
-                          className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
-                          placeholder=""
-                      />
-                  </div>
-  
-                  <div className="mb-6">
-                      <label htmlFor="pincode" className="block text-sm font-medium text-gray-700 mb-1">
-                          Pincode
-                      </label>
-                      <input
-                          type="text"
-                          id="pincode"
-                          name="pincode"
-                          // value={pincode}
-                          // onChange={handleInputChange}
-                          className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
-                          placeholder=""
-                      />
-                  </div>
-  
-                  <div className="mb-8"> {/* Increased bottom margin before the button */}
-                      <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                          Password
-                      </label>
-                      <input
-                          type="password"
-                          id="password"
-                          name="password"
-                          // value={password}
-                          // onChange={handleInputChange}
-                          className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
-                          placeholder=""
-                      />
-                  </div>
-  
-                  <div className="flex justify-center"> {/* Centering the button */}
-                      <button
-                          type="submit" // Or "button" if it doesn't submit a form
-                          // onClick={handleUpdateProfile} // Assuming you have an update handler
-                          className="px-8 py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-75"
-                      >
-                          Update
-                      </button>
-                  </div>
-              </div>
+        <div className="flex flex-col items-center w-full p-8 bg-white">
+          <h2 className="text-3xl font-bold mb-10 self-start">Profile Dashboard</h2>
+
+          <div className="flex flex-col items-center mb-8">
+            {/* Placeholder profile image */}
+            <img
+              src={user}
+              alt="Profile"
+              className="w-24 h-24 rounded-full mb-4 object-cover"
+            />
+            <h3 className="text-xl font-semibold text-gray-800">{formData.username || 'Name'}</h3>
+            <p className="text-sm text-gray-500">{formData.email || 'Email'}</p>
           </div>
+
+          <div className="w-full max-w-md">
+            {/* Username Field */}
+            <div className="mb-6">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                Username
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                placeholder="Enter your username"
+              />
+            </div>
+
+            {/* Email Field */}
+            <div className="mb-6">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                placeholder="Enter your email"
+              />
+            </div>
+
+            {/* Pincode Field */}
+            <div className="mb-6">
+              <label htmlFor="pincode" className="block text-sm font-medium text-gray-700 mb-1">
+                Pincode
+              </label>
+              <input
+                type="text"
+                id="pincode"
+                name="pincode"
+                value={formData.pincode}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                placeholder="Enter your pincode"
+              />
+            </div>
+
+            {/* Area Field */}
+            <div className="mb-6">
+              <label htmlFor="area" className="block text-sm font-medium text-gray-700 mb-1">
+                Area
+              </label>
+              <input
+                type="text"
+                id="area"
+                name="area"
+                value={formData.area || ''}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                placeholder="Enter your area"
+              />
+            </div>
+
+            {/* City Field */}
+            <div className="mb-6">
+              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+                City
+              </label>
+              <input
+                type="text"
+                id="city"
+                name="city"
+                value={formData.city || ''}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                placeholder="Enter your city"
+              />
+            </div>
+
+            {/* State Field */}
+            <div className="mb-6">
+              <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
+                State
+              </label>
+              <input
+                type="text"
+                id="state"
+                name="state"
+                value={formData.state || ''}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                placeholder="Enter your state"
+              />
+            </div>
+
+            {/* Country Field */}
+            <div className="mb-6">
+              <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
+                Country
+              </label>
+              <input
+                type="text"
+                id="country"
+                name="country"
+                value={formData.country || ''}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+                placeholder="Enter your country"
+              />
+            </div>
+
+            {/* Update Button */}
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={handleUpdateProfile}
+                className="px-8 py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-75"
+              >
+                Update Profile
+              </button>
+            </div>
+          </div>
+        </div>
       );
-  } else if (activeSidebarItem === 'booksAvailable') {
+    } else if (activeSidebarItem === 'booksAvailable') {
       return (
         <BooksAvailablePage
           searchQuery={searchQuery}
