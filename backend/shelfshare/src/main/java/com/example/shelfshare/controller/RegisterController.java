@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.GetMapping; // Change to GetMapping
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,9 +24,10 @@ public class RegisterController {
 
     @Autowired
     private UserService userService;
-    
+
     @PostMapping("/createNewUser")
     public ResponseEntity<RegisterResponse> createNewUser(@RequestBody RegisterRequest req) {
+        // ... (your existing code for createNewUser)
         var createdUser = userService.createUser(req.name(), req.username(), req.password(), req.email(), req.pincode(), req.area(), req.city(), req.state(), req.country(), req.securityQuestionAnswers());
         if (createdUser.isEmpty()) {
             return new ResponseEntity<RegisterResponse>(
@@ -37,12 +39,14 @@ public class RegisterController {
             HttpStatus.CREATED);
     }
 
-    @PostMapping("/pincodeToAddress/{pincode}")
+    // Change from @PostMapping to @GetMapping
+    @GetMapping("/pincodeToAddress/{pincode}") // Change to GetMapping
     public ResponseEntity<UserAddressResponse> pincodeToAddress(@PathVariable String pincode) {
         UserAddressResponse addressResponse = userService.getAddressByPincode(pincode);
 
-        if(addressResponse.area() == null || addressResponse.area().isEmpty()) {
-            return new ResponseEntity<UserAddressResponse>(addressResponse, HttpStatus.NOT_FOUND);
+        if(addressResponse == null || addressResponse.area() == null || addressResponse.area().isEmpty()) {
+            // Return 404 not found specifically if address data is empty/null
+            return new ResponseEntity<UserAddressResponse>(HttpStatus.NOT_FOUND);
         }
 
         return new ResponseEntity<UserAddressResponse>(addressResponse, HttpStatus.OK);

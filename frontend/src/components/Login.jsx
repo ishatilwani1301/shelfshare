@@ -31,8 +31,8 @@ const Login = () => {
       }
 
       const data = await response.json();
-      console.log('Login successful:', data);
-      console.error('Login successful:', data.jwt);
+      console.log('Login successful:', data.jwt);
+
 
       // Store the access token (e.g., in localStorage)
       localStorage.setItem('accessToken', data.jwt);

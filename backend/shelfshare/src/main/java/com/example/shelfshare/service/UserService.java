@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.shelfshare.entity.Users;
@@ -19,6 +20,7 @@ import com.example.shelfshare.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 
 @Service
+@CrossOrigin(origins = "http://localhost:5173")
 public class UserService {
 
     @Autowired
