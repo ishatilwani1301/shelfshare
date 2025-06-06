@@ -6,6 +6,7 @@ import Footer from './Footer';
 import BooksAvailablePage from './BooksAvailablePage';
 import AnonymousBooksAvailablePage from './AnonymousBooksAvailablePage';
 import AnonymousBookDetailPage from './AnonymousBookDetailPage';
+import user from '../assets/user.jpg'; // Placeholder profile image
 
 
 const Dashboard = () => {
