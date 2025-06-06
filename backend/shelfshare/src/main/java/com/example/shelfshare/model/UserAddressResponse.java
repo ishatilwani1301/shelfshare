@@ -1,3 +1,5 @@
 package com.example.shelfshare.model;
 
-public record UserAddressResponse(String district, String region, String state, String country) {};
+import java.util.List;
+
+public record UserAddressResponse(List<String> area, String city, String state, String country, String message) {};

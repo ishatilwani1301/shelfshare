@@ -4,7 +4,9 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
 import BooksAvailablePage from './BooksAvailablePage';
-import user from '../assets/user.jpg' // Placeholder for user profile image
+import AnonymousBooksAvailablePage from './AnonymousBooksAvailablePage';
+import AnonymousBookDetailPage from './AnonymousBookDetailPage';
+
 
 const Dashboard = () => {
   const navigate = useNavigate();
