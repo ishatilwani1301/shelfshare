@@ -1,91 +1,207 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-// Hardcoded book data - We're putting this back in for now!
-const dummyBooks = [
-  { id: 1, title: 'The Secret Garden', author: 'Frances Hodgson Burnett', imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAFppiKXKAnz-Qd6vCmGfpqcmXjbXlrCSyk2NY5spXZSkU2y72pScWmF-3tbWr-RhOzRzrGp-x4yTlQJ2IObaWYLdM0Bl0GxIrCQSWMznBcdqzESmR4aUWst3T39Sr33qFn5FmYkGkkow41FTDDwHd9b66N7CBwkdOOUMMx6AwAL53aygyiACkPUIkLCzCGbOLUHu64jcvgT2FwWQWRs4qy9QeFDRd487UvAxOC_1-idyyr2eZBkHLHdur1GW2lG1Tk9FMZUrHOrDc', description: 'A classic novel about a young orphan who discovers a hidden garden and brings it back to life.' },
-  { id: 2, title: 'Pride and Prejudice', author: 'Clara Bennett', imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA997Zq4W2sjuomcsC7KOW6eFjChbs2CPxkWJqsKyH2VewaU_qxxACEOtaH76bOPYGkhS-YJETp1sn5LFD81LxRmCa2ClNYpwuWhiP_TbZ4NBqMGCvpV_9igT12beUvOz97OzEdCkwR8Mn3uEn-w6B__cN5UQzd_7IkGFYr18K4NNQiFk7eyYzJMwbi_YJU6FJSV6QHjjNNdW4OwR2iaU7XpuW7ZadieDzQxf2k2xRPWA46ZA-FlQOBsyQIxAPcDq2fL_jE0yvd69I', description: 'A romantic novel of manners written by Jane Austen in 1813.' },
-  { id: 3, title: 'To Kill a Mockingbird', author: 'Harper Lee', imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDiDVQToy4LDRuINckyZ6HSGbpM5YCiqy_jwmgMzHNT_pR8fiGGL11c9Hy4qQcYyAKYKWWHxBcuxPFNRmNdVnoqKMeuAs1iph9Mq44qFiGZR1VgdYBDfidoOt_4qPeKXzNm_OvH30ynBwtM4FzeQ3wn_zNJOQi7pbfMpC0HI4SOTGtxLdkebj7RMuA7WhfSlrBuaDSfoZ2kCpP4Shfw-q-GBU6Nwp3e3VbFBSNLmH5A2CGwrYugucspeoWL5ECfehUV0ravkN0ee3M', description: 'A novel by Harper Lee published in 1960. It was instantly successful, winning the Pulitzer Prize, and has become a classic of modern American literature.' },
-  { id: 4, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAvUGhhmJmhI_dxGo87pkUkpi_A8ghYGaa6p_H0w8ssO6I2EFJwdJmis8ez2LvPVWMSUAol4isKKkkwu8Hvssf7y2C7ZGPi1yLFFUAFj4YdzUUu384c8pVN6ppMpzFKIAO2HkVmrmVqJsdVT2ja2H_-UAbOhe3q7pmA4CZYx11AWPvDpFg0CH4bYPxJJDGu2ewU4TqfplHi9UH7Rtsx09lFpThJ-0DqORj0vQU06mVDK2N1wuBd110cc7wwpeRM53W4ALIrGfZkAk0', description: 'The story of the mysteriously wealthy Jay Gatsby and his love for the beautiful Daisy Buchanan, of lavish parties on Long Island at a time when The New York Times remarked "gin was the national drink and sex the national obsession."' },
-  { id: 5, title: '1984', author: 'George Orwell', imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDb_vq7KzgYSIB3Ekiox8EoBzfqOk88-dCOBheuBew_gtwuXLVL5Atcourh2E0YPV_DjYlMoppIAND8MtZJAfCXJ9T2RTfgcPsLYG8QqXwIEgTptU0i425QmdT1ZPki_6CuAcy3mTeZsj_h8k4J35zl9JkbrWg4g5Yz0aYFIi73qAfEU0mztm_zrFVWv1GW0-iarJfQMazaamBl2DcRJJKWUHDAHRnWJJaEFmSaS3tQj6GrAEHe2kT1Y40gcAyecO81pA0vNAzhwVk', description: 'A dystopian social science fiction novel and cautionary tale by English author George Orwell. It was published on 8 June 1949.' },
-  { id: 6, title: 'The Catcher in the Rye', author: 'J.D. Salinger', imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBk9v3H5xRwhxUaMBhotDNxxgFBkrPHXA8eEOGbwzUvVZvIr5AtfVBQD3tRF4g6aEjQxWltmbQYIJZJFRRO66EdiPuVMz0AbHOVyh609FxhiS19srmcSGKqvCbf0EBGbEjJPpM-ZQt8sxeZIC1rtMInLp85rOopXckCtX_WPiju2S1joCuYi-6eE77q8iHO4T5seRUSSIvMtTuXJDoZ3p12mZg7tO4fYFt9yTkp9HSzBov4hwqH21Q0nb00RdJj74PSbRQnF0k1bcY', description: 'A novel by J. D. Salinger, partially published in serial form in 1945–1946 and as a novel in 1951.' },
-  { id: 7, title: 'Brave New World', author: 'Aldous Huxley', imageUrl: 'https://m.media-amazon.com/images/I/41xR7r82t9L._SY445_SX342_.jpg', description: 'A dystopian novel by English author Aldous Huxley, written in 1931 and published in 1932.' },
-  { id: 8, title: 'The Hobbit', author: 'J.R.R. Tolkien', imageUrl: 'https://m.media-amazon.com/images/I/419dE-SjDUL._SY445_SX342_.jpg', description: 'A fantasy novel by English author J. R. R. Tolkien. It was published on 21 September 1937 to wide critical acclaim.' },
-  { id: 9, title: 'The Lord of the Rings', author: 'J.R.R. Tolkien', imageUrl: 'https://m.media-amazon.com/images/I/51wB7-O9LFL._SY445_SX342_.jpg', description: 'An epic high-fantasy novel by the English author and scholar J. R. R. Tolkien. Set in Middle-earth, the story began as a sequel to Tolkien\'s 1937 children\'s fantasy novel The Hobbit, but eventually developed into a much larger work.' },
-  { id: 10, title: 'Dune', author: 'Frank Herbert', imageUrl: 'https://m.media-amazon.com/images/I/41yXwT3D40L._SY445_SX342_.jpg', description: 'A 1965 science fiction novel by American author Frank Herbert. It is the first in the Dune saga, and is often considered one of the greatest science fiction novels of all time.' },
-  { id: 11, title: 'Foundation', author: 'Isaac Asimov', imageUrl: 'https://m.media-amazon.com/images/I/51+u8y4V6EL._SY445_SX342_.jpg', description: 'A science fiction novel by Isaac Asimov, first published in 1951. It is the first of seven books in the Foundation series.' },
-  { id: 12, title: 'Neuromancer', author: 'William Gibson', imageUrl: 'https://m.media-amazon.com/images/I/51M3f2T0iOL._SY445_SX342_.jpg', description: 'A 1984 science fiction novel by American-Canadian writer William Gibson. It is considered one of the earliest and best-known works in the cyberpunk genre.' },
-  { id: 13, title: 'Slaughterhouse-Five', author: 'Kurt Vonnegut', imageUrl: 'https://m.media-amazon.com/images/I/51wG3u3uYOL._SY445_SX342_.jpg', description: 'A satirical anti-war novel by Kurt Vonnegut, first published in 1969.' },
-  { id: 14, title: 'The Hitchhiker\'s Guide to the Galaxy', author: 'Douglas Adams', imageUrl: 'https://m.media-amazon.com/images/I/51I7s3tXyRL._SY445_SX342_.jpg', description: 'A comedy science fiction series created by Douglas Adams.' },
-  { id: 15, title: 'Fahrenheit 451', author: 'Ray Bradbury', imageUrl: 'https://m.media-amazon.com/images/I/41J7L8+YfSL._SY445_SX342_.jpg', description: 'A dystopian novel by American writer Ray Bradbury, published in 1953.' },
-  { id: 16, title: 'The Chronicles of Narnia', author: 'C.S. Lewis', imageUrl: 'https://m.media-amazon.com/images/I/51Y971L27OL._SY445_SX342_.jpg', description: 'A series of seven fantasy novels by C. S. Lewis.' },
-  { id: 17, title: 'Catch-22', author: 'Joseph Heller', imageUrl: 'https://m.media-amazon.com/images/I/51+qPz9mHcL._SY445_SX342_.jpg', description: 'A satirical war novel by American author Joseph Heller.' },
-  { id: 18, title: 'One Hundred Years of Solitude', author: 'Gabriel Garcia Marquez', imageUrl: 'https://m.media-amazon.com/images/I/51H57CjSjjL._SY445_SX342_.jpg', description: 'A landmark novel by Colombian author Gabriel García Márquez that tells the story of the Buendía family.' },
-];
+const BooksAvailablePage = ({ searchQuery }) => {
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [genres, setGenres] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [authors, setAuthors] = useState([]);
 
 
-const BooksAvailablePage = ({ searchQuery, activeSidebarItem }) => {
-  // Directly use dummyBooks for filtering since no backend is present
-  const books = dummyBooks; // No fetch needed, so no loading/error states for this component
+  const [selectedGenre, setSelectedGenre] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedAuthor, setSelectedAuthor] = useState('');
 
-  // Filter books based on the search query
-  const filteredBooks = books.filter(book =>
-    book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    book.author.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Define a set of Tailwind colors for different card backgrounds
+  const cardColors = [
+    'bg-[#fbe8e4]', // Light Coral/Peach - warm, inviting
+    'bg-[#e2f0cb]', // Soft Mint Green - fresh, calming
+    'bg-[#d2eaf7]', // Sky Blue - light, airy
+    'bg-[#fff0b3]', // Pale Gold/Cream - bright, cheerful
+    'bg-[#e6d8ed]', // Lavender Mist - soft, ethereal
+    'bg-[#c8e6c9]', // Light Sage Green - earthy, sophisticated
+    'bg-[#b3e5fc]', // Light Cyan - cool, crisp
+    'bg-[#ffe0b2]', // Apricot - sunny, warm
+    'bg-[#efdcd5]', // Dusty Rose - gentle, vintage
+    'bg-[#d1c4e9]', // Muted Violet - soft, unique
+  ];
 
-  // Removed loading and error conditions as data is local
+  useEffect(() => {
+    const fetchBooks = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch('http://localhost:1234/books');
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setBooks(data);
+
+        const uniqueGenres = new Set();
+        const uniqueLocations = new Set();
+        const uniqueAuthors = new Set();
+
+        data.forEach(book => {
+          if (book.bookGenre && book.bookGenre.trim() !== '') {
+            uniqueGenres.add(book.bookGenre.trim());
+          }
+
+          if (book.location && book.location.trim() !== '') {
+            uniqueLocations.add(book.location.trim());
+          }
+         
+          if (book.authorName && book.authorName.trim() !== '') {
+            uniqueAuthors.add(book.authorName.trim());
+          }
+        });
+
+        setGenres(Array.from(uniqueGenres).sort());
+        setLocations(Array.from(uniqueLocations).sort());
+        setAuthors(Array.from(uniqueAuthors).sort());
+
+      } catch (e) {
+        console.error("Failed to fetch books:", e);
+        setError("Failed to load books. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooks();
+  }, []);
+
+  const filteredBooks = books.filter(book => {
+    const bookTitle = book.bookTitle || '';
+    const authorName = book.authorName || '';
+    const bookGenre = book.bookGenre || '';
+    const location = book.location || '';
+
+    const matchesSearch =
+      searchQuery === '' ||
+      bookTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      authorName.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesGenre =
+      selectedGenre === '' || bookGenre.toLowerCase() === selectedGenre.toLowerCase();
+
+    const matchesLocation =
+      selectedLocation === '' || location.toLowerCase().includes(selectedLocation.toLowerCase());
+
+    const matchesAuthor =
+      selectedAuthor === '' || authorName.toLowerCase() === selectedAuthor.toLowerCase();
+
+
+    return matchesSearch && matchesGenre && matchesLocation && matchesAuthor;
+  });
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64 text-[#837c67]">
+        Loading books...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-64 text-red-500">
+        Error: {error}
+      </div>
+    );
+  }
 
   return (
-    <>
-      <h2 className="text-[#171612] tracking-light text-[28px] font-bold leading-tight px-4 text-left pb-3 pt-5">
-        {activeSidebarItem === 'myShelf' ? 'My Bookshelf' : (activeSidebarItem === 'anonymousBooks' ? 'Anonymous Shares' : 'Explore Books')}
-      </h2>
-      <div className="flex gap-3 p-3 flex-wrap pr-4">
-        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-[#f4f3f1] pl-4 pr-2">
-          <p className="text-[#171612] text-sm font-medium leading-normal">Genre</p>
-          <div className="text-[#171612]" data-icon="CaretDown" data-size="20px" data-weight="regular">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
-              <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path>
-            </svg>
-          </div>
-        </button>
-        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-[#f4f3f1] pl-4 pr-2">
-          <p className="text-[#171612] text-sm font-medium leading-normal">Location</p>
-          <div className="text-[#171612]" data-icon="CaretDown" data-size="20px" data-weight="regular">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
-              <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path>
-            </svg>
-          </div>
-        </button>
-        <button className="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-[#f4f3f1] pl-4 pr-2">
-          <p className="text-[#171612] text-sm font-medium leading-normal">Sort</p>
-          <div className="text-[#171612]" data-icon="CaretDown" data-size="20px" data-weight="regular">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
-              <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path>
-            </svg>
-          </div>
-        </button>
+    <div className="p-6">
+      <h1 className="text-3xl font-bold text-[#171612] mb-6">Available Books</h1>
+
+      <div className="flex flex-wrap items-end gap-4 mb-6">
+        <div className="flex items-center gap-2">
+          <label htmlFor="genre-select" className="text-[#5B400D] font-semibold text-base">Genre:</label>
+          <select
+            id="genre-select"
+            value={selectedGenre}
+            onChange={(e) => setSelectedGenre(e.target.value)}
+            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer"
+          >
+            <option value="">All</option>
+            {genres.map(g => (
+              <option key={g} value={g}>{g}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label htmlFor="author-select" className="text-[#5B400D] font-semibold text-base">Author:</label>
+          <select
+            id="author-select"
+            value={selectedAuthor}
+            onChange={(e) => setSelectedAuthor(e.target.value)}
+            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer"
+          >
+            <option value="">All</option>
+            {authors.map(a => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label htmlFor="location-select" className="text-[#5B400D] font-semibold text-base">Location:</label>
+          <select
+            id="location-select"
+            value={selectedLocation}
+            onChange={(e) => setSelectedLocation(e.target.value)}
+            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer"
+          >
+            <option value="">All</option>
+            {locations.map(loc => (
+              <option key={loc} value={loc}>{loc}</option>
+            ))}
+          </select>
+        </div>
+
+
+        {/* Clear Filters Button */}
+        {(selectedGenre || selectedLocation || selectedAuthor) && (
+          <button
+            onClick={() => {
+              setSelectedGenre('');
+              setSelectedLocation('');
+              setSelectedAuthor('');
+            }}
+            className="flex h-11 shrink-0 items-center justify-center rounded-md bg-[#f3ebd2] pl-4 pr-4 text-[#5B400D] text-base font-bold leading-normal tracking-[0.015em] hover:bg-[#e0d8c0] transition-colors duration-200"
+          >
+            Clear Filters
+          </button>
+        )}
       </div>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(158px,1fr))] gap-3 p-4">
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredBooks.length > 0 ? (
-          filteredBooks.map((book) => (
-            <Link key={book.id} to={`/book/${book.id}`} className="flex flex-col gap-3 pb-3 group cursor-pointer">
-              <div
-                className="w-full bg-center bg-no-repeat aspect-[3/4] bg-cover rounded-xl shadow-md transition-shadow duration-200 group-hover:shadow-lg"
-                style={{ backgroundImage: `url("${book.imageUrl}")` }}
-              ></div>
+          filteredBooks.map((book, index) => (
+            <Link
+              key={book.id}
+              to={`/dashboard/books/${book.id}`}
+              className={`flex flex-col gap-2 pb-3 group cursor-pointer border rounded-lg p-4 transition-all duration-300 transform hover:scale-105 hover:shadow-xl ${cardColors[index % cardColors.length]}`}
+            >
               <div>
-                <p className="text-[#171612] text-base font-medium leading-normal group-hover:text-[#5B400D] transition-colors duration-200">{book.title}</p>
-                <p className="text-[#837c67] text-sm font-normal leading-normal">{book.author}</p>
+                <p className="text-[#171612] text-base font-bold leading-normal group-hover:text-[#5B400D] transition-colors duration-200">{book.bookTitle || 'Untitled Book'}</p>
+                <p className="text-[#837c67] text-sm font-bold leading-normal">{book.authorName || 'Unknown Author'}</p>
+                {book.location && <p className="text-[#837c67] text-xs leading-normal">Location: {book.location}</p>}
               </div>
             </Link>
           ))
         ) : (
-          <p className="text-[#837c67] col-span-full text-center py-8">No books found matching your search.</p>
+          <p className="text-[#837c67] col-span-full text-center py-8">No books found matching your search and filters.</p>
         )}
       </div>
-    </>
+    </div>
   );
 };
 
