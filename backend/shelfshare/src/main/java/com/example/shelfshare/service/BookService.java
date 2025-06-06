@@ -93,4 +93,8 @@ public class BookService {
     public Optional<Books> getBookById(Integer bookId) {
         return booksRepository.findById(bookId);
     }
+
+    public List<Integer> getAllBookIdList() {
+        return booksRepository.findAllBookIdList();
+    }
 }

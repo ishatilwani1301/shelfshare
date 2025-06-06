@@ -5,17 +5,14 @@ import com.example.shelfshare.repository.NotesRepository;
 import com.example.shelfshare.model.BookRequest;
 import com.example.shelfshare.service.BookService;
 import com.example.shelfshare.service.NotesService;
-import com.example.shelfshare.entity.Books;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import com.example.shelfshare.model.BookCreationResponse;
 
@@ -64,14 +61,37 @@ public class BookController {
         }
     }
 
-    // @GetMapping
-    // public ResponseEntity<List<BookResponse>> getAllBooks() {
-    //     List<BookResponse> books = bookService.getAllAvailableBooks()
-    //             .stream()
-    //             .map(book -> mapBookToDto(book, "books available to borrow/buy"))
-    //             .toList();
-    //     return new ResponseEntity<>(books, HttpStatus.OK);
-    // }
+    @GetMapping
+    public ResponseEntity<List<BookResponse>> getAllBooks() {
+        List<Integer> bookIdList = bookService.getAllBookIdList();
+        List<BookResponse> books = new ArrayList<>();
+        for (Integer bookId : bookIdList) {
+            var book = bookService.getBookById(bookId);
+            if (book.isPresent()) {
+                List<String> previousOwners = book.get().getPreviousOwners()
+                    .stream()
+                    .map(owner -> owner.getUsername())
+                    .toList();
+                var notes = notesService.getMostRecentNoteForBook(book.get().getBookId());
+                books.add(new BookResponse(
+                    book.get().getBookId(),
+                    book.get().getBookTitle(),
+                    book.get().getAuthorName(),
+                    book.get().getBookGenre().name(),
+                    book.get().getPublicationYear(),
+                    book.get().getBookStatus().name(),
+                    book.get().getEnlisted(),
+                    book.get().getCurrentOwner().getUsername(),
+                    previousOwners,
+                    notes.isPresent() ? notes.get().getNoteContent() : null,
+                    notes.isPresent() ? notes.get().getCustomizedTitle() : null,
+                    "Book details retrieved successfully"
+                ));
+            }
+        }
+
+        return new ResponseEntity<>(books, HttpStatus.OK);
+    }
 
     // @GetMapping("/my-books")
     // public ResponseEntity<List<BookResponse>> getMyBooks(Principal principal) {
@@ -107,7 +127,6 @@ public class BookController {
                 new BookResponse("Book not found"),
                 HttpStatus.NOT_FOUND);
         }
-        var notedIdList = book.get().getNotesId();
         List<String> previousOwners = book.get().getPreviousOwners()
             .stream()
             .map(owner -> owner.getUsername())
