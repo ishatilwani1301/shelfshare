@@ -21,7 +21,6 @@ import com.example.shelfshare.model.BookCreationResponse;
 @RestController
 @RequestMapping("/books")
 @CrossOrigin(origins = "http://localhost:5173")
-
 public class BookController {
 
     private final BookService bookService;
