@@ -9,6 +9,16 @@ import user from '../assets/user.jpg' // Placeholder for user profile image
 const Dashboard = () => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    pincode: '',
+    area: '',
+    city: '',
+    state: '',
+    country: '',
+    password: '', // Do not pre-fill the password for security reasons
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeSidebarItem, setActiveSidebarItem] = useState(null); // null for initial welcome page
@@ -17,6 +27,13 @@ const Dashboard = () => {
 
   // Define header height for padding consistently
   const HEADER_HEIGHT_PX = 80;
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
+  };
 
   const AccessToken = localStorage.getItem('accessToken');
 
@@ -103,6 +120,40 @@ const Dashboard = () => {
   const handleBackToBookOffersList = () => {
     setSelectedBookOfferId(null);
   }; // <--- ADD THIS CLOSING CURLY BRACE
+
+  const handleUpdateProfile = async () => {
+    try {
+      const AccessToken = localStorage.getItem('accessToken');
+      if (!AccessToken) {
+        setError('No access token found. Please log in.');
+        navigate('/login');
+        return;
+      }
+
+      const response = await fetch('http://localhost:1234/user/updateProfile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${AccessToken}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update profile.');
+      }
+
+      const data = await response.json();
+      console.log('Profile updated successfully:', data);
+      setUserData(data); // Update the userData state with the updated profile
+      setError('');
+      alert('Profile updated successfully!');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      setError(error.message || 'Failed to update profile.');
+    }
+  };
 
   // --- Loading and Error States --- // <--- This is where the 'if (loading)' block should begin.
   if (loading) {
