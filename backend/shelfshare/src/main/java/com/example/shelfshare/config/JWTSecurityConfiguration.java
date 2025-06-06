@@ -76,6 +76,7 @@ public class JWTSecurityConfiguration {
                         .requestMatchers("/user/**").authenticated()
                         .requestMatchers("/books/my-books").authenticated()
                         .requestMatchers("/books/**").permitAll()
+                        .requestMatchers("/anonymous-books").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

@@ -9,6 +9,7 @@ import com.example.shelfshare.service.NotesService;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,8 @@ import com.example.shelfshare.model.BookCreationResponse;
 
 @RestController
 @RequestMapping("/books")
+@CrossOrigin(origins = "http://localhost:5173")
+
 public class BookController {
 
     private final BookService bookService;
