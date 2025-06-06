@@ -65,39 +65,6 @@ public class BookController {
         }
     }
 
-    //@GetMapping
-    //public ResponseEntity<List<BookResponse>> getAllBooks() {
-    //    List<Integer> bookIdList = bookService.getAllBookIdList();
-     //   List<BookResponse> books = new ArrayList<>();
-     //   for (Integer bookId : bookIdList) {
-    //        var book = bookService.getBookById(bookId);
-    //        if (book.isPresent()) {
-    //            List<String> previousOwners = book.get().getPreviousOwners()
-    //                .stream()
-    //                .map(owner -> owner.getUsername())
-     //               .toList();
-     //           var notes = notesService.getMostRecentNoteForBook(book.get().getBookId());
-    //            books.add(new BookResponse(
-    //                book.get().getBookId(),
-    //                book.get().getBookTitle(),
-    //                book.get().getAuthorName(),
-    //                book.get().getBookGenre().name(),
-    //                book.get().getPublicationYear(),
-    //                book.get().getBookStatus().name(),
-    //                book.get().getEnlisted(),
-    //                book.get().getCurrentOwner().getUsername(),
-    //                previousOwners,
-    //                notes.isPresent() ? notes.get().getNoteContent() : null,
-    //                notes.isPresent() ? notes.get().getCustomizedTitle() : null,
-    //                "Book details retrieved successfully"
-    //            ));
-    //        }
-    //    }
-
-     //   return new ResponseEntity<>(books, HttpStatus.OK);
-    //}
-
-
     @GetMapping
     public ResponseEntity<List<BookResponse>> getAllBooks() {
         List<Integer> bookIdList = bookService.getAllBookIdList();
@@ -127,53 +94,7 @@ public class BookController {
          return new ResponseEntity<>(bookResponses, HttpStatus.OK);
      }
 
-    // private BookResponse mapBookToDto(Books book, String message) {
-    //     return new BookResponse(
-    //             book.getBookId(),
-    //             book.getBookTitle(),
-    //             book.getAuthorName(),
-    //             book.getBookGenre().name(),
-    //             book.getPublicationYear(),
-    //             book.getBookStatus().name(),
-    //             book.getEnlisted(),
-    //             book.getCurrentOwner().getUsername(),
-    //             message
-    //     );
-    // }
-
-    //@GetMapping("/{bookId}")
-   // public ResponseEntity<BookResponse> getBookById(@PathVariable Integer bookId) {
-    //    var book = bookService.getBookById(bookId);
-     //   if (book.isEmpty()) {
-     //       return new ResponseEntity<BookResponse>(
-    //            new BookResponse("Book not found"),
-      //          HttpStatus.NOT_FOUND);
-       // }
-       // List<String> previousOwners = book.get().getPreviousOwners()
-        //    .stream()
-       //     .map(owner -> owner.getUsername())
-       //     .toList();
-       // var notes = notesService.getMostRecentNoteForBook(book.get().getBookId());
-       // return new ResponseEntity<BookResponse>(
-         //   new BookResponse(
-        //        book.get().getBookId(),
-         //       book.get().getBookTitle(),
-          //      book.get().getAuthorName(),
-          //      book.get().getBookGenre().name(),
-         //       book.get().getPublicationYear(),
-          //      book.get().getBookStatus().name(),
-         //       book.get().getEnlisted(),
-          //      book.get().getCurrentOwner().getUsername(),
-        //        previousOwners,
-        //        notes.isPresent() ? notes.get().getNoteContent() : null,
-          //      notes.isPresent() ? notes.get().getCustomizedTitle() : null,
-         //       "Book details retrieved successfully"
-           // ),
-         //   HttpStatus.OK
-       // );
-  //  }
-
-
+    
     @GetMapping("/{bookId}")
     public ResponseEntity<BookResponse> getBookById(@PathVariable Integer bookId) {
         var bookOptional = bookService.getBookById(bookId); // Renamed for clarity
