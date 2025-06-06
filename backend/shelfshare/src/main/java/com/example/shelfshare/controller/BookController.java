@@ -9,18 +9,20 @@ import com.example.shelfshare.service.NotesService;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.shelfshare.entity.Books;
 import com.example.shelfshare.model.BookCreationResponse;
-
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 @RestController
 @RequestMapping("/books")
 @CrossOrigin(origins = "http://localhost:5173")
+
 public class BookController {
 
     private final BookService bookService;
@@ -68,88 +70,74 @@ public class BookController {
         List<Integer> bookIdList = bookService.getAllBookIdList();
         List<BookResponse> books = new ArrayList<>();
         for (Integer bookId : bookIdList) {
-            var book = bookService.getBookById(bookId);
-            if (book.isPresent()) {
-                List<String> previousOwners = book.get().getPreviousOwners()
-                    .stream()
-                    .map(owner -> owner.getUsername())
-                    .toList();
-                var notes = notesService.getMostRecentNoteForBook(book.get().getBookId());
-                books.add(new BookResponse(
-                    book.get().getBookId(),
-                    book.get().getBookTitle(),
-                    book.get().getAuthorName(),
-                    book.get().getBookGenre().name(),
-                    book.get().getPublicationYear(),
-                    book.get().getBookStatus().name(),
-                    book.get().getEnlisted(),
-                    book.get().getCurrentOwner().getUsername(),
-                    previousOwners,
-                    notes.isPresent() ? notes.get().getNoteContent() : null,
-                    notes.isPresent() ? notes.get().getCustomizedTitle() : null,
-                    "Book details retrieved successfully"
-                ));
+            var bookOptional = bookService.getBookById(bookId); // Renamed for clarity
+            if (bookOptional.isPresent()) {
+                Books book = bookOptional.get();
+                books.add(buildBookResponse(book, "Book details retrieved successfully")); // Using the helper method
             }
         }
 
         return new ResponseEntity<>(books, HttpStatus.OK);
     }
 
-    // @GetMapping("/my-books")
-    // public ResponseEntity<List<BookResponse>> getMyBooks(Principal principal) {
-    //     if (principal == null) {
-    //         return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
-    //     }
-    //     List<BookResponse> books = bookService.getMyBooks(principal.getName())
-    //             .stream()
-    //             .map(book -> mapBookToDto(book, "Books you own!"))
-    //             .toList();
-    //     return new ResponseEntity<>(books, HttpStatus.OK);
-    // }
+    @GetMapping("/my-books")
+    public ResponseEntity<List<BookResponse>> getMyBooks(Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
+        }
+        List<Books> myBooksEntities = bookService.getMyBooks(principal.getName());
+        List<BookResponse> bookResponses = new ArrayList<>();
 
-    // private BookResponse mapBookToDto(Books book, String message) {
-    //     return new BookResponse(
-    //             book.getBookId(),
-    //             book.getBookTitle(),
-    //             book.getAuthorName(),
-    //             book.getBookGenre().name(),
-    //             book.getPublicationYear(),
-    //             book.getBookStatus().name(),
-    //             book.getEnlisted(),
-    //             book.getCurrentOwner().getUsername(),
-    //             message
-    //     );
-    // }
+        for (Books book : myBooksEntities) {
+            bookResponses.add(buildBookResponse(book, "Books you own!")); // Using the helper method
+        }
+         return new ResponseEntity<>(bookResponses, HttpStatus.OK);
+     }
 
+    
     @GetMapping("/{bookId}")
     public ResponseEntity<BookResponse> getBookById(@PathVariable Integer bookId) {
-        var book = bookService.getBookById(bookId);
-        if (book.isEmpty()) {
+        var bookOptional = bookService.getBookById(bookId); // Renamed for clarity
+        if (bookOptional.isEmpty()) {
             return new ResponseEntity<BookResponse>(
                 new BookResponse("Book not found"),
                 HttpStatus.NOT_FOUND);
         }
-        List<String> previousOwners = book.get().getPreviousOwners()
-            .stream()
-            .map(owner -> owner.getUsername())
-            .toList();
-        var notes = notesService.getMostRecentNoteForBook(book.get().getBookId());
+        Books book = bookOptional.get();
         return new ResponseEntity<BookResponse>(
-            new BookResponse(
-                book.get().getBookId(),
-                book.get().getBookTitle(),
-                book.get().getAuthorName(),
-                book.get().getBookGenre().name(),
-                book.get().getPublicationYear(),
-                book.get().getBookStatus().name(),
-                book.get().getEnlisted(),
-                book.get().getCurrentOwner().getUsername(),
-                previousOwners,
-                notes.isPresent() ? notes.get().getNoteContent() : null,
-                notes.isPresent() ? notes.get().getCustomizedTitle() : null,
-                "Book details retrieved successfully"
-            ),
+            buildBookResponse(book, "Book details retrieved successfully"), // Using the helper method
             HttpStatus.OK
+        );
+    }
+    
+    
+
+    // helper to build BOOKRESponse - it is to avoid writing same code in all endpoints
+    private BookResponse buildBookResponse(Books book, String message) {
+        List<String> previousOwners = new ArrayList<>();
+        if (book.getPreviousOwners() != null) { 
+            previousOwners = book.getPreviousOwners()
+                .stream()
+                .map(owner -> owner.getUsername())
+                .collect(Collectors.toList());
+        }
+        String currentOwnerUsername = (book.getCurrentOwner() != null) ? book.getCurrentOwner().getUsername() : null; // Defensive check for null current owner
+
+        var notes = notesService.getMostRecentNoteForBook(book.getBookId());
+
+        return new BookResponse(
+            book.getBookId(),
+            book.getBookTitle(),
+            book.getAuthorName(),
+            book.getBookGenre().name(),
+            book.getPublicationYear(),
+            book.getBookStatus().name(),
+            book.getEnlisted(),
+            currentOwnerUsername, 
+            previousOwners,
+            notes.isPresent() ? notes.get().getNoteContent() : null,
+            notes.isPresent() ? notes.get().getCustomizedTitle() : null,
+            message
         );
     }
 }
