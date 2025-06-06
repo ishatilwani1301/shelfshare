@@ -1,5 +1,7 @@
 package com.example.shelfshare.model;
 
+import java.util.List;
+
 public record BookResponse(
         Integer id,
         String bookTitle,
@@ -8,12 +10,14 @@ public record BookResponse(
         Integer publicationYear,
         String bookStatus,
         Boolean isEnlisted,
-        String username,
+        String currentOwnerName,
+        List<String> previousOwners,
+        String noteContent,
+        String customizedTitle,
         String message
 ) {
 
-
-public BookResponse(String message) {
-        this(null, null, null, null, null, null, null, null, message);
-}
+        public BookResponse(String message) {
+                this(null, null, null, null, null, null, null, null, null, null, null, message);
+        }
 }
