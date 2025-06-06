@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,12 +29,6 @@ public class BookService {
 
     @Autowired
     private NotesRepository notesRepository;
-
-    // @Autowired
-    // public BookService(BooksRepository booksRepository, UserRepository userRepository) {
-    //     this.booksRepository = booksRepository;
-    //     this.userRepository = userRepository;
-    // }
 
     public Books enlistBook(Integer bookId, String username) {
         var user = userRepository.findByUsername(username)
@@ -93,5 +88,9 @@ public class BookService {
         var myBooks = booksRepository.findByCurrentOwner_Username(username);
         // TODO: Add logic to get also the borrowed books by this user.
         return myBooks;
+    }
+
+    public Optional<Books> getBookById(Integer bookId) {
+        return booksRepository.findById(bookId);
     }
 }
