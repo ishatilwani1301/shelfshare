@@ -31,10 +31,11 @@ const Login = () => {
       }
 
       const data = await response.json();
-      console.log('Login successful:', data);
+      console.log('Login successful:', data.jwt);
+
 
       // Store the access token (e.g., in localStorage)
-      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('accessToken', data.jwt);
 
       // Show success toast
       toast.success(data.message || 'Login successful!', {
