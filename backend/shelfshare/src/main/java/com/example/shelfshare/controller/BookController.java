@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.example.shelfshare.entity.Books;
 import com.example.shelfshare.model.BookCreationResponse;
-
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 @RestController
 @RequestMapping("/books")
