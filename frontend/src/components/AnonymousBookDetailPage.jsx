@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom'; // Import useParams
+import { useParams } from 'react-router-dom'; 
 
 const AnonymousBookDetailPage = ({ onBackToList }) => {
-  const { offerId } = useParams(); // Get the offerId from the URL parameters
+  const { offerId } = useParams(); 
   const [offer, setOffer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -10,7 +10,7 @@ const AnonymousBookDetailPage = ({ onBackToList }) => {
   useEffect(() => {
     const fetchBookDetails = async () => {
       setLoading(true);
-      setError(''); // Clear any previous errors
+      setError(''); 
 
       if (!offerId) {
         setError('No book ID found in the URL to fetch details.');
@@ -19,7 +19,7 @@ const AnonymousBookDetailPage = ({ onBackToList }) => {
       }
 
       try {
-        const response = await fetch(`http://localhost:1234/anonymous-books/${offerId}`); // Use offerId here
+        const response = await fetch(`http://localhost:1234/anonymous-books/${offerId}`); 
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -40,9 +40,8 @@ const AnonymousBookDetailPage = ({ onBackToList }) => {
           title: data.CustomizedTitle || 'Untitled Offer',
           description: data.noteContent || 'No description provided.',
           tags: data.tags || [],
-          // You removed condition, so no need to map it if not displayed
-          // condition: data.condition || 'N/A',
-          anonymousAuthor: data.currentOwnerUsername, // <--- CHANGED THIS: Directly use the owner's username
+          
+          anonymousAuthor: data.currentOwnerUsername, 
           datePosted: data.datePosted || 'N/A',
         };
 
@@ -57,7 +56,7 @@ const AnonymousBookDetailPage = ({ onBackToList }) => {
     };
 
     fetchBookDetails();
-  }, [offerId]); // Dependency array: re-run effect if offerId changes
+  }, [offerId]); 
 
   if (loading) {
     return (
