@@ -1,6 +1,7 @@
 package com.example.shelfshare.controller;
 
 import com.example.shelfshare.model.BookResponse;
+import com.example.shelfshare.model.MessageResponse;
 import com.example.shelfshare.repository.NotesRepository;
 import com.example.shelfshare.model.BookRequest;
 import com.example.shelfshare.service.BookService;
@@ -17,7 +18,14 @@ import org.springframework.web.bind.annotation.*;
 
 import com.example.shelfshare.entity.Books;
 import com.example.shelfshare.model.BookCreationResponse;
+
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import com.example.shelfshare.model.BookLendApprovalRequest;
+import com.example.shelfshare.service.UserService;
+
 
 @RestController
 @RequestMapping("/books")
@@ -31,10 +39,13 @@ public class BookController {
 
     private final NotesService notesService;
 
-    public BookController(BookService bookService, NotesRepository noteRepository, NotesService notesService) {
+    private final UserService userService;
+
+    public BookController(BookService bookService, NotesRepository noteRepository, NotesService notesService, UserService userService) {
         this.bookService = bookService;
         this.noteRepository = noteRepository;
         this.notesService = notesService;
+        this.userService = userService;
     }
 
     // @PostMapping("/enlist/{bookId}")
@@ -91,8 +102,8 @@ public class BookController {
         for (Books book : myBooksEntities) {
             bookResponses.add(buildBookResponse(book, "Books you own!")); // Using the helper method
         }
-         return new ResponseEntity<>(bookResponses, HttpStatus.OK);
-     }
+        return new ResponseEntity<>(bookResponses, HttpStatus.OK);
+    }
 
     
     @GetMapping("/{bookId}")
@@ -110,9 +121,6 @@ public class BookController {
         );
     }
     
-    
-
-    // helper to build BOOKRESponse - it is to avoid writing same code in all endpoints
     private BookResponse buildBookResponse(Books book, String message) {
         List<String> previousOwners = new ArrayList<>();
         if (book.getPreviousOwners() != null) { 
@@ -133,11 +141,59 @@ public class BookController {
             book.getPublicationYear(),
             book.getBookStatus().name(),
             book.getEnlisted(),
-            currentOwnerUsername, 
+            currentOwnerUsername,
             previousOwners,
             notes.isPresent() ? notes.get().getNoteContent() : null,
             notes.isPresent() ? notes.get().getCustomizedTitle() : null,
             message
         );
     }
+
+    @PostMapping("borrow/{bookId}")
+    public ResponseEntity<MessageResponse> borrowBookByBookId(@PathVariable Integer bookId, Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<>(new MessageResponse("User not authenticated"), HttpStatus.UNAUTHORIZED);
+        }
+
+        var bookOptional = bookService.getBookById(bookId);
+        if (bookOptional.isEmpty()) {
+            return new ResponseEntity<>(new MessageResponse("Book not found"), HttpStatus.NOT_FOUND);
+        }
+
+        Books book = bookOptional.get();
+        if (!book.getEnlisted()) {
+            return new ResponseEntity<>(new MessageResponse("Book is not enlisted for borrowing"), HttpStatus.BAD_REQUEST);
+        }
+
+        if (book.getCurrentOwner() != null && book.getCurrentOwner().getUsername().equals(principal.getName())) {
+            return new ResponseEntity<>(new MessageResponse("You cannot borrow your own book"), HttpStatus.BAD_REQUEST);
+        }
+
+        boolean bookBorrowedStatus = bookService.borrowBook(bookId, principal.getName());
+        if (!bookBorrowedStatus) {
+            return new ResponseEntity<>(new MessageResponse("Failed to send borrow request"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(new MessageResponse("Borrow request sent successfully"), HttpStatus.OK);
+    }
+    
+    @PostMapping("/approve")
+    public ResponseEntity<MessageResponse> approveRequest(@RequestBody BookLendApprovalRequest bookLendApprovalRequest, Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<>(new MessageResponse("User not authenticated"), HttpStatus.UNAUTHORIZED);
+        }
+        if (bookLendApprovalRequest == null || bookLendApprovalRequest.bookId() == null || bookLendApprovalRequest.requesterUserId() == null) {
+            return new ResponseEntity<>(new MessageResponse("Invalid request data"), HttpStatus.BAD_REQUEST);
+        }
+        var userOptional = userService.getUserByUsername(principal.getName());
+        if (userOptional.isEmpty()) {
+            return new ResponseEntity<>(new MessageResponse("User not found"), HttpStatus.NOT_FOUND);
+        }
+        var user = userOptional.get();
+        boolean approvalStatus = bookService.approveBorrowRequest(bookLendApprovalRequest.bookId(), bookLendApprovalRequest.requesterUserId(), user.getUserId());
+        if (!approvalStatus) {
+            return new ResponseEntity<>(new MessageResponse("Failed to approve borrow request"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(new MessageResponse("Borrow request approved successfully"), HttpStatus.OK);
+    }
+    
 }
