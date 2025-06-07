@@ -53,7 +53,7 @@ const Dashboard = () => {
     } else if (item === 'profile') {
       navigate('/dashboard/profile');
     } else if (item === 'anonymousBookOffers') {
-      navigate('/dashboard/anonymous-offers');
+      navigate('/dashboard/anonymousbooks');
     } else {
       navigate('/dashboard'); 
     }
@@ -67,12 +67,12 @@ const Dashboard = () => {
   
   const handleSelectBookOffer = (offerId) => {
     setSelectedBookOfferId(offerId);
-    navigate(`/dashboard/anonymous-offers/${offerId}`);
+    navigate(`/dashboard/anonymousbooks/${offerId}`);
   };
 
   const handleBackToBookOffersList = () => {
     setSelectedBookOfferId(null);
-    navigate('/dashboard/anonymous-offers');
+    navigate('/dashboard/anonymousbooks');
   };
   if (loading) {
     return (
@@ -236,8 +236,8 @@ const Dashboard = () => {
               <Route path="books" element={<BooksAvailablePage searchQuery={searchQuery} activeSidebarItem="booksAvailable" />} />
               <Route path="books/:bookId" element={<BookDetailPage />} /> {/* New Route for book detail */}
               <Route path="my-shelf" element={<MyShelfContent />} />
-              <Route path="anonymous-offers" element={<AnonymousBooksAvailablePage searchQuery={searchQuery} onSelectBookOffer={handleSelectBookOffer} />} />
-              <Route path="anonymous-offers/:offerId" element={<AnonymousBookDetailPage onBackToList={handleBackToBookOffersList} />} />
+              <Route path="anonymousbooks" element={<AnonymousBooksAvailablePage searchQuery={searchQuery} onSelectBookOffer={handleSelectBookOffer} />} />
+              <Route path="anonymousbooks/:offerId" element={<AnonymousBookDetailPage onBackToList={handleBackToBookOffersList} />} />
               <Route path="*" element={<p className="text-[#837c67] col-span-full text-center py-8">Page Not Found</p>} />
             </Routes>
           </div>
