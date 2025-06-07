@@ -12,9 +12,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.example.shelfshare.entity.BorrowRequests;
 import com.example.shelfshare.entity.Users;
+import com.example.shelfshare.model.BorrowRequestsReceivedResponse;
+import com.example.shelfshare.model.BorrowRequestsSentResponse;
 import com.example.shelfshare.model.UserAddressResponse;
 import com.example.shelfshare.model.UserDetailsChangeRequest;
+import com.example.shelfshare.repository.BorrowRequestRepository;
 import com.example.shelfshare.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -28,6 +32,9 @@ public class UserService {
 
     @Autowired
     private final RestTemplate restTemplate;
+
+    @Autowired
+    private BorrowRequestRepository borrowRequestRepository;
 
     public UserService(RestTemplate restTemplate) {
         this.encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
@@ -156,5 +163,51 @@ public class UserService {
         } catch (Exception e) {
             return new UserAddressResponse(Collections.emptyList(), null, null, null, "An internal error occurred while processing the request.");
         }
+    }
+
+    public List<BorrowRequestsSentResponse> getBorrowRequestsSent(Users user) {
+        if (user == null) {
+            return Collections.emptyList();
+        }
+        
+        List<BorrowRequestsSentResponse> borrowRequests = new ArrayList<>();
+        List<BorrowRequests> requests = borrowRequestRepository.findAllByRequesterId(user.getUserId());
+        for (BorrowRequests request : requests) {
+            borrowRequests.add(new BorrowRequestsSentResponse(request.getBook().getBookTitle(),
+                                                            request.getBook().getAuthorName(),
+                                                            request.getRequestDate().toString(),
+                                                            request.getOwner().getUsername(),
+                                                            request.getStatus().toString()));
+        }
+        return borrowRequests;
+    }
+
+    public List<BorrowRequestsReceivedResponse> getBorrowRequestsReceived(Users user) {
+        if (user == null) {
+            return Collections.emptyList();
+        }
+        
+        List<BorrowRequestsReceivedResponse> borrowRequests = new ArrayList<>();
+        List<BorrowRequests> requests = borrowRequestRepository.findAllByBorrowerId(user.getUserId());
+        for (BorrowRequests request : requests) {
+            var book = request.getBook();
+            var requester = request.getRequester();
+            borrowRequests.add(new BorrowRequestsReceivedResponse(
+                book.getBookId(),
+                book.getBookTitle(),
+                book.getAuthorName(),
+                requester.getUserId(),
+                requester.getName(),
+                requester.getUsername(),
+                requester.getUserEmail(),
+                requester.getPincode(),
+                requester.getArea(),
+                requester.getCity(),
+                requester.getState(),
+                requester.getCountry(),
+                request.getRequestDate().toString()
+            ));
+        }
+        return borrowRequests;
     }
 }
