@@ -1,64 +1,62 @@
 import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom'; 
 
-const AnonymousBookDetailPage = ({ bookOfferId, onBackToList }) => {
+const AnonymousBookDetailPage = ({ onBackToList }) => {
+  const { offerId } = useParams(); 
   const [offer, setOffer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    setLoading(true);
-    setError('');
-    // Simulate fetching a single book offer by ID
-    const mockOffers = [
-      {
-        id: 'abo1',
-        title: 'Offering "The Alchemist"',
-        description: 'A beautiful copy of Paulo Coelho\'s "The Alchemist". Read it last year, really resonated with me. Looking for someone who would appreciate it. It explores themes of destiny, personal legends, and the wisdom of following your dreams. Highly recommended for introspective readers.',
-        tags: ['Fiction', 'Spiritual', 'Self-help', 'Adventure'],
-        condition: 'Good',
-        anonymousAuthor: 'Anonymous Seeker',
-        datePosted: '2024-05-15',
-      },
-      {
-        id: 'abo2',
-        title: 'Looking to give away "Sapiens"',
-        description: 'Yuval Noah Harari\'s "Sapiens: A Brief History of Humankind". Mind-blowing read, but I need to clear some shelf space. Hope it finds a good home. This book completely reshaped my understanding of human history and our place in the world.',
-        tags: ['Non-fiction', 'History', 'Science', 'Anthropology'],
-        condition: 'Very Good',
-        anonymousAuthor: 'Anonymous Historian',
-        datePosted: '2024-05-20',
-      },
-      {
-        id: 'abo3',
-        title: 'Free copy of "Dune"',
-        description: 'First book in the classic sci-fi series. Great condition. Offering it to someone who loves epic world-building. A must-read for any science fiction fan, with intricate political intrigue and ecological themes.',
-        tags: ['Science Fiction', 'Fantasy', 'Classic', 'Epic'],
-        condition: 'Good',
-        anonymousAuthor: 'Anonymous Arrakis Fan',
-        datePosted: '2024-05-22',
-      },
-      {
-        id: 'abo4',
-        title: 'Poetry collection by Rupi Kaur',
-        description: 'Milk and Honey. A very raw and emotional collection. Gently used, hoping it can inspire someone else. Explores themes of abuse, love, loss, and femininity.',
-        tags: ['Poetry', 'Modern', 'Feminism'],
-        condition: 'Fair',
-        anonymousAuthor: 'Anonymous Poet',
-        datePosted: '2024-05-25',
-      },
-    ];
+    const fetchBookDetails = async () => {
+      setLoading(true);
+      setError(''); 
 
-    const foundOffer = mockOffers.find(o => o.id === bookOfferId);
-
-    setTimeout(() => { 
-      if (foundOffer) {
-        setOffer(foundOffer);
-      } else {
-        setError('Book offer not found.');
+      if (!offerId) {
+        setError('No book ID found in the URL to fetch details.');
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    }, 500);
-  }, [bookOfferId]); 
+
+      try {
+        const response = await fetch(`http://localhost:1234/anonymous-books/${offerId}`); 
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP error! Status: ${response.status} - ${errorText || response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("Fetched single book detail from backend:", data);
+
+        if (!data || !data.bookId) {
+          setError('Book offer not found for the provided ID.');
+          setOffer(null);
+          return;
+        }
+
+        const processedOffer = {
+          bookId: data.bookId,
+          title: data.CustomizedTitle || 'Untitled Offer',
+          description: data.noteContent || 'No description provided.',
+          tags: data.tags || [],
+          
+          anonymousAuthor: data.currentOwnerUsername, 
+          datePosted: data.datePosted || 'N/A',
+        };
+
+        setOffer(processedOffer);
+
+      } catch (err) {
+        console.error("Failed to fetch book details:", err);
+        setError(`Failed to load book details: ${err.message || "An unexpected error occurred."}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookDetails();
+  }, [offerId]); 
 
   if (loading) {
     return (
@@ -83,7 +81,7 @@ const AnonymousBookDetailPage = ({ bookOfferId, onBackToList }) => {
   }
 
   if (!offer) {
-      return null; // Should not happen if error handled, but as a safeguard
+      return null;
   }
 
   return (
@@ -102,22 +100,20 @@ const AnonymousBookDetailPage = ({ bookOfferId, onBackToList }) => {
         <h2 className="text-[#171612] tracking-light text-[32px] font-bold leading-tight mb-4">{offer.title}</h2>
         <p className="text-[#837c67] text-base mb-4">{offer.description}</p>
 
-        <div className="flex flex-wrap gap-2 mb-4">
-          {offer.tags.map(tag => (
-            <span key={tag} className="bg-[#f3ebd2] text-[#171612] text-sm font-medium px-3 py-1 rounded-full">
-              {tag}
-            </span>
-          ))}
-        </div>
+        {offer.tags && offer.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {offer.tags.map(tag => (
+              <span key={tag} className="bg-[#f3ebd2] text-[#171612] text-sm font-medium px-3 py-1 rounded-full">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
 
-        <p className="text-[#171612] text-sm mb-2">
-          <span className="font-semibold">Condition:</span> {offer.condition}
-        </p>
         <p className="text-[#171612] text-sm mb-4">
-          <span className="font-semibold">Posted by:</span> {offer.anonymousAuthor} on {offer.datePosted}
+          <span className="font-semibold">Posted by:</span> {offer.anonymousAuthor}
         </p>
 
-      
         <button className="mt-4 flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-full bg-[#f3ebd2] pl-4 pr-4 text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#e0d8c0]">
           Request This Book
         </button>
