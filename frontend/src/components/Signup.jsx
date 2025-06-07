@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Footer from './Footer';
+import loginimg1 from '../assets/loginimg1.jpg'; // Import the login image
 // import cors from 'cors'; // Import CORS for handling CORS issues
 
 const SignUp = () => {
@@ -210,13 +211,13 @@ const SignUp = () => {
 
       <main className="flex-grow flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-2xl flex max-w-3xl w-full overflow-hidden transform transition-all duration-300 ease-in-out">
-          <div className="w-1/2 bg-gradient-to-br from-yellow-50 to-orange-100 flex flex-col items-center justify-center p-6 relative text-center">
+          <div className="w-1/2 bg-white flex flex-col items-center justify-center p-6 relative text-center">
             <div className="relative z-10 flex flex-col items-center">
               {/* Consider replacing this placeholder image with a local asset or a more reliable public URL */}
               <img
-                src="https://via.placeholder.com/200x150/E0F2F7/3399FF?text=Join+Us!"
+                src={loginimg1}
                 alt="Join ShelfShare Community"
-                className="w-full max-w-[10rem] h-auto mb-4"
+                className="w-full max-w-[18rem] h-auto mb-4"
               />
               <h2 className="text-2xl font-extrabold text-gray-800 leading-tight mb-2">
                 Join the ShelfShare Community

@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react'; // Import useCallback
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, Routes, Route, useParams } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import users from '../assets/users.png'; // Assuming this is a placeholder image for user profile
+import users from '../assets/users.png';
 
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -12,12 +12,33 @@ import AnonymousBooksAvailablePage from './AnonymousBooksAvailablePage';
 import AnonymousBookDetailPage from './AnonymousBookDetailPage';
 import BookDetailPage from './BookDetailPage';
 
-// --- Move these components OUTSIDE the Dashboard component ---
+// --- InputField component moved outside for better re-render optimization ---
+const InputField = React.memo(({ label, name, value, type = 'text', placeholder, disabled = false, onChange, isEditingProfile }) => (
+  <div className="mb-6">
+    <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+      {label}
+    </label>
+    {isEditingProfile ? (
+      <input
+        type={type}
+        id={name}
+        name={name}
+        value={value || ''}
+        onChange={onChange}
+        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+        placeholder={placeholder}
+        disabled={disabled}
+      />
+    ) : (
+      <p className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm sm:text-sm text-gray-800">
+        {value || 'N/A'}
+      </p>
+    )}
+  </div>
+));
+
 
 // Component for the welcome message
-// Use React.memo if WelcomeContent has complex rendering or many props,
-// but for simple components like this, it might not be strictly necessary,
-// but good practice for consistency.
 const WelcomeContent = React.memo(({ username, handleSidebarNavigate }) => (
   <div className="flex flex-col items-center justify-center h-full text-center p-8">
     <h2 className="text-[#171612] tracking-light text-[28px] font-bold leading-tight mb-4">
@@ -36,68 +57,113 @@ const WelcomeContent = React.memo(({ username, handleSidebarNavigate }) => (
 ));
 
 // Component for the profile page
-// Now wrapped with React.memo to prevent unnecessary re-renders
 const ProfileContent = React.memo(({
   formData,
   handleInputChange,
+  handleAreaChange, // New prop for area dropdown
   isEditingProfile,
   handleEditProfileClick,
   handleSaveProfile,
   handleCancelEdit,
   username,
-  email,
+  availableAreas, // New prop for area dropdown options
 }) => {
-  // Helper component for input fields
-  // Using React.memo here too for further optimization, though less critical
-  // if InputField is simple and its parent (ProfileContent) is already memoized.
-  const InputField = React.memo(({ label, name, value, type = 'text', placeholder, disabled = false }) => (
-    <div className="mb-6">
-      <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-      </label>
-      {isEditingProfile ? (
-        <input
-          type={type}
-          id={name}
-          name={name}
-          value={value || ''}
-          onChange={handleInputChange}
-          className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
-          placeholder={placeholder}
-          disabled={disabled}
-        />
-      ) : (
-        <p className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm sm:text-sm text-gray-800">
-          {value || 'N/A'}
-        </p>
-      )}
-    </div>
-  ));
-
   return (
     <div className="flex flex-col items-center w-full p-8 bg-white">
       <h2 className="text-3xl font-bold mb-10 self-start">Profile Dashboard</h2>
 
       <div className="flex flex-col items-center mb-8">
-        {/* Placeholder profile image */}
         <img
           src={users}
           alt="Profile"
           className="w-24 h-24 rounded-full mb-4 object-cover"
         />
          <h3 className="text-xl font-semibold text-gray-800">{username || 'Name'}</h3>
-        {/* <p className="text-sm text-gray-500">{email || 'Email'}</p>  */}
       </div>
 
       <div className="w-full max-w-md">
-        <InputField label="Username" name="username" value={formData.username} placeholder="Enter your username" />
-        {/* Email is usually not directly editable without separate verification */}
-        <InputField label="Email" name="email" value={formData.email} type="email" placeholder="Enter your email" disabled={true} />
-        <InputField label="Pincode" name="pincode" value={formData.pincode} placeholder="Enter your pincode" />
-        <InputField label="Area" name="area" value={formData.area} placeholder="Enter your area" />
-        <InputField label="City" name="city" value={formData.city} placeholder="Enter your city" />
-        <InputField label="State" name="state" value={formData.state} placeholder="Enter your state" />
-        <InputField label="Country" name="country" value={formData.country} placeholder="Enter your country" />
+        <InputField
+          label="Username"
+          name="username"
+          value={formData.username}
+          placeholder="Enter your username"
+          onChange={handleInputChange}
+          isEditingProfile={isEditingProfile}
+        />
+        <InputField
+          label="Email"
+          name="email"
+          value={formData.email}
+          type="email"
+          placeholder="Enter your email"
+          disabled={true}
+          onChange={handleInputChange}
+          isEditingProfile={isEditingProfile}
+        />
+        <InputField
+          label="Pincode"
+          name="pincode"
+          value={formData.pincode}
+          placeholder="Enter your pincode"
+          onChange={handleInputChange}
+          isEditingProfile={isEditingProfile}
+        />
+
+        {/* Custom rendering for Area field */}
+        <div className="mb-6">
+          <label htmlFor="area" className="block text-sm font-medium text-gray-700 mb-1">
+            Area
+          </label>
+          {isEditingProfile && availableAreas.length > 0 ? (
+            <select
+              id="area"
+              name="area"
+              value={formData.area}
+              onChange={handleAreaChange} // Use the specific area change handler
+              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+            >
+              <option value="" disabled>Select your area</option>
+              {availableAreas.map((areaOption) => (
+                <option key={areaOption} value={areaOption}>
+                  {areaOption}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm sm:text-sm text-gray-800">
+              {formData.area || 'N/A'}
+            </p>
+          )}
+        </div>
+
+        {/* City, State, Country remain as disabled InputFields */}
+        <InputField
+          label="City"
+          name="city"
+          value={formData.city}
+          placeholder="City will be filled automatically"
+          disabled={true}
+          onChange={handleInputChange}
+          isEditingProfile={isEditingProfile}
+        />
+        <InputField
+          label="State"
+          name="state"
+          value={formData.state}
+          placeholder="State will be filled automatically"
+          disabled={true}
+          onChange={handleInputChange}
+          isEditingProfile={isEditingProfile}
+        />
+        <InputField
+          label="Country"
+          name="country"
+          value={formData.country}
+          placeholder="Country will be filled automatically"
+          disabled={true}
+          onChange={handleInputChange}
+          isEditingProfile={isEditingProfile}
+        />
 
         <div className="flex justify-center mt-8 space-x-4">
           {isEditingProfile ? (
@@ -121,7 +187,7 @@ const ProfileContent = React.memo(({
             <button
               type="button"
               onClick={handleEditProfileClick}
-              className="px-8 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
+              className="px-6 py-2 bg-[#F3EBD2] text-[#171612] font-semibold rounded-lg shadow-md hover:bg-[#F3EBD2] focus:outline-none focus:ring-2 focus:ring-[#F3EBD2] focus:ring-opacity-75"
             >
               Update Info
             </button>
@@ -133,7 +199,7 @@ const ProfileContent = React.memo(({
 });
 
 // Component for My Bookshelf
-const MyShelfContent = React.memo(() => ( // Memoize this too
+const MyShelfContent = React.memo(() => (
   <div className="flex flex-col items-center justify-center h-full text-center p-8">
     <h2 className="text-[#171612] tracking-light text-[28px] font-bold leading-tight mb-4">
       My Bookshelf
@@ -150,7 +216,7 @@ const MyShelfContent = React.memo(() => ( // Memoize this too
 // --- Dashboard Component ---
 function Dashboard() {
   const navigate = useNavigate();
-  const [userData, setUserData] = useState(null); // Stores the authoritative user data
+  const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeSidebarItem, setActiveSidebarItem] = useState(() => {
@@ -176,11 +242,14 @@ function Dashboard() {
     country: '',
   });
 
+  // New state to hold available areas for the dropdown
+  const [availableAreas, setAvailableAreas] = useState([]);
+
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   const AccessToken = localStorage.getItem('accessToken');
 
-  const fetchUserDetails = useCallback(async () => { // Memoize fetchUserDetails
+  const fetchUserDetails = useCallback(async () => {
     if (!AccessToken) {
       setError('No access token found. Please log in.');
       setLoading(false);
@@ -214,6 +283,12 @@ function Dashboard() {
         state: data.state || '',
         country: data.country || '',
       });
+      // If initial user data has an area, make it available as a selection
+      if (data.area) {
+        setAvailableAreas([data.area]);
+      } else {
+        setAvailableAreas([]);
+      }
       setError('');
     } catch (error) {
       console.error('Error fetching user details:', error);
@@ -235,29 +310,107 @@ function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [AccessToken, navigate]); // Dependencies for useCallback
+  }, [AccessToken, navigate]);
 
   useEffect(() => {
     fetchUserDetails();
-  }, [fetchUserDetails]); // Now depend on the memoized fetchUserDetails
+  }, [fetchUserDetails]);
 
-  const handleInputChange = useCallback((e) => { // Memoize handleInputChange
+  const handleInputChange = useCallback(async (e) => {
     const { name, value } = e.target;
+
+    // Update formData immediately to reflect typing
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
-  }, []); // No dependencies, as setFormData is stable
 
-  const handleEditProfileClick = useCallback(() => { // Memoize handleEditProfileClick
+    // If the changed field is pincode and it has 6 digits, fetch address
+    if (name === 'pincode' && value.length === 6) {
+      try {
+        const response = await fetch(`http://localhost:1234/register/pincodeToAddress/${value}`, {
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to fetch address details');
+        }
+
+        const data = await response.json();
+        let fetchedAreas = [];
+
+        // Corrected: Check if the API returns an array directly under 'data.area'
+        if (Array.isArray(data.area)) {
+          fetchedAreas = data.area;
+        } else if (typeof data.area === 'string' && data.area) {
+          // Fallback for APIs that return a single area string directly
+          fetchedAreas = [data.area];
+        }
+
+        setAvailableAreas(fetchedAreas); // Set the dropdown options
+
+        setFormData((prevData) => ({
+          ...prevData,
+          area: fetchedAreas.length > 0 ? fetchedAreas[0] : '', // Pre-select the first area, or clear
+          city: data.city || '',
+          state: data.state || '',
+          country: data.country || '',
+        }));
+        toast.success("Address details fetched successfully!", { autoClose: 1500 });
+      } catch (error) {
+        console.error('Error fetching address details:', error);
+        toast.error(`Failed to fetch address for pincode: ${error.message}`, {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        // Clear address fields and available areas if fetch fails
+        setFormData((prevData) => ({
+          ...prevData,
+          area: '',
+          city: '',
+          state: '',
+          country: '',
+        }));
+        setAvailableAreas([]);
+      }
+    } else if (name === 'pincode' && value.length < 6) {
+      // Clear address fields and available areas if pincode is incomplete or invalid
+      setFormData((prevData) => ({
+        ...prevData,
+        area: '',
+        city: '',
+        state: '',
+        country: '',
+      }));
+      setAvailableAreas([]);
+    }
+  }, []);
+
+  // New handler specifically for the Area dropdown
+  const handleAreaChange = useCallback((e) => {
+    const { value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      area: value,
+    }));
+  }, []);
+
+
+  const handleEditProfileClick = useCallback(() => {
     setIsEditingProfile(true);
     toast.info("You can now edit your profile information.", {
       position: 'top-right',
       autoClose: 2000,
     });
-  }, []); // No dependencies, setIsEditingProfile is stable
+  }, []);
 
-  const handleSaveProfile = useCallback(async () => { // Memoize handleSaveProfile
+  const handleSaveProfile = useCallback(async () => {
     if (!AccessToken) {
       toast.error('Authentication required to update profile. Please log in.', {
         position: 'top-right',
@@ -308,10 +461,11 @@ function Dashboard() {
         progress: undefined,
       });
     }
-  }, [AccessToken, formData, navigate, setUserData]); // Dependencies for useCallback
+  }, [AccessToken, formData, navigate, setUserData]);
 
-  const handleCancelEdit = useCallback(() => { // Memoize handleCancelEdit
+  const handleCancelEdit = useCallback(() => {
     setIsEditingProfile(false);
+    // Reset formData to the current userData
     setFormData({
       username: userData?.username || '',
       email: userData?.email || '',
@@ -321,19 +475,21 @@ function Dashboard() {
       state: userData?.state || '',
       country: userData?.country || '',
     });
+    // Clear available areas when cancelling edit
+    setAvailableAreas([]);
     toast.info("Profile changes cancelled.", {
       position: 'top-right',
       autoClose: 2000,
     });
-  }, [userData]); // userData is a dependency because it's used to reset formData
+  }, [userData]);
 
-  const handleLogout = useCallback(() => { // Memoize handleLogout
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('accessToken');
     setUserData(null);
     navigate('/login');
   }, [navigate]);
 
-  const handleSidebarNavigate = useCallback((item) => { // Memoize handleSidebarNavigate
+  const handleSidebarNavigate = useCallback((item) => {
     setActiveSidebarItem(item);
     setSearchQuery('');
     setSelectedBookOfferId(null);
@@ -350,17 +506,17 @@ function Dashboard() {
     }
   }, [navigate]);
 
-  const handleSearchChange = useCallback((query) => { // Memoize handleSearchChange
+  const handleSearchChange = useCallback((query) => {
     setSearchQuery(query);
     setSelectedBookOfferId(null);
   }, []);
 
-  const handleSelectBookOffer = useCallback((offerId) => { // Memoize handleSelectBookOffer
+  const handleSelectBookOffer = useCallback((offerId) => {
     setSelectedBookOfferId(offerId);
     navigate(`/dashboard/anonymous-offers/${offerId}`);
   }, [navigate]);
 
-  const handleBackToBookOffersList = useCallback(() => { // Memoize handleBackToBookOffersList
+  const handleBackToBookOffersList = useCallback(() => {
     setSelectedBookOfferId(null);
     navigate('/dashboard/anonymous-offers');
   }, [navigate]);
@@ -415,12 +571,13 @@ function Dashboard() {
                   <ProfileContent
                     formData={formData}
                     handleInputChange={handleInputChange}
+                    handleAreaChange={handleAreaChange} // Pass new area change handler
                     isEditingProfile={isEditingProfile}
                     handleEditProfileClick={handleEditProfileClick}
                     handleSaveProfile={handleSaveProfile}
                     handleCancelEdit={handleCancelEdit}
                     username={username}
-                    email={formData.email}
+                    availableAreas={availableAreas} // Pass available areas
                   />
                 }
               />
