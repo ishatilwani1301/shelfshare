@@ -511,14 +511,18 @@ function Dashboard() {
     setSelectedBookOfferId(null);
   }, []);
 
-  const handleSelectBookOffer = useCallback((offerId) => {
-    setSelectedBookOfferId(offerId);
+  const handleSelectBookOffer = useCallback(
+    (offerId) => {
+      setSelectedBookOfferId(offerId);
+      navigate(`/dashboard/anonymousbooks/${offerId}`);
+    },
+    [navigate]
+  );
 
-    navigate(`/dashboard/anonymous-offers/${offerId}`);
+  const handleBackToBookOffersList = useCallback(() => {
+    setSelectedBookOfferId(null);
+    navigate('/dashboard/anonymousbooks');
   }, [navigate]);
-
-    navigate(`/dashboard/anonymousbooks/${offerId}`);
-  };
 
   if (loading) {
     return (
