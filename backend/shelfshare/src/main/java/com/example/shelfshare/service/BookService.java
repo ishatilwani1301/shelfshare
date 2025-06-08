@@ -109,6 +109,50 @@ public class BookService {
         return booksRepository.findAllBookIdList();
     }
 
+    public List<Books> getBooksByOwnerState(String stateName) {
+        return booksRepository.findByCurrentOwner_StateIgnoreCase(stateName);
+    }
+
+    public List<Books> getBooksByStatus(String statusName) {
+        try {
+            BookStatus status = BookStatus.valueOf(statusName.toUpperCase());
+            return booksRepository.findByBookStatus(status);
+        } catch (IllegalArgumentException e) {
+            return new ArrayList<>(); // Return empty list for invalid status
+        }
+    }
+
+    public List<Books> getBooksByOwnerCountry(String countryName) {
+        return booksRepository.findByCurrentOwner_CountryIgnoreCase(countryName);
+    }
+
+    public List<Books> getBooksByOwnerArea(String areaName) {
+        return booksRepository.findByCurrentOwner_AreaIgnoreCase(areaName);
+    }
+
+    public List<Books> getBooksByOwnerCity(String cityName) {
+        return booksRepository.findByCurrentOwner_CityIgnoreCase(cityName);
+    }
+
+    public List<Books> getBooksByOwnerPincode(String pincode) {
+        return booksRepository.findByCurrentOwner_Pincode(pincode);
+    }
+
+    public List<Books> getBooksByGenre(String genreName) {
+        try {
+            // Convert genreName string to BookGenre enum, case-insensitively
+            BookGenre genre = BookGenre.valueOf(genreName.toUpperCase());
+            return booksRepository.findByBookGenre(genre);
+        } catch (IllegalArgumentException e) {
+            return new ArrayList<>(); // Or throw a specific exception for invalid genre
+        }
+    }
+
+    public List<Books> getBooksByAuthorName(String authorName) {
+        return booksRepository.findByAuthorNameIgnoreCase(authorName);
+    }
+
+
     @Transactional
     public Boolean borrowBook(Integer bookId, String username) {
         var userOptional = userRepository.findByUsername(username);

@@ -2,6 +2,7 @@ package com.example.shelfshare.model;
 
 public record AnonymousBookResponse(
     Integer bookId,
+    String bookGenre,
     String currentOwnerUsername,
     Integer noteId, 
     String CustomizedTitle,            
@@ -9,6 +10,6 @@ public record AnonymousBookResponse(
     String message
 ) {
     public AnonymousBookResponse(String message) {
-        this(null, null, null, null, null, message);
+        this(null, null, null, null, null, null, message);
     }
 }
