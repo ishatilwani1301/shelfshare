@@ -18,11 +18,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.example.shelfshare.entity.Books;
 import com.example.shelfshare.model.BookCreationResponse;
-
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-
 import com.example.shelfshare.model.BookLendApprovalRequest;
 import com.example.shelfshare.service.UserService;
 
@@ -47,7 +42,7 @@ public class BookController {
         this.notesService = notesService;
         this.userService = userService;
     }
-
+   //*******TO DO
     // @PostMapping("/enlist/{bookId}")
     // public ResponseEntity<BookResponse> enlistBook(@PathVariable Integer bookId, Principal principal) {
     //     if (principal == null) {
@@ -75,20 +70,29 @@ public class BookController {
             return new ResponseEntity<>(new BookCreationResponse("Book created successfully"), HttpStatus.CREATED);
         }
     }
-
-    @GetMapping
+ 
+    //@GetMapping
+    //public ResponseEntity<List<BookResponse>> getAllBooks() {
+    //    List<Integer> bookIdList = bookService.getAllBookIdList();
+     //   List<BookResponse> books = new ArrayList<>();
+     //   for (Integer bookId : bookIdList) {
+     //       var bookOptional = bookService.getBookById(bookId); // Renamed for clarity
+     //       if (bookOptional.isPresent()) {
+     //           Books book = bookOptional.get();
+     //           books.add(buildBookResponse(book, "Book details retrieved successfully")); // Using the helper method
+      //      }
+       // }
+//
+  //      return new ResponseEntity<>(books, HttpStatus.OK);
+    //}
+    @GetMapping // This endpoint will now return only AVAILABLE books, it doesnt return books which are enlisted like previous one
     public ResponseEntity<List<BookResponse>> getAllBooks() {
-        List<Integer> bookIdList = bookService.getAllBookIdList();
-        List<BookResponse> books = new ArrayList<>();
-        for (Integer bookId : bookIdList) {
-            var bookOptional = bookService.getBookById(bookId); // Renamed for clarity
-            if (bookOptional.isPresent()) {
-                Books book = bookOptional.get();
-                books.add(buildBookResponse(book, "Book details retrieved successfully")); // Using the helper method
-            }
+        List<Books> availableBooksEntities = bookService.getAllAvailableBooks();
+        List<BookResponse> bookResponses = new ArrayList<>();
+        for (Books book : availableBooksEntities) {
+            bookResponses.add(buildBookResponse(book, "Book details retrieved successfully"));
         }
-
-        return new ResponseEntity<>(books, HttpStatus.OK);
+        return new ResponseEntity<>(bookResponses, HttpStatus.OK);
     }
 
     @GetMapping("/my-books")
