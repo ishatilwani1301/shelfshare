@@ -6,6 +6,10 @@ import com.example.shelfshare.repository.NotesRepository;
 import com.example.shelfshare.model.BookRequest;
 import com.example.shelfshare.service.BookService;
 import com.example.shelfshare.service.NotesService;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 import java.security.Principal;
 import java.util.ArrayList;
