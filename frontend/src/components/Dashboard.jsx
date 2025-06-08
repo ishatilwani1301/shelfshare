@@ -484,15 +484,16 @@ function Dashboard() {
     setSelectedBookOfferId(null);
   }, []);
 
+  const handleBackToBookOffersList = useCallback(() => {
+    setSelectedBookOfferId(null);
+    navigate('/dashboard/anonymousbooks');
+  }, [navigate]);
 
   const handleSelectBookOffer = useCallback((offerId) => {
     setSelectedBookOfferId(offerId);
-
-    navigate(`/dashboard/anonymous-offers/${offerId}`);
-  }, [navigate]);
-
     navigate(`/dashboard/anonymousbooks/${offerId}`);
-  };
+  }, [navigate]);
+  
 
   if (loading) {
     return (
@@ -624,5 +625,4 @@ function Dashboard() {
     </div>
   );
 }
-
 export default Dashboard;
