@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'; // Import useNavigate for redire
 import { ToastContainer, toast } from 'react-toastify'; // Import Toastify
 import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
 import Footer from './Footer';
+import loginimg from '../assets/loginimg2.jpg'; // Import the login image
 
 const Login = () => {
   const navigate = useNavigate(); // Initialize navigate hook
@@ -31,10 +32,11 @@ const Login = () => {
       }
 
       const data = await response.json();
-      console.log('Login successful:', data);
+      console.log('Login successful:', data.jwt);
+
 
       // Store the access token (e.g., in localStorage)
-      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('accessToken', data.jwt);
 
       // Show success toast
       toast.success(data.message || 'Login successful!', {
@@ -75,12 +77,12 @@ const Login = () => {
       <main className="flex-grow flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-2xl flex max-w-3xl w-full overflow-hidden transform transition-all duration-300 ease-in-out">
           {/* Left Section */}
-          <div className="w-1/2 bg-gradient-to-br from-yellow-50 to-orange-100 flex flex-col items-center justify-center p-6 relative">
+          <div className="w-1/2 bg-white flex flex-col items-center justify-center p-6 relative">
             <div className="relative z-10 flex flex-col items-center text-center">
               <img
-                src="https://via.placeholder.com/200x150/FEECE2/E67E22?text=Bookshelf+Illustration"
+                src={loginimg}
                 alt="Bookshelf and Reading Illustration"
-                className="w-full max-w-[10rem] h-auto mb-4"
+                className="w-full max-w-[15rem] h-auto mb-4"
               />
               <h2 className="text-2xl font-bold text-gray-800 leading-tight mb-2">Welcome back</h2>
               <p className="text-sm text-gray-600 max-w-xs">

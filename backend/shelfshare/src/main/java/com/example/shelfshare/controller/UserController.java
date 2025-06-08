@@ -17,6 +17,7 @@ import com.example.shelfshare.model.UserDetailsResponse;
 import com.example.shelfshare.service.UserService;
 
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping; // <--- ADD THIS IMPORT
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.example.shelfshare.model.UserPasswordChangeRequest;
@@ -103,7 +104,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/changeUserDetails")
+    @PutMapping("/changeUserDetails") // <--- CHANGED FROM @PostMapping TO @PutMapping
     public ResponseEntity<UserPasswordChangeResponse> changeUserDetails(@RequestBody UserDetailsChangeRequest userDetails, Principal principal) {
         if (principal == null) {
             return new ResponseEntity<UserPasswordChangeResponse>(
@@ -120,6 +121,8 @@ public class UserController {
             );
         }
 
+        // IMPORTANT: When changing username, make sure it doesn't conflict with existing usernames
+        // but *also* allow the current user's username to be the same if they didn't change it.
         var usernameExists = userService.getUserByUsername(userDetails.username());
         if (usernameExists.isPresent() && !usernameExists.get().getUsername().equals(principal.getName())) {
             return new ResponseEntity<UserPasswordChangeResponse>(
@@ -160,6 +163,7 @@ public class UserController {
         );
     }
 
+
     @GetMapping("/borrowRequestsSent")
     public ResponseEntity<List<BorrowRequestsSentResponse>> getBorrowRequestsSent(Principal principal) {
         if (principal == null) {
@@ -197,3 +201,4 @@ public class UserController {
     }
     
 }
+
