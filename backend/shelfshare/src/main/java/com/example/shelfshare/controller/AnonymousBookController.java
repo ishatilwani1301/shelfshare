@@ -69,7 +69,10 @@ public class AnonymousBookController {
                 "Anonymous Book details retrieved successfully"
             ), HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            // Return a JSON response for NOT_FOUND
+        return new ResponseEntity<>(new AnonymousBookResponse(
+            null, null, null, null, null, "Book not found"
+        ), HttpStatus.NOT_FOUND);
         }
     }
 }
