@@ -3,13 +3,10 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
-//import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.shelfshare.entity.BookGenre;
 import com.example.shelfshare.entity.BookStatus;
 import com.example.shelfshare.entity.Books;
-import org.springframework.stereotype.Repository;
-import java.util.List;
 
 public interface BooksRepository extends CrudRepository<Books, Integer> {
     List<Books> findByCurrentOwner_Username(String username);
@@ -32,4 +29,6 @@ public interface BooksRepository extends CrudRepository<Books, Integer> {
     
     @Query("SELECT b.bookId FROM Books b")
     List<Integer> findAllBookIdList();
+
+    List<Books> findByCurrentOwner_UsernameAndBookStatus(String username, BookStatus bookStatus);
 }

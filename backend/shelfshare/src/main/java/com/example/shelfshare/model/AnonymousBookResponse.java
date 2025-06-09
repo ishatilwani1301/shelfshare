@@ -4,8 +4,8 @@ public record AnonymousBookResponse(
     Integer bookId,
     String bookGenre,
     String currentOwnerUsername,
-    Integer noteId, 
-    String CustomizedTitle,            
+    Integer noteId,
+    String CustomizedTitle,
     String noteContent,
     String message
 ) {

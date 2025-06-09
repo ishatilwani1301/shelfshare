@@ -193,6 +193,8 @@ public class BookService {
         owner.setBorrowRequestsReceived(ownerReceivedBorrowRequests);
 
         userRepository.save(owner);
+
+        book.setEnlisted(false);
         
         booksRepository.save(book);
 
@@ -274,5 +276,15 @@ public class BookService {
         userRepository.save(requester);
 
         return true;
+    }
+
+
+    public List<Books> getBooksBorrowed(String username) {
+        var user = userRepository.findByUsername(username);
+        if (user.isEmpty()) {
+            return new ArrayList<>();
+        }
+        // fetch the books where the current owner is the user and the book status is BORROWED
+        return booksRepository.findByCurrentOwner_UsernameAndBookStatus(username, BookStatus.BORROWED);
     }
 }
