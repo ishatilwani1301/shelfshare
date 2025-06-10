@@ -1,5 +1,3 @@
-// src/components/Dashboard.jsx
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, Routes, Route } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
@@ -494,9 +492,6 @@ function Dashboard() {
     navigate(`/dashboard/anonymousbooks/${offerId}`);
   }, [navigate]);
 
-    navigate(`/dashboard/anonymousbooks/${offerId}`);
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white font-sans">
@@ -592,7 +587,7 @@ function Dashboard() {
               />
               <Route path="books/:bookId" element={<BookDetailPage />} />
               {/* MyShelf now handles its own sub-routes */}
-              <Route path="my-shelf/*" element={<MyShelf />} /> {/* <--- Corrected */}
+              <Route path="my-shelf/*" element={<MyShelf />} />
               
               {/* REMOVED: <Route path="/add-book" element={<AddBookPage />} /> */}
               
@@ -627,4 +622,5 @@ function Dashboard() {
     </div>
   );
 }
+
 export default Dashboard;

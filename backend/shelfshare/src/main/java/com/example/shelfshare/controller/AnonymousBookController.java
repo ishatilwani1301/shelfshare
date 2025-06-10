@@ -74,7 +74,7 @@ public class AnonymousBookController {
         } else {
             // Return a JSON response for NOT_FOUND
         return new ResponseEntity<>(new AnonymousBookResponse(
-            null, null, null, null, null, "Book not found"
+            null, null, null, null,null, null, "Book not found"
         ), HttpStatus.NOT_FOUND);
         }
     }
