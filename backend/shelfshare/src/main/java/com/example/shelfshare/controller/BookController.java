@@ -24,6 +24,9 @@ import com.example.shelfshare.entity.Books;
 import com.example.shelfshare.model.BookCreationResponse;
 import com.example.shelfshare.model.BookLendApprovalRequest;
 import com.example.shelfshare.service.UserService;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 @RestController
@@ -74,7 +77,7 @@ public class BookController {
             return new ResponseEntity<>(new BookCreationResponse("Book created successfully"), HttpStatus.CREATED);
         }
     }
- 
+
     //@GetMapping
     //public ResponseEntity<List<BookResponse>> getAllBooks() {
     //    List<Integer> bookIdList = bookService.getAllBookIdList();
@@ -131,7 +134,7 @@ public class BookController {
     
     private BookResponse buildBookResponse(Books book, String message) {
         List<String> previousOwners = new ArrayList<>();
-        if (book.getPreviousOwners() != null) { 
+        if (book.getPreviousOwners() != null) {
             previousOwners = book.getPreviousOwners()
                 .stream()
                 .map(owner -> owner.getUsername())
@@ -202,6 +205,20 @@ public class BookController {
             return new ResponseEntity<>(new MessageResponse("Failed to approve borrow request"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>(new MessageResponse("Borrow request approved successfully"), HttpStatus.OK);
+    }
+    
+    @GetMapping("/booksBorrowed")
+    public ResponseEntity<List<BookResponse>> getBooksBorrowedByUser(Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
+        }
+        List<Books> booksOwned = bookService.getBooksBorrowed(principal.getName());
+        List<BookResponse> bookResponses = new ArrayList<>();
+
+        for (Books book : booksOwned) {
+            bookResponses.add(buildBookResponse(book, "Books you borrowed!"));
+        }
+        return new ResponseEntity<>(bookResponses, HttpStatus.OK);
     }
     
 }

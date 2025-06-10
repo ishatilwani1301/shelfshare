@@ -121,16 +121,6 @@ public class UserController {
             );
         }
 
-        // IMPORTANT: When changing username, make sure it doesn't conflict with existing usernames
-        // but *also* allow the current user's username to be the same if they didn't change it.
-        var usernameExists = userService.getUserByUsername(userDetails.username());
-        if (usernameExists.isPresent() && !usernameExists.get().getUsername().equals(principal.getName())) {
-            return new ResponseEntity<UserPasswordChangeResponse>(
-                new UserPasswordChangeResponse("Username already exists"),
-                HttpStatus.BAD_REQUEST
-            );
-        }
-
         var userInDb = user.get();
         if (userService.changeUserDetails(userInDb, userDetails)) {
             return new ResponseEntity<UserPasswordChangeResponse>(
