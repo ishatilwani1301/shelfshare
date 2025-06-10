@@ -6,6 +6,10 @@ import com.example.shelfshare.repository.NotesRepository;
 import com.example.shelfshare.model.BookRequest;
 import com.example.shelfshare.service.BookService;
 import com.example.shelfshare.service.NotesService;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -18,13 +22,11 @@ import org.springframework.web.bind.annotation.*;
 
 import com.example.shelfshare.entity.Books;
 import com.example.shelfshare.model.BookCreationResponse;
-
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-
 import com.example.shelfshare.model.BookLendApprovalRequest;
 import com.example.shelfshare.service.UserService;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 @RestController
@@ -47,7 +49,7 @@ public class BookController {
         this.notesService = notesService;
         this.userService = userService;
     }
-
+   //*******TO DO
     // @PostMapping("/enlist/{bookId}")
     // public ResponseEntity<BookResponse> enlistBook(@PathVariable Integer bookId, Principal principal) {
     //     if (principal == null) {
@@ -76,19 +78,28 @@ public class BookController {
         }
     }
 
-    @GetMapping
+    //@GetMapping
+    //public ResponseEntity<List<BookResponse>> getAllBooks() {
+    //    List<Integer> bookIdList = bookService.getAllBookIdList();
+     //   List<BookResponse> books = new ArrayList<>();
+     //   for (Integer bookId : bookIdList) {
+     //       var bookOptional = bookService.getBookById(bookId); // Renamed for clarity
+     //       if (bookOptional.isPresent()) {
+     //           Books book = bookOptional.get();
+     //           books.add(buildBookResponse(book, "Book details retrieved successfully")); // Using the helper method
+      //      }
+       // }
+//
+  //      return new ResponseEntity<>(books, HttpStatus.OK);
+    //}
+    @GetMapping // This endpoint will now return only AVAILABLE books, it doesnt return books which are enlisted like previous one
     public ResponseEntity<List<BookResponse>> getAllBooks() {
-        List<Integer> bookIdList = bookService.getAllBookIdList();
-        List<BookResponse> books = new ArrayList<>();
-        for (Integer bookId : bookIdList) {
-            var bookOptional = bookService.getBookById(bookId); // Renamed for clarity
-            if (bookOptional.isPresent()) {
-                Books book = bookOptional.get();
-                books.add(buildBookResponse(book, "Book details retrieved successfully")); // Using the helper method
-            }
+        List<Books> availableBooksEntities = bookService.getAllAvailableBooks();
+        List<BookResponse> bookResponses = new ArrayList<>();
+        for (Books book : availableBooksEntities) {
+            bookResponses.add(buildBookResponse(book, "Book details retrieved successfully"));
         }
-
-        return new ResponseEntity<>(books, HttpStatus.OK);
+        return new ResponseEntity<>(bookResponses, HttpStatus.OK);
     }
 
     @GetMapping("/my-books")
@@ -123,7 +134,7 @@ public class BookController {
     
     private BookResponse buildBookResponse(Books book, String message) {
         List<String> previousOwners = new ArrayList<>();
-        if (book.getPreviousOwners() != null) { 
+        if (book.getPreviousOwners() != null) {
             previousOwners = book.getPreviousOwners()
                 .stream()
                 .map(owner -> owner.getUsername())
@@ -194,6 +205,20 @@ public class BookController {
             return new ResponseEntity<>(new MessageResponse("Failed to approve borrow request"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>(new MessageResponse("Borrow request approved successfully"), HttpStatus.OK);
+    }
+    
+    @GetMapping("/booksBorrowed")
+    public ResponseEntity<List<BookResponse>> getBooksBorrowedByUser(Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
+        }
+        List<Books> booksOwned = bookService.getBooksBorrowed(principal.getName());
+        List<BookResponse> bookResponses = new ArrayList<>();
+
+        for (Books book : booksOwned) {
+            bookResponses.add(buildBookResponse(book, "Books you borrowed!"));
+        }
+        return new ResponseEntity<>(bookResponses, HttpStatus.OK);
     }
     
 }

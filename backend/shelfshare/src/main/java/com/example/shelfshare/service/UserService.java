@@ -95,9 +95,6 @@ public class UserService {
         if (request.name() != null && !request.name().isEmpty()) {
             user.setName(request.name());
         }
-        if (request.username() != null && !request.username().isEmpty()) {
-            user.setUsername(request.username());
-        }
         if (request.email() != null && !request.email().isEmpty()) {
             user.setUserEmail(request.email());
         }

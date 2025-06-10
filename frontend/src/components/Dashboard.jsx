@@ -493,7 +493,9 @@ function Dashboard() {
     setSelectedBookOfferId(offerId);
     navigate(`/dashboard/anonymousbooks/${offerId}`);
   }, [navigate]);
-  
+
+    navigate(`/dashboard/anonymousbooks/${offerId}`);
+  };
 
   if (loading) {
     return (

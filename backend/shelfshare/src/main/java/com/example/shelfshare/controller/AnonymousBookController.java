@@ -32,6 +32,7 @@ public class AnonymousBookController {
         this.bookService = bookService;
         this.notesService = notesService;
     }
+    //******to do, get all books should be changed, to ensure only available books are listed here + build a common helper
     @GetMapping
     public ResponseEntity<List<AnonymousBookResponse>> getAllBooks() {
         List<Integer> bookIdList = bookService.getAllBookIdList();
@@ -43,6 +44,7 @@ public class AnonymousBookController {
                 var notes = notesService.getMostRecentNoteForBook(book.getBookId());
                 Amonymousbooks.add(new AnonymousBookResponse(
                     book.getBookId(),
+                    book.getBookGenre().name(),
                     book.getCurrentOwner().getUsername(),
                     notes.isPresent() ? notes.get().getNoteId() : null,
                     notes.isPresent() ? notes.get().getCustomizedTitle() : null,
@@ -62,6 +64,7 @@ public class AnonymousBookController {
             var notes = notesService.getMostRecentNoteForBook(book.getBookId());
             return new ResponseEntity<>(new AnonymousBookResponse(
                 book.getBookId(),
+                book.getBookGenre().name(),
                 book.getCurrentOwner().getUsername(),
                 notes.isPresent() ? notes.get().getNoteId() : null,
                 notes.isPresent() ? notes.get().getCustomizedTitle() : null,
