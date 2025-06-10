@@ -57,7 +57,31 @@ const BookDetailPage = () => {
     }
   }, [bookId]); 
 
- 
+  const handleBorrowBook = async () => {
+    try {
+      const response = await fetch(`http://localhost:1234/books/borrow/${bookId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${localStorage.getItem('accessToken') || ''}`, // Use token from localStorage
+        },
+        credentials: 'include', // Include cookies for authentication if needed
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorBody.message || 'Failed to send borrow request');
+      }
+
+      const result = await response.json();
+      console.log('Borrow request response:', result);
+      alert(result.message || 'Borrow request sent successfully');
+    } catch (error) {
+      console.error('Error sending borrow request:', error);
+      alert(error.message || 'An unexpected error occurred while sending the borrow request.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-4 text-center text-gray-700 text-sm">
@@ -160,12 +184,26 @@ const BookDetailPage = () => {
 
           <div className="mt-8 flex justify-center lg:justify-start">
             {book.status === 'AVAILABLE' ? (
-              <button className="px-6 py-3 border border-transparent text-base font-bold rounded-full shadow-md text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-300 transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253"></path>
-                </svg>
-                <span>Borrow This Book</span>
-              </button>
+              <button
+              onClick={handleBorrowBook} // Attach the handler here
+              className="px-6 py-3 border border-transparent text-base font-bold rounded-full shadow-md text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-300 transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-2"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253"
+                ></path>
+              </svg>
+              <span>Borrow This Book</span>
+            </button>
             ) : (
               <p className="px-6 py-3 text-base font-bold text-gray-600 bg-gray-200 rounded-full">
                 {book.status ? book.status.replace(/_/g, ' ') : 'Status N/A'}
