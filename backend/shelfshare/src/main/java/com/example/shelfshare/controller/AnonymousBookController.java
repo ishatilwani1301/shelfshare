@@ -45,6 +45,7 @@ public class AnonymousBookController {
                 Amonymousbooks.add(new AnonymousBookResponse(
                     book.getBookId(),
                     book.getBookGenre().name(),
+                    book.getAuthorName(),
                     book.getCurrentOwner().getUsername(),
                     notes.isPresent() ? notes.get().getNoteId() : null,
                     notes.isPresent() ? notes.get().getCustomizedTitle() : null,
@@ -65,6 +66,7 @@ public class AnonymousBookController {
             return new ResponseEntity<>(new AnonymousBookResponse(
                 book.getBookId(),
                 book.getBookGenre().name(),
+                book.getAuthorName(),
                 book.getCurrentOwner().getUsername(),
                 notes.isPresent() ? notes.get().getNoteId() : null,
                 notes.isPresent() ? notes.get().getCustomizedTitle() : null,
