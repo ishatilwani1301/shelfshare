@@ -9,7 +9,7 @@ const IncomingRequestsListPage = () => {
   useEffect(() => {
     const fetchIncomingRequests = async () => {
       try {
-        const response = await api.get('/books/incoming-requests');
+        const response = await api.get('/user/borrowRequestsReceived');
         setRequests(response.data);
         setLoading(false);
       } catch (err) {

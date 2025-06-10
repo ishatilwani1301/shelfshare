@@ -185,7 +185,7 @@ const MyShelf = React.memo(() => {
           <Route path="add-book" element={<AddBookPage />} />
           <Route path="enlisted" element={<MyEnlistedBooksPage onBookAction={fetchCounts} />} />
           <Route path="borrowed" element={<BorrowedBooksListPage />} />
-          <Route path="requests" element={<IncomingRequestsListPage />} />
+          <Route path="/user/borrowRequestsReceived" element={<IncomingRequestsListPage />} />
           <Route path="not-available-request" element={<NotAvailablePage message="There are no incoming borrow requests at the moment." />} />
           <Route path="not-available-books" element={<NotAvailablePage message="You have not borrowed any books yet." />} />
           <Route path="*" element={<p className="text-[#837c67] text-center py-8">My Shelf Sub-Page Not Found</p>} />

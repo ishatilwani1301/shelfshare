@@ -71,7 +71,7 @@ const AddBookPage = () => {
         navigate('/dashboard/my-shelf');
       } else {
         // Handle other non-200 responses if your backend sends them
-        toast.error(`Failed to add book: ${response.data?.message || 'Unknown error'}`, {
+        toast.success(` ${response.data?.message}`, {
           position: 'top-right',
         });
       }

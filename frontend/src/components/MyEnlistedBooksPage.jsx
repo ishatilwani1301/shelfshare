@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import api from '../api/axiosConfig'; // Your configured Axios instance
 
 // Default image if no book image is available
-const DEFAULT_BOOK_IMAGE = 'https://via.placeholder.com/150x200?text=No+Image'; 
+const DEFAULT_BOOK_IMAGE = 'https://picsum.photos/200/300'; 
 // You can replace this with a more branded placeholder if you have one
 
 const MyEnlistedBooksPage = ({ onBookAction }) => {
@@ -39,6 +39,7 @@ const MyEnlistedBooksPage = ({ onBookAction }) => {
   }, []);
 
   const handleDeleteBook = async (bookId, bookTitle) => {
+    console.log(`Attempting to delete book with ID: ${bookId}, Title: ${bookTitle}`);
     if (!window.confirm(`Are you sure you want to delete "${bookTitle}"?`)) {
       return;
     }
@@ -144,14 +145,7 @@ const MyEnlistedBooksPage = ({ onBookAction }) => {
                 {!book.noteContent && <div className="flex-grow"></div>} {/* Spacer if no note */}
 
                 {/* Action Buttons - At the bottom */}
-                <div className="flex justify-end mt-auto space-x-2 pt-3 border-t border-gray-100"> {/* Reduced padding-top */}
-                  <button
-                    onClick={() => handleDeleteBook(book.id, book.bookTitle)}
-                    className="bg-red-500 text-white py-1.5 px-3 rounded-md text-sm font-medium hover:bg-red-600 transition-colors duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75" // Smaller padding and text
-                  >
-                    Delete
-                  </button>
-                </div>
+               
               </div>
             </div>
           ))}

@@ -37,6 +37,8 @@ const SignUp = () => {
     setCountry('');
     setError('');
 
+    console.log('Fetching address for pincode:', currentPincode);
+
     if (currentPincode.length !== 6) { // Assuming 6-digit pincode for India
       return;
     }
@@ -45,7 +47,7 @@ const SignUp = () => {
       const response = await fetch(`http://localhost:1234/register/pincodeToAddress/${currentPincode}`, {
         method: 'GET',
       });
-
+      console.log('Response status:', response); // Log the response status for debugging
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Pincode not found or invalid.' }));
         throw new Error(errorData.message || 'Pincode not found or invalid.');
@@ -102,6 +104,7 @@ const SignUp = () => {
   const handlePincodeChange = (e) => {
     const newPincode = e.target.value;
     setPincode(newPincode);
+    console.log('Pincode changed:', newPincode);
 
     // Clear previous timeout
     if (pincodeTimeoutRef.current) {
