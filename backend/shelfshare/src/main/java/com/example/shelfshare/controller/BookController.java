@@ -5,6 +5,7 @@ import com.example.shelfshare.model.MessageResponse;
 import com.example.shelfshare.repository.NotesRepository;
 import com.example.shelfshare.model.BookRequest;
 import com.example.shelfshare.service.BookService;
+import com.example.shelfshare.service.NoteSummarizationService;
 import com.example.shelfshare.service.NotesService;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,11 +42,14 @@ public class BookController {
 
     private final UserService userService;
 
-    public BookController(BookService bookService, NotesRepository noteRepository, NotesService notesService, UserService userService) {
+    private final NoteSummarizationService noteSummarizationService;
+
+    public BookController(BookService bookService, NotesRepository noteRepository, NotesService notesService, UserService userService, NoteSummarizationService noteSummarizationService) {
         this.bookService = bookService;
         this.noteRepository = noteRepository;
         this.notesService = notesService;
         this.userService = userService;
+        this.noteSummarizationService = noteSummarizationService;
     }
     @PostMapping("/enlist/{bookId}")
     public ResponseEntity<MessageResponse> enlistBook(@PathVariable Integer bookId, @RequestBody BookRequest req, Principal principal) {
@@ -140,6 +144,8 @@ public class BookController {
         }
         var currentOwner = (book.getCurrentOwner() != null) ? book.getCurrentOwner() : null;
 
+        String summarizedNoteContent = noteSummarizationService.getSummarizedNoteContent(book.getBookId());
+
         var notes = notesService.getMostRecentNoteForBook(book.getBookId());
 
         return new BookResponse(
@@ -155,7 +161,7 @@ public class BookController {
             currentOwner != null ? currentOwner.getArea() : null,
             currentOwner != null ? currentOwner.getCity() : null,
             currentOwner != null ? currentOwner.getState() : null,
-            notes.isPresent() ? notes.get().getNoteContent() : null,
+            summarizedNoteContent,
             notes.isPresent() ? notes.get().getCustomizedTitle() : null,
             message
         );

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.shelfshare.entity.Books;
 import com.example.shelfshare.model.AnonymousBookResponse;
 import com.example.shelfshare.service.BookService;
+import com.example.shelfshare.service.NoteSummarizationService;
 import com.example.shelfshare.service.NotesService;
 
 
@@ -26,11 +27,13 @@ public class AnonymousBookController {
 
     private final BookService bookService;
     private final NotesService notesService;
+    private final NoteSummarizationService noteSummarizationService;
 
     @Autowired
-    public AnonymousBookController(BookService bookService, NotesService notesService) {
+    public AnonymousBookController(BookService bookService, NotesService notesService, NoteSummarizationService noteSummarizationService) {
         this.bookService = bookService;
         this.notesService = notesService;
+        this.noteSummarizationService = noteSummarizationService;
     }
     //******to do, get all books should be changed, to ensure only available books are listed here + build a common helper
     @GetMapping
@@ -41,6 +44,7 @@ public class AnonymousBookController {
             Optional<Books> bookOptional = bookService.getBookById(bookId);
             if (bookOptional.isPresent()) {
                 Books book = bookOptional.get();
+                var summarizedNoteContent = noteSummarizationService.getSummarizedNoteContent(bookId);
                 var notes = notesService.getMostRecentNoteForBook(book.getBookId());
                 var currentOwner = book.getCurrentOwner();
                 Amonymousbooks.add(new AnonymousBookResponse(
@@ -53,7 +57,7 @@ public class AnonymousBookController {
                     currentOwner.getState(),
                     notes.isPresent() ? notes.get().getNoteId() : null,
                     notes.isPresent() ? notes.get().getCustomizedTitle() : null,
-                    notes.isPresent() ? notes.get().getNoteContent() : null,
+                    summarizedNoteContent,
                     "Anonymous Book details retrieved successfully"
                 ));
             }
@@ -67,6 +71,7 @@ public class AnonymousBookController {
         if (bookOptional.isPresent()) {
             Books book = bookOptional.get();
             var notes = notesService.getMostRecentNoteForBook(book.getBookId());
+            var summarizedNoteContent = noteSummarizationService.getSummarizedNoteContent(bookId);
             var currentOwner = book.getCurrentOwner();
             return new ResponseEntity<>(new AnonymousBookResponse(
                 book.getBookId(),
@@ -78,7 +83,7 @@ public class AnonymousBookController {
                 currentOwner.getState(),
                 notes.isPresent() ? notes.get().getNoteId() : null,
                 notes.isPresent() ? notes.get().getCustomizedTitle() : null,
-                notes.isPresent() ? notes.get().getNoteContent() : null,
+                summarizedNoteContent,
                 "Anonymous Book details retrieved successfully"
             ), HttpStatus.OK);
         } else {
