@@ -9,7 +9,8 @@ const BorrowedBooksListPage = () => {
   useEffect(() => {
     const fetchBorrowedBooks = async () => {
       try {
-        const response = await api.get('/books/borrowed');
+        // Updated endpoint to match your backend controller
+        const response = await api.get('/books/booksBorrowed');
         setBorrowedBooks(response.data);
         setLoading(false);
       } catch (err) {
@@ -41,7 +42,14 @@ const BorrowedBooksListPage = () => {
             <li key={book.id} className="bg-white p-4 rounded shadow">
               <h3 className="text-lg font-semibold">{book.title}</h3>
               <p className="text-gray-600">Author: {book.author}</p>
-              <p className="text-gray-600">Borrowed On: {new Date(book.borrowedDate).toLocaleDateString()}</p>
+              {/* Assuming your BookResponse includes a borrowedDate or similar field */}
+              {book.borrowedDate && (
+                <p className="text-gray-600">Borrowed On: {new Date(book.borrowedDate).toLocaleDateString()}</p>
+              )}
+              {/* Display the message from the backend if available */}
+              {book.message && (
+                <p className="text-gray-700 mt-2 italic">{book.message}</p>
+              )}
             </li>
           ))}
         </ul>

@@ -7,7 +7,7 @@ import BorrowedBooksListPage from './BorrowedBooksListPage';
 import IncomingRequestsListPage from './IncomingRequestsListPage';
 import NotAvailablePage from './NotAvailablePage';
 
-// Enhanced BookCard component
+// Enhanced BookCard component (no change needed here)
 const BookCard = ({ title, description, buttonText, onClick, isLoading }) => (
   <div className="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between h-full transform transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
     <div>
@@ -21,7 +21,6 @@ const BookCard = ({ title, description, buttonText, onClick, isLoading }) => (
     {buttonText && (
       <button
         onClick={onClick}
-        // Applying the new button styles
         className="mt-auto bg-[#f3ebd2] text-[#171612] py-2 px-4 rounded-md hover:bg-[#e0d6c4] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#f3ebd2] focus:ring-opacity-75"
         disabled={isLoading}
       >
@@ -52,7 +51,6 @@ const MyShelf = React.memo(() => {
   const [loadingBorrowed, setLoadingBorrowed] = useState(true);
   const [loadingIncoming, setLoadingIncoming] = useState(true);
 
-  const API_BASE_URL = 'http://localhost:1234/books';
 
   const fetchCounts = useCallback(async () => {
     const AccessToken = localStorage.getItem('accessToken');
@@ -63,9 +61,10 @@ const MyShelf = React.memo(() => {
       return;
     }
 
+    // Enlisted Books
     try {
       setLoadingEnlisted(true);
-      const enlistedResponse = await api.get(`${API_BASE_URL}/my-books`);
+      const enlistedResponse = await api.get('/books/my-books'); // Assuming this endpoint is correct
       setMyEnlistedBooksCount(enlistedResponse.data.length);
     } catch (err) {
       console.error('Error fetching my enlisted books:', err);
@@ -74,9 +73,10 @@ const MyShelf = React.memo(() => {
       setLoadingEnlisted(false);
     }
 
+    // Borrowed Books
     try {
       setLoadingBorrowed(true);
-      const borrowedResponse = await api.get(`${API_BASE_URL}/borrowed`);
+      const borrowedResponse = await api.get('/booksBorrowed'); // Corrected to match backend: /booksBorrowed
       setBorrowedBooksCount(borrowedResponse.data.length);
     } catch (err) {
       console.error('Error fetching borrowed books count:', err);
@@ -85,9 +85,10 @@ const MyShelf = React.memo(() => {
       setLoadingBorrowed(false);
     }
 
+    // Incoming Requests
     try {
       setLoadingIncoming(true);
-      const incomingResponse = await api.get(`${API_BASE_URL}/incoming-requests`);
+      const incomingResponse = await api.get('/user/borrowRequestsReceived'); // Corrected to match backend route
       setIncomingBorrowRequestsCount(incomingResponse.data.length);
     } catch (err) {
       console.error('Error fetching incoming requests count:', err);
@@ -112,8 +113,13 @@ const MyShelf = React.memo(() => {
   const handleViewBorrowedBooks = async () => {
     setLoadingBorrowed(true);
     try {
-      await api.get(`${API_BASE_URL}/borrowed`);
-      navigate('borrowed');
+      // Keep this check if you want to conditionally navigate to NotAvailablePage
+      const response = await api.get('/booksBorrowed'); // Corrected to match backend endpoint
+      if (response.data && response.data.length > 0) {
+        navigate('borrowed');
+      } else {
+        navigate('not-available-books');
+      }
     } catch (err) {
       console.error('Error viewing borrowed books details:', err);
       navigate('not-available-books');
@@ -125,8 +131,13 @@ const MyShelf = React.memo(() => {
   const handleViewIncomingRequests = async () => {
     setLoadingIncoming(true);
     try {
-      await api.get(`${API_BASE_URL}/incoming-requests`);
-      navigate('requests');
+      // Keep this check if you want to conditionally navigate to NotAvailablePage
+      const response = await api.get('/user/borrowRequestsReceived'); // Corrected to match backend endpoint
+      if (response.data && response.data.length > 0) {
+        navigate('requests'); // *** THIS IS THE ONLY CHANGE ***
+      } else {
+        navigate('not-available-request');
+      }
     } catch (err) {
       console.error('Error viewing incoming requests details:', err);
       navigate('not-available-request');
@@ -136,20 +147,19 @@ const MyShelf = React.memo(() => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-start h-full text-center p-8 bg-gray-100 min-h-screen font-sans"> {/* Added font-sans for better default font */}
+    <div className="flex flex-col items-center justify-start h-full text-center p-8 bg-gray-100 min-h-screen font-sans">
       <div className="w-full max-w-4xl">
         <Routes>
           <Route
             index
             element={
               <>
-                <div className="flex justify-between items-center mb-8 border-b pb-4 border-gray-200"> {/* Added bottom border for visual separation */}
-                  <h2 className="text-[#171612] tracking-wide text-[36px] font-extrabold leading-tight"> {/* Slightly adjusted tracking and font weight */}
+                <div className="flex justify-between items-center mb-8 border-b pb-4 border-gray-200">
+                  <h2 className="text-[#171612] tracking-wide text-[36px] font-extrabold leading-tight">
                     My Shelf
                   </h2>
                   <button
                     onClick={handleAddBookClick}
-                    // Applied new button styles
                     className="bg-[#f3ebd2] text-[#171612] py-2 px-6 rounded-md text-lg font-medium hover:bg-[#e0d6c4] transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-[#f3ebd2] focus:ring-opacity-75"
                   >
                     + Add Book
@@ -185,7 +195,8 @@ const MyShelf = React.memo(() => {
           <Route path="add-book" element={<AddBookPage />} />
           <Route path="enlisted" element={<MyEnlistedBooksPage onBookAction={fetchCounts} />} />
           <Route path="borrowed" element={<BorrowedBooksListPage />} />
-          <Route path="/user/borrowRequestsReceived" element={<IncomingRequestsListPage />} />
+          {/* This route path 'requests' needs to match the navigate('requests') in handleViewIncomingRequests */}
+          <Route path="requests" element={<IncomingRequestsListPage />} />
           <Route path="not-available-request" element={<NotAvailablePage message="There are no incoming borrow requests at the moment." />} />
           <Route path="not-available-books" element={<NotAvailablePage message="You have not borrowed any books yet." />} />
           <Route path="*" element={<p className="text-[#837c67] text-center py-8">My Shelf Sub-Page Not Found</p>} />
