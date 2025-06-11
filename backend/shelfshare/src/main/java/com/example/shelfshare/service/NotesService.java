@@ -1,5 +1,6 @@
 package com.example.shelfshare.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -22,5 +23,9 @@ public class NotesService {
 
     public Optional<Notes> getMostRecentNoteForBook(Integer bookId) {
         return notesRepository.findTopByBookBookIdOrderByTimestampDesc(bookId);
+    }
+
+    public List<Notes> findAllNotesByBookId(Integer bookId) {
+        return notesRepository.findByBookBookId(bookId);
     }
 }
