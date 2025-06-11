@@ -47,20 +47,20 @@ public class BookController {
         this.notesService = notesService;
         this.userService = userService;
     }
-   //*******TO DO
-    // @PostMapping("/enlist/{bookId}")
-    // public ResponseEntity<BookResponse> enlistBook(@PathVariable Integer bookId, Principal principal) {
-    //     if (principal == null) {
-    //         return new ResponseEntity<BookResponse>(new BookResponse("User not authenticated"), HttpStatus.UNAUTHORIZED);
-    //     }
+    @PostMapping("/enlist/{bookId}")
+    public ResponseEntity<MessageResponse> enlistBook(@PathVariable Integer bookId, @RequestBody BookRequest req, Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<>(new MessageResponse("User not authenticated"), HttpStatus.UNAUTHORIZED);
+        }
 
-    //     var updatedBook = bookService.enlistBook(bookId, principal.getName());
-    //     if (updatedBook == null) {
-    //         return new ResponseEntity<BookResponse>(new BookResponse("Book not found or user not owner"), HttpStatus.BAD_REQUEST);
-    //     }
+        boolean enlistmentStatus = bookService.enlistBook(bookId, principal.getName(), req.noteContent(), req.customizedTitle());
 
-    //     return new ResponseEntity<>(mapBookToDto(updatedBook, "Book enlisted successfully"), HttpStatus.OK);
-    // }
+        if (!enlistmentStatus) {
+            return new ResponseEntity<>(new MessageResponse("Failed to enlist book. Book not found, user not owner, or book is already enlisted."), HttpStatus.BAD_REQUEST);
+        }
+
+        return new ResponseEntity<>(new MessageResponse("Book enlisted successfully"), HttpStatus.OK);
+    }
 
     @PostMapping("/addNewBook")
     public ResponseEntity<BookCreationResponse> addNewBook(@RequestBody BookRequest req, Principal principal) {

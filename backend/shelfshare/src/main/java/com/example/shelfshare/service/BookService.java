@@ -37,18 +37,65 @@ public class BookService {
     @Autowired
     private BorrowRequestRepository borrowRequestRepository;
 
-    public Books enlistBook(Integer bookId, String username) {
-        var user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new NoSuchElementException("User not found"));
+    @Transactional
+    public Boolean enlistBook(Integer bookId, String username, String noteContent, String customizedTitle) {
+        var userOptional = userRepository.findByUsername(username);
+        var bookOptional = booksRepository.findById(bookId);
 
-        var book = booksRepository.findById(bookId)
-            .orElse(null);
-        if (book == null || !book.getCurrentOwner().getUsername().equals(username)) {
-            return null;
+        if (userOptional.isEmpty() || bookOptional.isEmpty()) {
+            return false; // User or book not found
         }
+
+        var user = userOptional.get();
+        var book = bookOptional.get();
+
+        if (!book.getCurrentOwner().getUserId().equals(user.getUserId())) {
+            return false; // User is not the owner of this book
+        }
+
+        if (book.getEnlisted() && book.getBookStatus() == BookStatus.AVAILABLE) {
+            return false; // Book is already enlisted and available
+        }
+
         book.setBookStatus(BookStatus.AVAILABLE);
-        return booksRepository.save(book);
+        book.setEnlisted(true);
+
+        if (noteContent != null || customizedTitle != null) {
+            Notes newNote = new Notes();
+            newNote.setNoteContent(noteContent);
+            newNote.setCustomizedTitle(customizedTitle);
+            newNote.setBook(book);
+            newNote.setUser(user); // The enlisting user is the one adding this note
+            newNote.setTimestamp(Instant.now());
+
+            Notes savedNote = notesRepository.save(newNote);
+
+            var updatedNotesArray = book.getNotesId();
+            if (updatedNotesArray == null) {
+                updatedNotesArray = new ArrayList<>();
+            }
+            updatedNotesArray.add(savedNote.getNoteId());
+            book.setNotesId(updatedNotesArray);
+        }
+
+        booksRepository.save(book);
+
+        var userBooksOwned = user.getBookOwned();
+        if (userBooksOwned.contains(bookId)) {
+            userBooksOwned.remove(bookId);
+            user.setBookOwned(userBooksOwned);
+        }
+
+        var userBooksEnlistedForSale = user.getBooksEnlistedForSale();
+        if (!userBooksEnlistedForSale.contains(bookId)) {
+            userBooksEnlistedForSale.add(bookId);
+            user.setBooksEnlistedForSale(userBooksEnlistedForSale);
+        }
+        userRepository.save(user);
+
+        return true;
     }
+
 
     public Boolean addNewBook(BookRequest request, String username) {
         var userOptional = userRepository.findByUsername(username);
