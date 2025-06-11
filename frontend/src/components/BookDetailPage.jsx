@@ -39,6 +39,9 @@ const BookDetailPage = () => {
           enlisted: backendBook.isEnlisted, 
           owner: {
             name: backendBook.currentOwnerName,
+            area: backendBook.userArea,
+            city: backendBook.userCity,
+            state: backendBook.userState,
           },
           previousOwners: backendBook.previousOwners ? backendBook.previousOwners.map(ownerUsername => ({ name: ownerUsername })) : []
         };
@@ -173,8 +176,13 @@ const BookDetailPage = () => {
           </div>
  
           <h3 className="text-lg font-bold text-gray-800 mb-3">Current Keeper</h3>
-          <div className="flex items-center bg-gray-100 p-3 rounded-lg border border-gray-200 shadow-sm mb-6">
-            <p className="font-bold text-gray-900 text-lg">{book.owner.name || 'Unknown'}</p>
+          <div className="flex flex-col bg-gray-100 p-3 rounded-lg border border-gray-200 shadow-sm mb-6">
+            <p className="font-bold text-gray-900 text-lg mb-2">{book.owner.name || 'Unknown'}</p>
+            <div className="text-gray-700 text-sm space-y-1">
+              {book.owner.area && <p>Area: <span className="font-semibold">{book.owner.area}</span></p>}
+              {book.owner.city && <p>City: <span className="font-semibold">{book.owner.city}</span></p>}
+              {book.owner.state && <p>State: <span className="font-semibold">{book.owner.state}</span></p>}
+            </div>
           </div>
 
           <h3 className="text-lg font-bold text-gray-800 mb-3">About the Book</h3>
