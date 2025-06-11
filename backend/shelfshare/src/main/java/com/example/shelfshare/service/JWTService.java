@@ -18,7 +18,7 @@ import io.jsonwebtoken.security.SignatureException;
 public class JWTService {
     private static final SignatureAlgorithm alg = Jwts.SIG.RS512;
     private KeyPair pair;
-    private static final Integer ACCESS_EXPIRY_SECONDS = 30;
+    private static final Integer ACCESS_EXPIRY_SECONDS = 60 * 15;
     private static final Integer REFERSH_EXPIRY_SECONDS = 15 * 60 * 60;
 
     public JWTService() {
