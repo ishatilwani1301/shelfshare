@@ -51,26 +51,27 @@ public class JWTSecurityConfiguration {
     }
 
     @Bean
-  @Order(2)
-  public SecurityFilterChain filterChainTokenRefresh(HttpSecurity http) throws Exception {
-    http.securityMatcher("/token/**")
-        .authorizeHttpRequests((authorize) -> authorize
-            .requestMatchers("/token/refresh").permitAll()
-            .anyRequest().authenticated())
-        .oauth2ResourceServer(oauth2 -> oauth2
-            .jwt(jwt -> jwt
-                .decoder(myJwtDecoder())
-                .jwtAuthenticationConverter(myJwtAuthenticationConverter())))
-        .cors(Customizer.withDefaults())
-        .csrf((csrf) -> csrf.disable());
+    @Order(2)
+    public SecurityFilterChain filterChainTokenRefresh(HttpSecurity http) throws Exception {
+        http.securityMatcher("/token/**")
+            .authorizeHttpRequests((authorize) -> authorize
+                .requestMatchers("/token/refresh").permitAll()
+                .anyRequest().authenticated())
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(jwt -> jwt
+                    .decoder(myJwtDecoder())
+                    .jwtAuthenticationConverter(myJwtAuthenticationConverter())))
+            .cors(Customizer.withDefaults())
+            .csrf((csrf) -> csrf.disable());
 
-    return http.build();
-  }
+        return http.build();
+    }
 
     @Bean
     @Order(3)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers("/noteSummarization/**").permitAll()
                         .requestMatchers("/books/enlist/**").authenticated()
                         .requestMatchers("/books/add").authenticated()
                         .requestMatchers("/user/**").authenticated()

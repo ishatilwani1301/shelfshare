@@ -1,0 +1,23 @@
+# Python
+*.pyc
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.env
+.venv/
+venv/
+pip-log.txt
+pip-delete-this-arg-does-not-exist.log
+.python-version
+.project
+
+# IDEs and OS specific
+.idea/             # IntelliJ IDEA
+.vscode/           # VS Code
+*.iml              # IntelliJ IDEA module files
+*.swp
+*.bak
+*~
+.DS_Store          # macOS
+Thumbs.db          # Windows
+ehthumbs.db        # Windows
