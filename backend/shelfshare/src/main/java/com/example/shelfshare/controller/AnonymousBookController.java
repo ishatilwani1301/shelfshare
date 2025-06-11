@@ -42,11 +42,15 @@ public class AnonymousBookController {
             if (bookOptional.isPresent()) {
                 Books book = bookOptional.get();
                 var notes = notesService.getMostRecentNoteForBook(book.getBookId());
+                var currentOwner = book.getCurrentOwner();
                 Amonymousbooks.add(new AnonymousBookResponse(
                     book.getBookId(),
                     book.getBookGenre().name(),
                     book.getAuthorName(),
-                    book.getCurrentOwner().getUsername(),
+                    currentOwner.getUsername(),
+                    currentOwner.getArea(),
+                    currentOwner.getCity(),
+                    currentOwner.getState(),
                     notes.isPresent() ? notes.get().getNoteId() : null,
                     notes.isPresent() ? notes.get().getCustomizedTitle() : null,
                     notes.isPresent() ? notes.get().getNoteContent() : null,
@@ -63,11 +67,15 @@ public class AnonymousBookController {
         if (bookOptional.isPresent()) {
             Books book = bookOptional.get();
             var notes = notesService.getMostRecentNoteForBook(book.getBookId());
+            var currentOwner = book.getCurrentOwner();
             return new ResponseEntity<>(new AnonymousBookResponse(
                 book.getBookId(),
                 book.getBookGenre().name(),
                 book.getAuthorName(),
-                book.getCurrentOwner().getUsername(),
+                currentOwner.getUsername(),
+                currentOwner.getArea(),
+                currentOwner.getCity(),
+                currentOwner.getState(),
                 notes.isPresent() ? notes.get().getNoteId() : null,
                 notes.isPresent() ? notes.get().getCustomizedTitle() : null,
                 notes.isPresent() ? notes.get().getNoteContent() : null,
@@ -76,7 +84,7 @@ public class AnonymousBookController {
         } else {
             // Return a JSON response for NOT_FOUND
         return new ResponseEntity<>(new AnonymousBookResponse(
-            null, null, null, null,null, null, null, "Book not found"
+            null, null, null, null,null, null, null, null, null, null, "Book not found"
         ), HttpStatus.NOT_FOUND);
         }
     }

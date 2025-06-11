@@ -5,12 +5,15 @@ public record AnonymousBookResponse(
     String bookGenre,
     String bookAuthor,
     String currentOwnerUsername,
+    String userArea,
+    String userCity,
+    String userState,
     Integer noteId,
     String CustomizedTitle,
     String noteContent,
     String message
 ) {
     public AnonymousBookResponse(String message) {
-        this(null, null, null, null, null, null, null, message);
+        this(null, null, null, null, null, null, null, null, null, null, message);
     }
 }

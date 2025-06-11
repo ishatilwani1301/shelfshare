@@ -1,24 +1,23 @@
 package com.example.shelfshare.controller;
 
-import com.example.shelfshare.model.BookResponse;
-import com.example.shelfshare.service.BookService;
-import com.example.shelfshare.service.NotesService;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.example.shelfshare.entity.BookGenre;
 import com.example.shelfshare.entity.BookStatus;
 import com.example.shelfshare.entity.Books;
+import com.example.shelfshare.model.BookResponse;
+import com.example.shelfshare.service.BookService;
+import com.example.shelfshare.service.NotesService;
 
 @RestController
 @RequestMapping("/filterBooks")
@@ -178,7 +177,7 @@ public class FilterBooksController {
                 .collect(Collectors.toList());
         }
 
-        String currentOwnerUsername = (book.getCurrentOwner() != null) ? book.getCurrentOwner().getUsername() : null;
+        var currentOwner = (book.getCurrentOwner() != null) ? book.getCurrentOwner() : null;
 
         var notes = notesService.getMostRecentNoteForBook(book.getBookId());
 
@@ -190,8 +189,11 @@ public class FilterBooksController {
             book.getPublicationYear(),
             book.getBookStatus().name(),
             book.getEnlisted(),
-            currentOwnerUsername,
+            currentOwner != null ? currentOwner.getUsername() : null,
             previousOwners,
+            currentOwner != null ? currentOwner.getArea() : null,
+            currentOwner != null ? currentOwner.getCity() : null,
+            currentOwner != null ? currentOwner.getState() : null,
             notes.isPresent() ? notes.get().getNoteContent() : null,
             notes.isPresent() ? notes.get().getCustomizedTitle() : null,
             message

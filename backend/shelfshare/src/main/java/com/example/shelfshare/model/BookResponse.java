@@ -12,12 +12,15 @@ public record BookResponse(
         Boolean isEnlisted,
         String currentOwnerName,
         List<String> previousOwners,
+        String userArea,
+        String userCity,
+        String userState,
         String noteContent,
         String customizedTitle,
         String message
 ) {
 
         public BookResponse(String message) {
-                this(null, null, null, null, null, null, null, null, null, null, null, message);
+                this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, message);
         }
 }

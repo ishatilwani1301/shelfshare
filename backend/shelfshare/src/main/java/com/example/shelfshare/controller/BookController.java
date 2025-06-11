@@ -25,8 +25,6 @@ import com.example.shelfshare.model.BookCreationResponse;
 import com.example.shelfshare.model.BookLendApprovalRequest;
 import com.example.shelfshare.service.UserService;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
 
 
 @RestController
@@ -140,7 +138,7 @@ public class BookController {
                 .map(owner -> owner.getUsername())
                 .collect(Collectors.toList());
         }
-        String currentOwnerUsername = (book.getCurrentOwner() != null) ? book.getCurrentOwner().getUsername() : null; // Defensive check for null current owner
+        var currentOwner = (book.getCurrentOwner() != null) ? book.getCurrentOwner() : null;
 
         var notes = notesService.getMostRecentNoteForBook(book.getBookId());
 
@@ -152,8 +150,11 @@ public class BookController {
             book.getPublicationYear(),
             book.getBookStatus().name(),
             book.getEnlisted(),
-            currentOwnerUsername,
+            currentOwner != null ? currentOwner.getUsername() : null,
             previousOwners,
+            currentOwner != null ? currentOwner.getArea() : null,
+            currentOwner != null ? currentOwner.getCity() : null,
+            currentOwner != null ? currentOwner.getState() : null,
             notes.isPresent() ? notes.get().getNoteContent() : null,
             notes.isPresent() ? notes.get().getCustomizedTitle() : null,
             message
