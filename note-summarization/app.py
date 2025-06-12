@@ -48,7 +48,7 @@ def get_summarized_text():
 
         if hasattr(result, 'summary_text'):
             summary = result.summary_text
-            print(f"DEBUG: Extracted summary: '{summary}')")
+            print(f"DEBUG: Extracted summary: '{summary}'")
             return jsonify({"summary": summary}), 200
         else:
             print(f"DEBUG: Result object does not contain 'summary_text' attribute: {result}")
