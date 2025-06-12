@@ -27,6 +27,30 @@ const IncomingRequestsListPage = () => {
   }, []); // Empty dependency array means this function is created once
 
   useEffect(() => {
+    const fetchIncomingRequests = async () => {
+      const AccessToken = localStorage.getItem('accessToken');
+      if (!AccessToken) {
+        setError('Access token not found. Please log in.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await api.get('/user/borrowRequestsReceived', {
+          headers: {
+            Authorization: `Bearer ${AccessToken}`,
+          },
+        });
+        console.log('Incoming response:', response.data);
+        setRequests(response.data);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching incoming requests:', err);
+        setError('Failed to load incoming requests. Please try again.');
+        setLoading(false);
+      }
+    };
+
     fetchIncomingRequests();
   }, [fetchIncomingRequests]); // Re-run effect if fetchIncomingRequests changes (though useCallback prevents this often)
 
@@ -91,32 +115,23 @@ const IncomingRequestsListPage = () => {
       ) : (
         <ul className="space-y-6">
           {requests.map((request) => (
-            // Use request.borrowRequestId as the key if available and unique
-            // Otherwise, a combination of bookId and requesterUserId could be used.
-            <li key={request.borrowRequestId || `${request.bookId}-${request.requesterUserId}`} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{request.bookTitle}</h3>
-              <p className="text-gray-700 mb-1">
-                <span className="font-medium">Author:</span> {request.bookAuthor}
-              </p>
-              <p className="text-gray-700 mb-1">
-                <span className="font-medium">Requested By:</span> {request.requesterUsername} (ID: {request.requesterUserId})
-              </p>
-              <p className="text-gray-700">
-                <span className="font-medium">Requested On:</span> {new Date(request.requestDate).toLocaleDateString()}
-              </p>
-              {/* Ensure bookId and requesterUserId are passed to the handler */}
-              <div className="mt-5 flex space-x-4">
+            <li key={request.bookId} className="bg-white p-4 rounded shadow">
+              <h3 className="text-lg font-semibold">{request.bookTitle}</h3>
+              <p className="text-gray-600">Author: {request.bookAuthor}</p>
+              <p className="text-gray-600">Requested By: {request.requesterUsername}</p>
+              <p className="text-gray-600">Email: {request.requesterEmail}</p>
+              <p className="text-gray-600">Location: {`${request.requesterArea}, ${request.requesterCity}, ${request.requesterState}, ${request.requesterCountry} - ${request.requesterPincode}`}</p>
+              <p className="text-gray-600">Requested On: {new Date(request.requestDate).toLocaleDateString()}</p>
+              <div className="mt-4 flex space-x-4">
                 <button
-                  className="bg-green-600 text-white px-5 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => handleApproveRequest(request.bookId, request.requesterUserId, request.borrowRequestId)}
-                  disabled={approvingRequestId === request.borrowRequestId || rejectingRequestId === request.borrowRequestId}
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                  onClick={() => handleApproveRequest(request.bookId, request.requesterUserId)}
                 >
                   {approvingRequestId === request.borrowRequestId ? 'Approving...' : 'Approve'}
                 </button>
                 <button
-                  className="bg-red-600 text-white px-5 py-2 rounded-md hover:bg-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => handleRejectRequest(request.borrowRequestId)} // Pass borrowRequestId if available
-                  disabled={approvingRequestId === request.borrowRequestId || rejectingRequestId === request.borrowRequestId}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                  onClick={() => handleRejectRequest(request.bookId, request.requesterUserId)}
                 >
                   {rejectingRequestId === request.borrowRequestId ? 'Rejecting...' : 'Reject'}
                 </button>
@@ -127,6 +142,62 @@ const IncomingRequestsListPage = () => {
       )}
     </div>
   );
+};
+
+const handleApproveRequest = async (bookId, requesterUserId) => {
+  const AccessToken = localStorage.getItem('accessToken');
+  if (!AccessToken) {
+    alert('Access token not found. Please log in.');
+    return;
+  }
+
+  try {
+    await api.post(
+      `/books/requests/approve`,
+      {
+        bookId: bookId,
+        requesterUserId: requesterUserId,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${AccessToken}`,
+        },
+      }
+    );
+    alert('Request approved successfully!');
+    window.location.reload();
+  } catch (err) {
+    console.error('Error approving request:', err);
+    alert('Failed to approve the request. Please try again.');
+  }
+};
+
+const handleRejectRequest = async (bookId, requesterUserId) => {
+  const AccessToken = localStorage.getItem('accessToken');
+  if (!AccessToken) {
+    alert('Access token not found. Please log in.');
+    return;
+  }
+
+  try {
+    await api.post(
+      `/books/requests/reject`,
+      {
+        bookId: bookId,
+        requesterUserId: requesterUserId,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${AccessToken}`,
+        },
+      }
+    );
+    alert('Request rejected successfully!');
+    window.location.reload();
+  } catch (err) {
+    console.error('Error rejecting request:', err);
+    alert('Failed to reject the request. Please try again.');
+  }
 };
 
 export default IncomingRequestsListPage;
