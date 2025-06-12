@@ -16,7 +16,7 @@ public interface BorrowRequestRepository extends CrudRepository<BorrowRequests, 
     @Query("SELECT br FROM BorrowRequests br WHERE br.owner.id = ?1 ORDER BY br.requestDate DESC")
     public List<BorrowRequests> findAllByBorrowerId(Integer userId);
 
-    public BorrowRequests findFirstByBookBookIdAndRequesterUserIdAndOwnerUserIdOrderByRequestDateAsc(Integer bookId, Integer requesterId, Integer ownerId);
+    public BorrowRequests findFirstByBookBookIdAndRequesterUserIdAndOwnerUserIdAndStatusOrderByRequestDateAsc(Integer bookId, Integer requesterId, Integer ownerId, BorrowRequestStatus status);
 
     public List<BorrowRequests> findByBookBookIdAndStatus(Integer bookId, BorrowRequestStatus status);
 }
