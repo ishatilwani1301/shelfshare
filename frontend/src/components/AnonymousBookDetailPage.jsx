@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 const AnonymousBookDetailPage = ({  }) => {
-  const { offerId } = useParams(); 
+  const { offerId } = useParams();
   const navigate = useNavigate();
   const [offer, setOffer] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -44,6 +44,10 @@ const AnonymousBookDetailPage = ({  }) => {
           mainTitle: data.CustomizedTitle || 'Untitled Offer',
           note: data.noteContent || 'No description provided.',
           genre: data.bookGenre || 'N/A',
+          keeperName: data.currentOwnerUsername || 'Anonymous User', 
+          userArea: data.userArea || 'N/A',
+          userCity: data.userCity || 'N/A',
+          userState: data.userState || 'N/A',
         };
 
         setOffer(transformedOffer);
@@ -59,6 +63,31 @@ const AnonymousBookDetailPage = ({  }) => {
       fetchOfferDetails();
     }
   }, [offerId]);
+
+  const handleRequestBook = async () => {
+    try {
+      const response = await fetch(`http://localhost:1234/books/borrow/${offerId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${localStorage.getItem('accessToken') || ''}`,
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorBody.message || 'Failed to send request for this book');
+      }
+
+      const result = await response.json();
+      console.log('Request book response:', result);
+      alert(result.message || 'Request sent successfully! The keeper will be notified.');
+    } catch (error) {
+      console.error('Error sending book request:', error);
+      alert(error.message || 'An unexpected error occurred while sending the book request.');
+    }
+  };
 
   const handleBackToList = () => {
     navigate('/dashboard/anonymousbooks');
@@ -118,12 +147,11 @@ const AnonymousBookDetailPage = ({  }) => {
         <h1 className="text-3xl font-extrabold text-gray-900 leading-tight mb-1 tracking-tight">
           {offer.mainTitle}
         </h1>
-        {/* Removed the "Anonymous Offer" line here */}
       </div>
 
-      <div className="flex flex-col items-start max-w-3xl mx-auto">
+      <div className="flex flex-col items-start px-6">
 
-        <div className="w-full bg-white p-6 rounded-xl shadow-md border border-gray-100 animate-fadeIn flex-shrink-0">
+        <div className="w-full bg-white p-6 rounded-xl shadow-md border border-gray-100 animate-fadeIn">
           <h2 className="text-xl font-bold text-gray-800 mb-4 border-b border-yellow-300 pb-2">
             Book Details
           </h2>
@@ -134,13 +162,37 @@ const AnonymousBookDetailPage = ({  }) => {
             </div>
           </div>
 
+          <h3 className="text-lg font-bold text-gray-800 mb-3">Current Keeper</h3>
+          <div className="flex flex-col bg-gray-100 p-3 rounded-lg border border-gray-200 shadow-sm mb-6">
+            <p className="font-bold text-gray-900 text-lg mb-2">{offer.keeperName}</p>
+            <div className="text-gray-700 text-sm space-y-1">
+              {offer.userArea && offer.userArea !== 'N/A' && (
+                <p>Area: <span className="font-semibold">{offer.userArea}</span></p>
+              )}
+              {offer.userCity && offer.userCity !== 'N/A' && (
+                <p>City: <span className="font-semibold">{offer.userCity}</span></p>
+              )}
+              {offer.userState && offer.userState !== 'N/A' && (
+                <p>State: <span className="font-semibold">{offer.userState}</span></p>
+              )}
+              {(!offer.userArea || offer.userArea === 'N/A') &&
+               (!offer.userCity || offer.userCity === 'N/A') &&
+               (!offer.userState || offer.userState === 'N/A') && (
+                <p>Location: <span className="font-semibold">N/A</span></p>
+              )}
+            </div>
+          </div>
+
           <h3 className="text-lg font-bold text-gray-800 mb-3">About the Book</h3>
           <p className="text-gray-700 leading-relaxed text-base lg:text-lg mb-6 bg-blue-50 p-6 rounded-lg border border-blue-100 shadow-inner">
             {offer.note}
           </p>
 
           <div className="mt-8 flex justify-center lg:justify-start">
-            <button className="px-6 py-3 border border-transparent text-base font-bold rounded-full shadow-md text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-300 transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-2">
+            <button
+              onClick={handleRequestBook}
+              className="px-6 py-3 border border-transparent text-base font-bold rounded-full shadow-md text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-300 transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-2"
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253"></path>
               </svg>
