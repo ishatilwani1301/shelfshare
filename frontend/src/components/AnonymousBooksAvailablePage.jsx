@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
@@ -11,6 +11,16 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
   
   const [uniqueAuthors, setUniqueAuthors] = useState(['All']);
   const [uniqueGenres, setUniqueGenres] = useState(['All']);
+
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
+  const [selectedArea, setSelectedArea] = useState('');
+
+  const [availableStates, setAvailableStates] = useState([]);
+  const [availableCities, setAvailableCities] = useState([]);
+  const [availableAreas, setAvailableAreas] = useState([]);
+
+  const [stateCityAreaMap, setStateCityAreaMap] = useState({});
  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9; 
@@ -61,10 +71,46 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
         }
         const data = await response.json();
 
+        const uniqueGenresSet = new Set(['All']);
+        const uniqueAuthorsSet = new Set(['All']);
+        const map = {}; 
+
         const processedOffers = data.map(backendOffer => {
           const genre = backendOffer.bookGenre && backendOffer.bookGenre.trim() !== '' ? backendOffer.bookGenre.trim() : '';
           const author = backendOffer.bookAuthor && backendOffer.bookAuthor.trim() !== '' ? backendOffer.bookAuthor.trim() : '';
 
+          const state = backendOffer.userState?.trim();
+          const city = backendOffer.userCity?.trim();
+          const area = backendOffer.userArea?.trim();
+
+          if (state) {
+            if (!map[state]) {
+              map[state] = {};
+            }
+            if (city) {
+              if (!map[state][city]) {
+                map[state][city] = new Set();
+              }
+              if (area) {
+                map[state][city].add(area);
+              }
+            }
+          }
+
+          if (genre) {
+            uniqueGenresSet.add(genre);
+          }
+          if (author) {
+            uniqueAuthorsSet.add(author);
+          }
+          
+          if (Array.isArray(backendOffer.tags)) {
+            backendOffer.tags.forEach(tag => {
+              if (tag && tag.trim() !== '') {
+                uniqueGenresSet.add(tag.trim());
+              }
+            });
+          }
           return {
             ...backendOffer,
             color: getRandomColor(),
@@ -74,35 +120,23 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
             tags: Array.isArray(backendOffer.tags) ? backendOffer.tags.map(tag => tag.trim()).filter(tag => tag !== '') : [],
             datePosted: backendOffer.datePosted || 'N/A',
             condition: backendOffer.condition || 'N/A',
-            bookId: backendOffer.bookId
+            bookId: backendOffer.bookId,
+            userState: state, 
+            userCity: city,   
+            userArea: area    
           };
         });
-
         setAllOffers(processedOffers);
-
-        const uniqueGenresSet = new Set(['All']);
-        const uniqueAuthorsSet = new Set(['All']);
-        
-        processedOffers.forEach(offer => {
-          if (offer.genre) {
-            uniqueGenresSet.add(offer.genre);
-          }
-          if (offer.author) {
-            uniqueAuthorsSet.add(offer.author);
-          }
-          offer.tags.forEach(tag => {
-            if (tag) {
-              uniqueGenresSet.add(tag);
-            }
-          });
-        });
-
         setUniqueGenres(Array.from(uniqueGenresSet).sort());
         setUniqueAuthors(Array.from(uniqueAuthorsSet).sort());
+        setAvailableStates(Object.keys(map).sort());
+        setStateCityAreaMap(map);
+
       } catch (err) {
         setError(`Failed to load anonymous book offers: ${err.message || "An unexpected error occurred."}`);
         setUniqueGenres([]);
         setUniqueAuthors([]);
+        setAvailableStates([]);
       } finally {
         setLoading(false);
       }
@@ -112,8 +146,33 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
   }, []);
 
   useEffect(() => {
-    setCurrentPage(1);
+    if (selectedState && stateCityAreaMap[selectedState]) {
+      const citiesForState = Object.keys(stateCityAreaMap[selectedState]).sort();
+      setAvailableCities(citiesForState);
+      setSelectedCity(''); 
+      setSelectedArea(''); 
+    } else {
+      setAvailableCities([]);
+      setAvailableAreas([]);
+      setSelectedCity('');
+      setSelectedArea('');
+    }
+  }, [selectedState, stateCityAreaMap]);
 
+   
+  useEffect(() => {
+    if (selectedState && selectedCity && stateCityAreaMap[selectedState]?.[selectedCity]) {
+      const areasForCity = Array.from(stateCityAreaMap[selectedState][selectedCity]).sort();
+      setAvailableAreas(areasForCity);
+      setSelectedArea(''); 
+    } else {
+      setAvailableAreas([]);
+      setSelectedArea('');
+    }
+  }, [selectedState, selectedCity, stateCityAreaMap]);
+
+
+  useEffect(() => {
     let tempFilteredOffers = allOffers;
 
     if (searchQuery) {
@@ -130,7 +189,7 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
       const lowerCaseGenreFilter = genreFilter.toLowerCase();
       tempFilteredOffers = tempFilteredOffers.filter(offer =>
         (offer.genre && offer.genre.toLowerCase() === lowerCaseGenreFilter) ||
-        (offer.tags && offer.tags.some(tag => tag.toLowerCase().includes(lowerCaseGenreFilter)))
+        (offer.tags && offer.tags.some(tag => tag.toLowerCase() === lowerCaseGenreFilter))
       );
     }
 
@@ -140,14 +199,35 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
         (offer.author && offer.author.toLowerCase() === lowerCaseAuthorFilter)
       );
     }
+    tempFilteredOffers = tempFilteredOffers.filter(offer => {
+      let passesLocationFilters = true;
+
+      if (selectedState) {
+        passesLocationFilters = passesLocationFilters && (offer.userState?.toLowerCase() === selectedState.toLowerCase());
+        if (passesLocationFilters && selectedCity) {
+          passesLocationFilters = passesLocationFilters && (offer.userCity?.toLowerCase() === selectedCity.toLowerCase());
+          if (passesLocationFilters && selectedArea) {
+            passesLocationFilters = passesLocationFilters && (offer.userArea?.toLowerCase() === selectedArea.toLowerCase());
+          }
+        }
+      }
+      return passesLocationFilters;
+    });
 
     setCurrentFilteredOffers(tempFilteredOffers);
+    setCurrentPage(1); 
+  }, [allOffers, searchQuery, genreFilter, authorFilter, selectedState, selectedCity, selectedArea]);
+  
 
+
+
+  useEffect(() => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    setFilteredAndPaginatedOffers(tempFilteredOffers.slice(indexOfFirstItem, indexOfLastItem));
+    setFilteredAndPaginatedOffers(currentFilteredOffers.slice(indexOfFirstItem, indexOfLastItem));
+  }, [currentFilteredOffers, currentPage, itemsPerPage]);
+  
 
-  }, [allOffers, searchQuery, genreFilter, authorFilter, currentPage, itemsPerPage]);
 
   const currentFilteredCount = currentFilteredOffers.length;
   const totalPagesForFiltered = Math.ceil(currentFilteredCount / itemsPerPage);
@@ -159,7 +239,7 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
   };
 
   const handleNextPage = () => {
-    if (currentPage <  totalPagesForFiltered) {
+    if (currentPage < totalPagesForFiltered) {
       setCurrentPage(prev => prev + 1);
     }
   };
@@ -170,7 +250,7 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
       const randomOffer = currentFilteredOffers[randomIndex];
 
       if (randomOffer && randomOffer.bookId) {
-        navigate(`/dashboard/anonymousbooks/${randomOffer.bookId}`);
+        onSelectBookOffer(randomOffer.bookId);
       } else {
         console.warn("Selected random offer has no valid bookId:", randomOffer);
         alert("Oops! Couldn't find a valid book ID for the surprise selection from the filtered list. Please try again or adjust your filters.");
@@ -178,6 +258,15 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
     } else {
       alert("No offers available with your current filters to surprise you with! Try adjusting your filters.");
     }
+  };
+
+  const handleClearFilters = () => {
+    setGenreFilter('All');
+    setAuthorFilter('All');
+    setSelectedState('');
+    setSelectedCity('');
+    setSelectedArea('');
+    
   };
 
   if (loading) {
@@ -196,7 +285,7 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
     );
   }
 
-   return (
+  return (
     <div className="p-4">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-[#171612] tracking-wide text-[32px] font-bold leading-tight">
@@ -210,7 +299,68 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
         </button>
       </div>
 
-      <div className="mb-6 flex flex-wrap items-center gap-4">
+      <div className="mb-4 flex flex-wrap items-end gap-4">
+        <div className="flex items-center gap-2">
+          <label htmlFor="state-select" className="text-[#5B400D] font-semibold text-base">State:</label>
+          <select
+            id="state-select"
+            value={selectedState}
+            onChange={(e) => {
+              setSelectedState(e.target.value);
+              setSelectedCity(''); 
+              setSelectedArea(''); 
+              setCurrentPage(1);
+            }}
+            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-40"
+          >
+            <option value="">All</option>
+            {availableStates.map(state => (
+              <option key={state} value={state}>{state}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label htmlFor="city-select" className="text-[#5B400D] font-semibold text-base">City:</label>
+          <select
+            id="city-select"
+            value={selectedCity}
+            onChange={(e) => {
+              setSelectedCity(e.target.value);
+              setSelectedArea(''); 
+              setCurrentPage(1);
+            }}
+            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-40"
+            disabled={!selectedState || availableCities.length === 0}
+          >
+            <option value="">All</option>
+            {availableCities.map(city => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label htmlFor="area-select" className="text-[#5B400D] font-semibold text-base">Area:</label>
+          <select
+            id="area-select"
+            value={selectedArea}
+            onChange={(e) => {
+              setSelectedArea(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-40"
+            disabled={!selectedCity || availableAreas.length === 0}
+          >
+            <option value="">All</option>
+            {availableAreas.map(area => (
+              <option key={area} value={area}>{area}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="mb-6 flex flex-wrap items-end gap-4">
         <div className="flex items-center gap-2">
           <label htmlFor="genre-select" className="text-[#5B400D] font-semibold text-base">Genre:</label>
           <select
@@ -223,7 +373,7 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
             className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer"
           >
             <option value="All">All</option>
-            {uniqueGenres.filter(g => g !== 'All').map(g => ( 
+            {uniqueGenres.filter(g => g !== 'All').map(g => (
               <option key={g} value={g}>{g}</option>
             ))}
           </select>
@@ -241,19 +391,15 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
             className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer"
           >
             <option value="All">All</option>
-            {uniqueAuthors.filter(a => a !== 'All').map(a => ( 
+            {uniqueAuthors.filter(a => a !== 'All').map(a => (
               <option key={a} value={a}>{a}</option>
             ))}
           </select>
         </div>
 
-        {(genreFilter !== 'All' || authorFilter !== 'All') && ( 
+        {(genreFilter !== 'All' || authorFilter !== 'All' || selectedState || selectedCity || selectedArea) && (
           <button
-            onClick={() => {
-              setGenreFilter('All'); 
-              setAuthorFilter('All');
-              setCurrentPage(1);
-            }}
+            onClick={handleClearFilters}
             className="flex h-10 shrink-0 items-center justify-center rounded-full bg-[#f3ebd2] px-4 text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#e0d8c0] transition-colors duration-200"
           >
             Clear Filters
@@ -261,15 +407,7 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
         )}
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center h-full">
-          <p className="text-[#171612]">Loading anonymous book offers...</p>
-        </div>
-      ) : error ? (
-        <div className="flex items-center justify-center h-full text-red-600">
-          <p>{error}</p>
-        </div>
-      ) : filteredAndPaginatedOffers.length === 0 ? (
+      {filteredAndPaginatedOffers.length === 0 ? (
         <p className="text-[#837c67]">No anonymous notes found matching your criteria.</p>
       ) : (
         <>
@@ -282,14 +420,13 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
                 style={{ minHeight: '180px', boxShadow: '5px 5px 15px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05)' }}
                 onClick={() => onSelectBookOffer(offer.bookId)}
               >
-                <h3 className="text-[#171612] text-xl font-bold leading-tight mb-3">
-                  {offer.CustomizedTitle || 'Untitled Offer'}
-                </h3>
-                {offer.author && (
-                  <p className="text-[#5B400D] text-sm font-semibold mb-2">
-                    by {offer.author}
+                <div>
+                  <p className="text-[#171612] text-xl font-bold leading-tight mb-1">
+                    {offer.CustomizedTitle || 'Untitled Offer'}
                   </p>
-                )}
+                  
+                </div>
+
                 <p className="text-[#171612] text-base leading-normal line-clamp-4 mb-3">
                   {offer.noteContent || 'No description provided.'}
                 </p>
@@ -324,5 +461,4 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
     </div>
   );
 };
-
 export default AnonymousBooksAvailablePage;
