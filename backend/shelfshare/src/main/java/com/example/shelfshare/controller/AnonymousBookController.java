@@ -2,7 +2,6 @@ package com.example.shelfshare.controller;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -35,62 +34,48 @@ public class AnonymousBookController {
         this.notesService = notesService;
         this.noteSummarizationService = noteSummarizationService;
     }
-    //******to do, get all books should be changed, to ensure only available books are listed here + build a common helper
+
     @GetMapping
     public ResponseEntity<List<AnonymousBookResponse>> getAllBooks() {
-        List<Integer> bookIdList = bookService.getAllBookIdList();
-        List<AnonymousBookResponse> Amonymousbooks = new ArrayList<>();
-        for (Integer bookId : bookIdList) {
-            Optional<Books> bookOptional = bookService.getBookById(bookId);
-            if (bookOptional.isPresent()) {
-                Books book = bookOptional.get();
-                var summarizedNoteContent = noteSummarizationService.getSummarizedNoteContent(bookId);
-                var notes = notesService.getMostRecentNoteForBook(book.getBookId());
-                var currentOwner = book.getCurrentOwner();
-                Amonymousbooks.add(new AnonymousBookResponse(
-                    book.getBookId(),
-                    book.getBookGenre().name(),
-                    book.getAuthorName(),
-                    currentOwner.getUsername(),
-                    currentOwner.getArea(),
-                    currentOwner.getCity(),
-                    currentOwner.getState(),
-                    notes.isPresent() ? notes.get().getNoteId() : null,
-                    notes.isPresent() ? notes.get().getCustomizedTitle() : null,
-                    summarizedNoteContent,
-                    "Anonymous Book details retrieved successfully"
-                ));
-            }
+        List<Books> bookList = bookService.getAllAvailableBooks();
+        List<AnonymousBookResponse> anonymousBookResponses = new ArrayList<>();
+        for (Books book : bookList) {
+            anonymousBookResponses.add(buildAnonymousBookResponse(book, "Book details retrieved successfully!"));
         }
-        return new ResponseEntity<>(Amonymousbooks, HttpStatus.OK);
+        return new ResponseEntity<>(anonymousBookResponses, HttpStatus.OK);
     }
 
     @GetMapping("/{bookId}")
     public ResponseEntity<AnonymousBookResponse> getAnonymousBookById(@PathVariable Integer bookId) {
-        Optional<Books> bookOptional = bookService.getBookById(bookId);
-        if (bookOptional.isPresent()) {
-            Books book = bookOptional.get();
-            var notes = notesService.getMostRecentNoteForBook(book.getBookId());
-            var summarizedNoteContent = noteSummarizationService.getSummarizedNoteContent(bookId);
-            var currentOwner = book.getCurrentOwner();
-            return new ResponseEntity<>(new AnonymousBookResponse(
-                book.getBookId(),
-                book.getBookGenre().name(),
-                book.getAuthorName(),
-                currentOwner.getUsername(),
-                currentOwner.getArea(),
-                currentOwner.getCity(),
-                currentOwner.getState(),
-                notes.isPresent() ? notes.get().getNoteId() : null,
-                notes.isPresent() ? notes.get().getCustomizedTitle() : null,
-                summarizedNoteContent,
-                "Anonymous Book details retrieved successfully"
-            ), HttpStatus.OK);
-        } else {
-            // Return a JSON response for NOT_FOUND
-        return new ResponseEntity<>(new AnonymousBookResponse(
-            null, null, null, null,null, null, null, null, null, null, "Book not found"
-        ), HttpStatus.NOT_FOUND);
+        var bookOptional = bookService.getBookById(bookId);
+        if (bookOptional.isEmpty()) {
+            return new ResponseEntity<AnonymousBookResponse>(
+                new AnonymousBookResponse("Book not found"),
+                HttpStatus.NOT_FOUND);
         }
+        Books book = bookOptional.get();
+        return new ResponseEntity<AnonymousBookResponse>(
+            buildAnonymousBookResponse(book, "Book details retrieved successfully"),
+            HttpStatus.OK
+        );
+    }
+
+    public AnonymousBookResponse buildAnonymousBookResponse(Books book, String message) {
+        var summarizedNoteContent = noteSummarizationService.getSummarizedNoteContent(book.getBookId());
+        var notes = notesService.getMostRecentNoteForBook(book.getBookId());
+        var currentOwner = book.getCurrentOwner();
+        return new AnonymousBookResponse(
+            book.getBookId(),
+            book.getBookGenre().name(),
+            book.getAuthorName(),
+            currentOwner.getUsername(),
+            currentOwner.getArea(),
+            currentOwner.getCity(),
+            currentOwner.getState(),
+            notes.isPresent() ? notes.get().getNoteId() : null,
+            notes.isPresent() ? notes.get().getCustomizedTitle() : null,
+            summarizedNoteContent,
+            message
+        );
     }
 }
