@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.shelfshare.model.BorrowRequestsSentResponse;
+import com.example.shelfshare.model.MessageResponse;
 import com.example.shelfshare.model.UserDetailsChangeRequest;
 import com.example.shelfshare.model.UserDetailsResponse;
 import com.example.shelfshare.service.UserService;
@@ -26,6 +27,7 @@ import com.example.shelfshare.model.UserPasswordChangeResponse;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.shelfshare.model.BorrowRequestsReceivedResponse;
+import com.example.shelfshare.model.ValidateSecurityQuestionRequest;
 
 
 @RestController
@@ -190,5 +192,39 @@ public class UserController {
         return new ResponseEntity<List<BorrowRequestsReceivedResponse>>(borrowRequests, HttpStatus.OK);
     }
     
+    @GetMapping("/securityQuestion")
+    public ResponseEntity<MessageResponse> getSecurityQuestion(Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<>(new MessageResponse("User not authenticated"), HttpStatus.UNAUTHORIZED);
+        }
+        var userOptional = userService.getUserByUsername(principal.getName());
+        if (userOptional.isEmpty()) {
+            return new ResponseEntity<>(new MessageResponse("User not found"), HttpStatus.NOT_FOUND);
+        }
+        var user = userOptional.get();
+        var securityQuestion = userService.getSecurityQuestion(user);
+        if (securityQuestion == null) {
+            return new ResponseEntity<>(new MessageResponse("No security questions found"), HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(new MessageResponse(securityQuestion), HttpStatus.OK);
+
+    }
+    
+    @PostMapping("/validateSecurityQuestion")
+    public ResponseEntity<MessageResponse> validateSecurityQuestion(@RequestBody ValidateSecurityQuestionRequest validateSecurityQuestionRequest, Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<>(new MessageResponse("User not authenticated"), HttpStatus.UNAUTHORIZED);
+        }
+        var userOptional = userService.getUserByUsername(principal.getName());
+        if (userOptional.isEmpty()) {
+            return new ResponseEntity<>(new MessageResponse("User not found"), HttpStatus.NOT_FOUND);
+        }
+        var user = userOptional.get();
+        var isValid = userService.validateSecurityQuestion(user, validateSecurityQuestionRequest.question(), validateSecurityQuestionRequest.answer());
+        if (!isValid) {
+            return new ResponseEntity<>(new MessageResponse("Validation failed"), HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(new MessageResponse("Correct Answer"), HttpStatus.OK);
+    }
 }
 

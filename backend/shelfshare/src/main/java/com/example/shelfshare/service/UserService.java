@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
@@ -208,5 +209,24 @@ public class UserService {
             ));
         }
         return borrowRequests;
+    }
+
+    public String getSecurityQuestion(Users user) {
+        var securityQuestionsMap = user.getSecurityQuestionMap();
+        if (securityQuestionsMap == null || securityQuestionsMap.isEmpty()) {
+            return null;
+        }
+        List<String> questions = new ArrayList<>(securityQuestionsMap.keySet());
+        Random random = new Random();
+        int randomIndex = random.nextInt(questions.size());
+        return questions.get(randomIndex);
+    }
+
+    public Boolean validateSecurityQuestion(Users user, String question, String answer) {
+        Map<String, String> securityQuestionsMap = user.getSecurityQuestionMap();
+        if (securityQuestionsMap == null || !securityQuestionsMap.containsKey(question)) {
+            return false;
+        }
+        return answer.equals(securityQuestionsMap.get(question));
     }
 }

@@ -1,5 +1,6 @@
 package com.example.shelfshare.repository;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.Query;
@@ -19,4 +20,6 @@ public interface BorrowRequestRepository extends CrudRepository<BorrowRequests, 
     public BorrowRequests findFirstByBookBookIdAndRequesterUserIdAndOwnerUserIdAndStatusOrderByRequestDateAsc(Integer bookId, Integer requesterId, Integer ownerId, BorrowRequestStatus status);
 
     public List<BorrowRequests> findByBookBookIdAndStatus(Integer bookId, BorrowRequestStatus status);
+
+    public List<BorrowRequests> findByStatusAndRequestDateBefore(BorrowRequestStatus status, Instant dateTime);
 }
