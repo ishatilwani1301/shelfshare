@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify'; 
+import 'react-toastify/dist/ReactToastify.css'; 
 
 const AnonymousBookDetailPage = ({  }) => {
   const { offerId } = useParams();
@@ -7,6 +9,16 @@ const AnonymousBookDetailPage = ({  }) => {
   const [offer, setOffer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const commonToastOptions = {
+    position: "top-right",
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+  };
 
   useEffect(() => {
     const fetchOfferDetails = async () => {
@@ -17,6 +29,7 @@ const AnonymousBookDetailPage = ({  }) => {
         if (!offerId) {
           setError('No offer ID found in the URL to fetch details.');
           setLoading(false);
+          toast.error('No offer ID found in the URL.', commonToastOptions);
           return;
         }
 
@@ -36,6 +49,7 @@ const AnonymousBookDetailPage = ({  }) => {
         if (!data || !data.bookId) {
           setError('Anonymous book offer not found for the provided ID or data is incomplete.');
           setOffer(null);
+          toast.error('Anonymous book offer not found or data is incomplete.', commonToastOptions);
           return;
         }
 
@@ -54,6 +68,7 @@ const AnonymousBookDetailPage = ({  }) => {
       } catch (err) {
         console.error("Error fetching anonymous book offer details:", err);
         setError(`Failed to load offer details: ${err.message || "An unexpected error occurred."}`);
+        toast.error(`Failed to load offer details: ${err.message || "An unexpected error occurred."}`, commonToastOptions);
       } finally {
         setLoading(false);
       }
@@ -82,10 +97,10 @@ const AnonymousBookDetailPage = ({  }) => {
 
       const result = await response.json();
       console.log('Request book response:', result);
-      alert(result.message || 'Request sent successfully! The keeper will be notified.');
+      toast.success(result.message || 'Request sent successfully! The keeper will be notified.', commonToastOptions);
     } catch (error) {
       console.error('Error sending book request:', error);
-      alert(error.message || 'An unexpected error occurred while sending the book request.');
+      toast.error(error.message || 'An unexpected error occurred while sending the book request.', commonToastOptions);
     }
   };
 
@@ -131,6 +146,7 @@ const AnonymousBookDetailPage = ({  }) => {
 
   return (
     <div className="p-4 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen font-sans text-sm">
+      <ToastContainer />
       <div className="mb-4">
         <button
           onClick={handleBackToList}

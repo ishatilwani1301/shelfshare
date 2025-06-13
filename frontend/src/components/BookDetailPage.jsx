@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom'; 
+import { ToastContainer, toast } from 'react-toastify'; 
+import 'react-toastify/dist/ReactToastify.css';
 
 const BookDetailPage = () => {
   const { bookId } = useParams(); 
@@ -8,6 +10,16 @@ const BookDetailPage = () => {
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const commonToastOptions = {
+    position: "top-right",
+    autoClose: 2000, 
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+  };
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -50,6 +62,7 @@ const BookDetailPage = () => {
       } catch (err) {
         console.error("Error fetching book details:", err);
         setError(`Failed to load book details: ${err.message || "An unexpected error occurred."}`);
+        toast.error(`Failed to load book details: ${err.message || "An unexpected error occurred."}`, commonToastOptions);
       } finally {
         setLoading(false);
       }
@@ -78,10 +91,10 @@ const BookDetailPage = () => {
 
       const result = await response.json();
       console.log('Borrow request response:', result);
-      alert(result.message || 'Borrow request sent successfully');
+      toast.success(result.message || 'Borrow request sent successfully', commonToastOptions);
     } catch (error) {
       console.error('Error sending borrow request:', error);
-      alert(error.message || 'An unexpected error occurred while sending the borrow request.');
+      toast.error(error.message || 'An unexpected error occurred while sending the borrow request.', commonToastOptions);
     }
   };
 
@@ -124,6 +137,7 @@ const BookDetailPage = () => {
   
   return (
     <div className="p-4 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen font-sans text-sm">
+      <ToastContainer />
       <div className="mb-4">
         <button
           onClick={() => navigate('/dashboard/books')}
