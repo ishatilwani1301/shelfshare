@@ -39,6 +39,9 @@ public class BookService {
     @Autowired
     private BorrowRequestRepository borrowRequestRepository;
 
+    @Autowired
+    private EmailService emailService;
+
     @Transactional
     public Boolean enlistBook(Integer bookId, String username, String noteContent, String customizedTitle) {
         var userOptional = userRepository.findByUsername(username);
@@ -247,6 +250,8 @@ public class BookService {
         book.setBookStatus(BookStatus.REQUESTED);
         
         booksRepository.save(book);
+
+        emailService.sendBorrowRequestReceivedEmail(owner.getUserId(), requester.getUserId(), book.getBookId());
 
         return true;
     }
