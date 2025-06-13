@@ -9,7 +9,6 @@ const BorrowedBooksListPage = () => {
   useEffect(() => {
     const fetchBorrowedBooks = async () => {
       try {
-        // Updated endpoint to match your backend controller
         const response = await api.get('/books/booksBorrowed');
         setBorrowedBooks(response.data);
         setLoading(false);

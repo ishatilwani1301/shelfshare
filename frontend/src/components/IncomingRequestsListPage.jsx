@@ -1,22 +1,34 @@
-import React, { useState, useEffect, useCallback } from 'react'; // Added useCallback
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../api/axiosConfig';
 
 const IncomingRequestsListPage = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [approvingRequestId, setApprovingRequestId] = useState(null); // State to manage loading for approval
-  const [rejectingRequestId, setRejectingRequestId] = useState(null); // State to manage loading for rejection
+  // State to manage loading for approval/rejection of specific requests
+  const [processingRequestId, setProcessingRequestId] = useState(null);
 
   // Function to fetch incoming requests
+  // Use useCallback to memoize this function, preventing unnecessary re-renders
   const fetchIncomingRequests = useCallback(async () => {
+    setLoading(true);
+    setError(null); // Clear any previous errors before fetching
+
+    const AccessToken = localStorage.getItem('accessToken');
+    if (!AccessToken) {
+      setError('Access token not found. Please log in.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      setLoading(true); // Set loading true before fetching
-      const response = await api.get('/user/borrowRequestsReceived');
-      // Ensure 'requests' array is updated with the correct structure from backend
-      // Assuming each item in response.data is a request object
+      const response = await api.get('/user/borrowRequestsReceived', {
+        headers: {
+          Authorization: `Bearer ${AccessToken}`,
+        },
+      });
+      // Assuming response.data is an array of request objects
       setRequests(response.data);
-      setError(null); // Clear any previous errors
     } catch (err) {
       console.error('Error fetching incoming requests:', err);
       setError('Failed to load incoming requests. Please try again.');
@@ -26,55 +38,77 @@ const IncomingRequestsListPage = () => {
     }
   }, []); // Empty dependency array means this function is created once
 
+  // useEffect to call fetchIncomingRequests on component mount
   useEffect(() => {
     fetchIncomingRequests();
-  }, [fetchIncomingRequests]); // Re-run effect if fetchIncomingRequests changes (though useCallback prevents this often)
+  }, [fetchIncomingRequests]); // Dependency array includes fetchIncomingRequests
 
-  const handleApproveRequest = async (bookId, requesterUserId, requestId) => {
-    setApprovingRequestId(requestId); // Set loading state for this specific request
+  const handleApproveRequest = async (bookId, requesterUserId, borrowRequestId) => {
+    setProcessingRequestId(borrowRequestId); // Set loading state for this specific request
+
+    const AccessToken = localStorage.getItem('accessToken');
+    if (!AccessToken) {
+      alert('Access token not found. Please log in.');
+      setProcessingRequestId(null);
+      return;
+    }
+
+    const payload = {
+      bookId: bookId,
+      requesterUserId: requesterUserId,
+    };
+
     try {
-      const response = await api.post('/books/approve', {
-        bookId: bookId,
-        requesterUserId: requesterUserId,
+      const response = await api.post(`/books/approve`, payload, {
+        headers: {
+          Authorization: `Bearer ${AccessToken}`,
+        },
       });
       alert(response.data.message || 'Request approved successfully!');
       // After successful approval, re-fetch the requests to update the list
       fetchIncomingRequests();
     } catch (err) {
       console.error('Error approving request:', err);
-      // More specific error message if available from backend, else a generic one
       alert(err.response?.data?.message || 'Failed to approve the request. Please try again.');
     } finally {
-      setApprovingRequestId(null); // Clear loading state
+      setProcessingRequestId(null); // Clear loading state
     }
   };
 
-  const handleRejectRequest = async (requestId) => {
-    // IMPORTANT: You need a backend endpoint for rejecting requests.
-    // The provided backend code only shows an /approve endpoint.
-    // If you have a reject endpoint, uncomment and adjust the following.
-    // For now, this is a placeholder.
+  const handleRejectRequest = async (bookId, requesterUserId, borrowRequestId) => {
+    setProcessingRequestId(borrowRequestId); // Set loading state for this specific request
 
-    setRejectingRequestId(requestId); // Set loading state for this specific request
+    const AccessToken = localStorage.getItem('accessToken');
+    if (!AccessToken) {
+      alert('Access token not found. Please log in.');
+      setProcessingRequestId(null);
+      return;
+    }
+
+    const payload = {
+      bookId: bookId,
+      requesterUserId: requesterUserId,
+    };
+
     try {
-      // Assuming a similar reject endpoint like '/books/reject'
-      // You might need to send bookId and requesterUserId here as well,
-      // depending on your backend's reject endpoint requirements.
-      // For demonstration, let's assume it also needs bookId and requesterUserId
-      // You'll need to pass these from the JSX to handleRejectRequest as well.
-      // Example: await api.post('/books/reject', { bookId: ..., requesterUserId: ... });
-      alert('Reject functionality is not yet fully implemented on the backend or frontend.');
-      console.warn('Reject functionality requires a backend endpoint and proper data structure.');
-      // After "reject", you'd typically re-fetch or remove from UI
-      // fetchIncomingRequests();
+      // Assuming your reject endpoint is /books/requests/reject and expects bookId and requesterUserId
+      await api.post(`/books/requests/reject`, payload, {
+        headers: {
+          Authorization: `Bearer ${AccessToken}`,
+        },
+      });
+      alert('Request rejected successfully!');
+      // After successful rejection, re-fetch the requests to update the list
+      fetchIncomingRequests();
     } catch (err) {
       console.error('Error rejecting request:', err);
       alert(err.response?.data?.message || 'Failed to reject the request. Please try again.');
     } finally {
-      setRejectingRequestId(null); // Clear loading state
+      setProcessingRequestId(null); // Clear loading state
     }
   };
 
+  // --- Render Logic ---
   if (loading) {
     return <p className="text-center text-gray-500 text-lg py-8">Loading incoming requests...</p>;
   }
@@ -91,34 +125,27 @@ const IncomingRequestsListPage = () => {
       ) : (
         <ul className="space-y-6">
           {requests.map((request) => (
-            // Use request.borrowRequestId as the key if available and unique
-            // Otherwise, a combination of bookId and requesterUserId could be used.
-            <li key={request.borrowRequestId || `${request.bookId}-${request.requesterUserId}`} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{request.bookTitle}</h3>
-              <p className="text-gray-700 mb-1">
-                <span className="font-medium">Author:</span> {request.bookAuthor}
-              </p>
-              <p className="text-gray-700 mb-1">
-                <span className="font-medium">Requested By:</span> {request.requesterUsername} (ID: {request.requesterUserId})
-              </p>
-              <p className="text-gray-700">
-                <span className="font-medium">Requested On:</span> {new Date(request.requestDate).toLocaleDateString()}
-              </p>
-              {/* Ensure bookId and requesterUserId are passed to the handler */}
-              <div className="mt-5 flex space-x-4">
+            <li key={request.borrowRequestId} className="bg-white p-4 rounded shadow">
+              <h3 className="text-lg font-semibold">{request.bookTitle}</h3>
+              <p className="text-gray-600">Author: {request.bookAuthor}</p>
+              <p className="text-gray-600">Requested By: {request.requesterUsername}</p>
+              <p className="text-gray-600">Email: {request.requesterEmail}</p>
+              <p className="text-gray-600">Location: {`${request.requesterArea}, ${request.requesterCity}, ${request.requesterState}, ${request.requesterCountry} - ${request.requesterPincode}`}</p>
+              <p className="text-gray-600">Requested On: {new Date(request.requestDate).toLocaleDateString()}</p>
+              <div className="mt-4 flex space-x-4">
                 <button
-                  className="bg-green-600 text-white px-5 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => handleApproveRequest(request.bookId, request.requesterUserId, request.borrowRequestId)}
-                  disabled={approvingRequestId === request.borrowRequestId || rejectingRequestId === request.borrowRequestId}
+                  disabled={processingRequestId === request.borrowRequestId}
                 >
-                  {approvingRequestId === request.borrowRequestId ? 'Approving...' : 'Approve'}
+                  {processingRequestId === request.borrowRequestId ? 'Approving...' : 'Approve'}
                 </button>
                 <button
-                  className="bg-red-600 text-white px-5 py-2 rounded-md hover:bg-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => handleRejectRequest(request.borrowRequestId)} // Pass borrowRequestId if available
-                  disabled={approvingRequestId === request.borrowRequestId || rejectingRequestId === request.borrowRequestId}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => handleRejectRequest(request.bookId, request.requesterUserId, request.borrowRequestId)}
+                  disabled={processingRequestId === request.borrowRequestId}
                 >
-                  {rejectingRequestId === request.borrowRequestId ? 'Rejecting...' : 'Reject'}
+                  {processingRequestId === request.borrowRequestId ? 'Rejecting...' : 'Reject'}
                 </button>
               </div>
             </li>

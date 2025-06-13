@@ -51,6 +51,7 @@ const MyShelf = React.memo(() => {
   const [loadingBorrowed, setLoadingBorrowed] = useState(true);
   const [loadingIncoming, setLoadingIncoming] = useState(true);
 
+  const API_BASE_URL = 'http://localhost:1234';
 
   const fetchCounts = useCallback(async () => {
     const AccessToken = localStorage.getItem('accessToken');
@@ -64,7 +65,7 @@ const MyShelf = React.memo(() => {
     // Enlisted Books
     try {
       setLoadingEnlisted(true);
-      const enlistedResponse = await api.get('/books/my-books'); // Assuming this endpoint is correct
+      const enlistedResponse = await api.get(`${API_BASE_URL}/books/my-books`);
       setMyEnlistedBooksCount(enlistedResponse.data.length);
     } catch (err) {
       console.error('Error fetching my enlisted books:', err);
@@ -76,7 +77,8 @@ const MyShelf = React.memo(() => {
     // Borrowed Books
     try {
       setLoadingBorrowed(true);
-      const borrowedResponse = await api.get('/booksBorrowed'); // Corrected to match backend: /booksBorrowed
+      const borrowedResponse = await api.get(`${API_BASE_URL}/books/booksBorrowed`);
+      console.log('Borrowed books response:', borrowedResponse.data);
       setBorrowedBooksCount(borrowedResponse.data.length);
     } catch (err) {
       console.error('Error fetching borrowed books count:', err);
@@ -88,7 +90,8 @@ const MyShelf = React.memo(() => {
     // Incoming Requests
     try {
       setLoadingIncoming(true);
-      const incomingResponse = await api.get('/user/borrowRequestsReceived'); // Corrected to match backend route
+      const incomingResponse = await api.get(`${API_BASE_URL}/user/borrowRequestsReceived`);
+      console.log('Incoming requests response:', incomingResponse.data);
       setIncomingBorrowRequestsCount(incomingResponse.data.length);
     } catch (err) {
       console.error('Error fetching incoming requests count:', err);
@@ -113,13 +116,8 @@ const MyShelf = React.memo(() => {
   const handleViewBorrowedBooks = async () => {
     setLoadingBorrowed(true);
     try {
-      // Keep this check if you want to conditionally navigate to NotAvailablePage
-      const response = await api.get('/booksBorrowed'); // Corrected to match backend endpoint
-      if (response.data && response.data.length > 0) {
-        navigate('borrowed');
-      } else {
-        navigate('not-available-books');
-      }
+      await api.get(`${API_BASE_URL}//books/booksBorrowed`);
+      navigate('borrowed');
     } catch (err) {
       console.error('Error viewing borrowed books details:', err);
       navigate('not-available-books');
@@ -131,13 +129,8 @@ const MyShelf = React.memo(() => {
   const handleViewIncomingRequests = async () => {
     setLoadingIncoming(true);
     try {
-      // Keep this check if you want to conditionally navigate to NotAvailablePage
-      const response = await api.get('/user/borrowRequestsReceived'); // Corrected to match backend endpoint
-      if (response.data && response.data.length > 0) {
-        navigate('requests'); // *** THIS IS THE ONLY CHANGE ***
-      } else {
-        navigate('not-available-request');
-      }
+      await api.get(`${API_BASE_URL}/user/borrowRequestsReceived`);
+      navigate('requests');
     } catch (err) {
       console.error('Error viewing incoming requests details:', err);
       navigate('not-available-request');
@@ -195,7 +188,6 @@ const MyShelf = React.memo(() => {
           <Route path="add-book" element={<AddBookPage />} />
           <Route path="enlisted" element={<MyEnlistedBooksPage onBookAction={fetchCounts} />} />
           <Route path="borrowed" element={<BorrowedBooksListPage />} />
-          {/* This route path 'requests' needs to match the navigate('requests') in handleViewIncomingRequests */}
           <Route path="requests" element={<IncomingRequestsListPage />} />
           <Route path="not-available-request" element={<NotAvailablePage message="There are no incoming borrow requests at the moment." />} />
           <Route path="not-available-books" element={<NotAvailablePage message="You have not borrowed any books yet." />} />
