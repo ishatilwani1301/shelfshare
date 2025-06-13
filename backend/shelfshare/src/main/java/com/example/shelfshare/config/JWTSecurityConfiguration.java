@@ -71,7 +71,6 @@ public class JWTSecurityConfiguration {
     @Order(3)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/noteSummarization/**").permitAll()
                         .requestMatchers("/books/enlist/**").authenticated()
                         .requestMatchers("/books/add").authenticated()
                         .requestMatchers("/user/**").authenticated()

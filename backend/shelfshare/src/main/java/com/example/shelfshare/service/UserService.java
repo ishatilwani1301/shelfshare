@@ -39,6 +39,9 @@ public class UserService {
     @Autowired
     private BorrowRequestRepository borrowRequestRepository;
 
+    @Autowired
+    private EmailService emailService;
+
     public UserService(RestTemplate restTemplate) {
         this.encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
         this.restTemplate = restTemplate;
@@ -60,7 +63,11 @@ public class UserService {
         user.setCountry(country);
         user.setSecurityQuestionMap(securityQuestionAnswers);
         user.setIsAdmin(false);
-        return Optional.of(userRepository.save(user));
+        var savedUser = Optional.of(userRepository.save(user));
+        if (savedUser.isPresent()) {
+            emailService.sendWelcomeEmail(savedUser.get().getUserId());
+        }
+        return savedUser;
     }
 
     public Optional<Users> getAuthenticatedUser(String username, String password) {
