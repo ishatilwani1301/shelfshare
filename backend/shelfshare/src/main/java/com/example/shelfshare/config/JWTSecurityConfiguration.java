@@ -73,6 +73,7 @@ public class JWTSecurityConfiguration {
         http.authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/books/enlist/**").authenticated()
                         .requestMatchers("/books/add").authenticated()
+                        .requestMatchers("/user/changeUserPassword").permitAll()
                         .requestMatchers("/user/**").authenticated()
                         .requestMatchers("/books/my-books").authenticated()
                         .requestMatchers("/books/**").permitAll()

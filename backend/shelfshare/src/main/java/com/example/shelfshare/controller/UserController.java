@@ -69,14 +69,14 @@ public class UserController {
     }
 
     @PostMapping("/changeUserPassword")
-    public ResponseEntity<UserPasswordChangeResponse> userPasswordChange(@RequestBody UserPasswordChangeRequest request, Principal principal) {
-        if (principal == null) {
+    public ResponseEntity<UserPasswordChangeResponse> userPasswordChange(@RequestBody UserPasswordChangeRequest request) {
+        if (request.username() == null) {
             return new ResponseEntity<UserPasswordChangeResponse>(
                 new UserPasswordChangeResponse("User not authenticated"),
                 HttpStatus.UNAUTHORIZED
             );
         } else {
-            var user = userService.getUserByUsername(principal.getName());
+            var user = userService.getUserByUsername(request.username());
             if (user.isEmpty()) {
                 return new ResponseEntity<UserPasswordChangeResponse>(
                     new UserPasswordChangeResponse("User not found"),
@@ -85,13 +85,6 @@ public class UserController {
             }
 
             var userInDb = user.get();
-            if (!userService.checkPassword(userInDb, request.oldPassword())) {
-                return new ResponseEntity<UserPasswordChangeResponse>(
-                    new UserPasswordChangeResponse("Old password is incorrect"),
-                    HttpStatus.BAD_REQUEST
-                );
-            }
-
             if (userService.changePassword(userInDb, request.newPassword())) {
                 return new ResponseEntity<UserPasswordChangeResponse>(
                     new UserPasswordChangeResponse("Password changed successfully"),
