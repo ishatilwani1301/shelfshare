@@ -10,7 +10,7 @@ import com.example.shelfshare.service.NotesService;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-
+import com.example.shelfshare.service.CustomTitleService;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -44,12 +44,15 @@ public class BookController {
 
     private final NoteSummarizationService noteSummarizationService;
 
-    public BookController(BookService bookService, NotesRepository noteRepository, NotesService notesService, UserService userService, NoteSummarizationService noteSummarizationService) {
+    private final CustomTitleService customTitleService;
+
+    public BookController(BookService bookService, NotesRepository noteRepository, NotesService notesService, UserService userService, NoteSummarizationService noteSummarizationService, CustomTitleService customTitleService) {
         this.bookService = bookService;
         this.noteRepository = noteRepository;
         this.notesService = notesService;
         this.userService = userService;
         this.noteSummarizationService = noteSummarizationService;
+        this.customTitleService = customTitleService;
     }
     @PostMapping("/enlist/{bookId}")
     public ResponseEntity<MessageResponse> enlistBook(@PathVariable Integer bookId, @RequestBody BookRequest req, Principal principal) {
@@ -132,6 +135,8 @@ public class BookController {
 
         String summarizedNoteContent = noteSummarizationService.getSummarizedNoteContent(book.getBookId());
 
+        String master_title = customTitleService.getMasterCustomTitle(book.getBookId());
+
         var notes = notesService.getMostRecentNoteForBook(book.getBookId());
 
         return new BookResponse(
@@ -148,7 +153,7 @@ public class BookController {
             currentOwner != null ? currentOwner.getCity() : null,
             currentOwner != null ? currentOwner.getState() : null,
             summarizedNoteContent,
-            notes.isPresent() ? notes.get().getCustomizedTitle() : null,
+            master_title,
             message
         );
     }
