@@ -192,39 +192,5 @@ public class UserController {
         return new ResponseEntity<List<BorrowRequestsReceivedResponse>>(borrowRequests, HttpStatus.OK);
     }
     
-    @GetMapping("/securityQuestion")
-    public ResponseEntity<MessageResponse> getSecurityQuestion(Principal principal) {
-        if (principal == null) {
-            return new ResponseEntity<>(new MessageResponse("User not authenticated"), HttpStatus.UNAUTHORIZED);
-        }
-        var userOptional = userService.getUserByUsername(principal.getName());
-        if (userOptional.isEmpty()) {
-            return new ResponseEntity<>(new MessageResponse("User not found"), HttpStatus.NOT_FOUND);
-        }
-        var user = userOptional.get();
-        var securityQuestion = userService.getSecurityQuestion(user);
-        if (securityQuestion == null) {
-            return new ResponseEntity<>(new MessageResponse("No security questions found"), HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(new MessageResponse(securityQuestion), HttpStatus.OK);
-
-    }
-    
-    @PostMapping("/validateSecurityQuestion")
-    public ResponseEntity<MessageResponse> validateSecurityQuestion(@RequestBody ValidateSecurityQuestionRequest validateSecurityQuestionRequest, Principal principal) {
-        if (principal == null) {
-            return new ResponseEntity<>(new MessageResponse("User not authenticated"), HttpStatus.UNAUTHORIZED);
-        }
-        var userOptional = userService.getUserByUsername(principal.getName());
-        if (userOptional.isEmpty()) {
-            return new ResponseEntity<>(new MessageResponse("User not found"), HttpStatus.NOT_FOUND);
-        }
-        var user = userOptional.get();
-        var isValid = userService.validateSecurityQuestion(user, validateSecurityQuestionRequest.question(), validateSecurityQuestionRequest.answer());
-        if (!isValid) {
-            return new ResponseEntity<>(new MessageResponse("Validation failed"), HttpStatus.BAD_REQUEST);
-        }
-        return new ResponseEntity<>(new MessageResponse("Correct Answer"), HttpStatus.OK);
-    }
 }
 
