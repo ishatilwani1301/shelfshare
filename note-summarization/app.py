@@ -87,11 +87,12 @@ def get_master_title():
         if hasattr(response_obj, 'summary_text'):
             master_title = response_obj.summary_text.strip()
 
+            # --- START POST-PROCESSING ---
             # Remove common question phrases if they appear at the beginning or end
             question_starters = ["how do you sum up", "what is", "can you summarize", "what are", "how"]
             question_enders = ["?", "."] # Check for trailing periods in questions
 
-            # Convert to lowercase for easier matching
+            # Convert to lowercase for easier matching, but apply changes to original casing
             lower_master_title = master_title.lower()
 
             # Check for question starters
@@ -112,7 +113,9 @@ def get_master_title():
             if master_title:
                 master_title = master_title[0].upper() + master_title[1:]
             
-            
+            # If after all this, it's empty, or still looks like a bad title,
+            # you might have a fallback, or just return it as is and accept the imperfections.
+            # For now, let's just make sure it's not empty.
             if not master_title and titles_list: # Fallback to first title if all processing fails
                 master_title = titles_list[0] + " (Refined Title Failed)" # Indicate fallback
             # --- END POST-PROCESSING ---
