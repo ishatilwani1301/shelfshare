@@ -1,5 +1,5 @@
 package com.example.shelfshare.model;
 
-public record ValidateSecurityQuestionRequest(String question, String answer) {
+public record ValidateSecurityQuestionRequest(String question, String answer, String username) {
 
 }
