@@ -80,20 +80,6 @@ public class BookController {
         }
     }
 
-    //@GetMapping
-    //public ResponseEntity<List<BookResponse>> getAllBooks() {
-    //    List<Integer> bookIdList = bookService.getAllBookIdList();
-     //   List<BookResponse> books = new ArrayList<>();
-     //   for (Integer bookId : bookIdList) {
-     //       var bookOptional = bookService.getBookById(bookId); // Renamed for clarity
-     //       if (bookOptional.isPresent()) {
-     //           Books book = bookOptional.get();
-     //           books.add(buildBookResponse(book, "Book details retrieved successfully")); // Using the helper method
-      //      }
-       // }
-//
-  //      return new ResponseEntity<>(books, HttpStatus.OK);
-    //}
     @GetMapping // This endpoint will now return only AVAILABLE books, it doesnt return books which are enlisted like previous one
     public ResponseEntity<List<BookResponse>> getAllBooks() {
         List<Books> availableBooksEntities = bookService.getAllAvailableBooks();
@@ -213,6 +199,26 @@ public class BookController {
         }
         return new ResponseEntity<>(new MessageResponse("Borrow request approved successfully"), HttpStatus.OK);
     }
+
+    @PostMapping("/reject")
+    public ResponseEntity<MessageResponse> rejectRequest(@RequestBody BookLendApprovalRequest bookLendRejectionRequest, Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<>(new MessageResponse("Useer not authenticated"), HttpStatus.UNAUTHORIZED);
+        }
+        if (bookLendRejectionRequest == null || bookLendRejectionRequest.bookId() == null || bookLendRejectionRequest.requesterUserId() == null) {
+            return new ResponseEntity<>(new MessageResponse("Invalid request data"), HttpStatus.BAD_REQUEST);
+        }
+        var userOptional = userService.getUserByUsername(principal.getName());
+        if (userOptional.isEmpty()) {
+            return new ResponseEntity<>(new MessageResponse("User not found"), HttpStatus.NOT_FOUND);
+        }
+        var user = userOptional.get();
+        boolean rejectionStatus = bookService.rejectBorrowRequest(bookLendRejectionRequest.bookId(), bookLendRejectionRequest.requesterUserId(), user.getUserId());
+        if (!rejectionStatus) {
+            return new ResponseEntity<>(new MessageResponse("Failed to reject borrow request"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(new MessageResponse("Borrow request rejected successfully"), HttpStatus.OK);
+    }
     
     @GetMapping("/booksBorrowed")
     public ResponseEntity<List<BookResponse>> getBooksBorrowedByUser(Principal principal) {
@@ -228,4 +234,5 @@ public class BookController {
         return new ResponseEntity<>(bookResponses, HttpStatus.OK);
     }
     
+
 }

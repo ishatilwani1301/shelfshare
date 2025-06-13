@@ -1,6 +1,7 @@
 package com.example.shelfshare.service;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -16,6 +17,7 @@ import com.example.shelfshare.entity.Books;
 import com.example.shelfshare.entity.BorrowRequestStatus;
 import com.example.shelfshare.entity.BorrowRequests;
 import com.example.shelfshare.entity.Notes;
+import com.example.shelfshare.entity.Users;
 import com.example.shelfshare.model.BookRequest;
 import com.example.shelfshare.repository.BooksRepository;
 import com.example.shelfshare.repository.BorrowRequestRepository;
@@ -242,6 +244,7 @@ public class BookService {
         userRepository.save(owner);
 
         book.setEnlisted(false);
+        book.setBookStatus(BookStatus.REQUESTED);
         
         booksRepository.save(book);
 
@@ -261,7 +264,7 @@ public class BookService {
         var requester = requesterOptional.get();
         var owner = ownerOptional.get();
 
-        if (book.getBookStatus() != BookStatus.AVAILABLE) {
+        if (book.getBookStatus() != BookStatus.REQUESTED) {
             return false;
         }
         var prevOwners = book.getPreviousOwners();
@@ -275,7 +278,7 @@ public class BookService {
         booksRepository.save(book);
 
         // Update the borrow request status
-        BorrowRequests borrowRequest = borrowRequestRepository.findFirstByBookBookIdAndRequesterUserIdAndOwnerUserIdOrderByRequestDateAsc(book.getBookId(), requester.getUserId(), owner.getUserId());
+        BorrowRequests borrowRequest = borrowRequestRepository.findFirstByBookBookIdAndRequesterUserIdAndOwnerUserIdAndStatusOrderByRequestDateAsc(book.getBookId(), requester.getUserId(), owner.getUserId(), BorrowRequestStatus.PENDING);
         if (borrowRequest != null) {
             borrowRequest.setStatus(BorrowRequestStatus.ACCEPTED);
             borrowRequestRepository.save(borrowRequest);
@@ -325,6 +328,46 @@ public class BookService {
         return true;
     }
 
+    public Boolean rejectBorrowRequest(Integer bookId, Integer requesterId, Integer ownerId) {
+        var bookOptional = booksRepository.findById(bookId);
+        var requesterOptional = userRepository.findById(requesterId);
+        var ownerOptional = userRepository.findById(ownerId);
+
+        if (bookOptional.isEmpty() || requesterOptional.isEmpty() || ownerOptional.isEmpty()) {
+            return false;
+        }
+
+        var book = bookOptional.get();
+        var requester = requesterOptional.get();
+        var owner = ownerOptional.get();
+        
+        // Update the borrow request status
+        BorrowRequests borrowRequest = borrowRequestRepository.findFirstByBookBookIdAndRequesterUserIdAndOwnerUserIdAndStatusOrderByRequestDateAsc(book.getBookId(), requester.getUserId(), owner.getUserId(), BorrowRequestStatus.PENDING);
+        System.out.println(borrowRequest.getBorrowRequestId());
+        if (borrowRequest != null) {
+            borrowRequest.setStatus(BorrowRequestStatus.REJECTED);
+            borrowRequestRepository.save(borrowRequest);
+
+            //remove this borrow request from the owner's received requests
+            var ownerReceivedRequests = owner.getBorrowRequestsReceived();
+            ownerReceivedRequests.removeIf(br -> br.equals(borrowRequest.getBorrowRequestId()));
+            owner.setBorrowRequestsReceived(ownerReceivedRequests);
+            userRepository.save(owner);
+
+            //remove this borrow request from the requester's sent requests
+            var requesterSentRequests = requester.getBorrowRequestsSent();
+            requesterSentRequests.removeIf(br -> br.equals(borrowRequest.getBorrowRequestId()));
+            requester.setBorrowRequestsSent(requesterSentRequests);
+            userRepository.save(requester);
+
+            book.setEnlisted(true);
+            book.setBookStatus(BookStatus.AVAILABLE);
+            booksRepository.save(book);
+        }
+
+        return true;
+    }
+
 
     public List<Books> getBooksBorrowed(String username) {
         var user = userRepository.findByUsername(username);
@@ -333,5 +376,42 @@ public class BookService {
         }
         // fetch the books where the current owner is the user and the book status is BORROWED
         return booksRepository.findByCurrentOwner_UsernameAndBookStatus(username, BookStatus.BORROWED);
+    }
+
+
+    @Transactional
+    public void rejectExpiredBorrowRequests() {
+        Instant threeDaysAgo = Instant.now().minus(3, ChronoUnit.DAYS);
+        List<BorrowRequests> expiredRequests = borrowRequestRepository.findByStatusAndRequestDateBefore(BorrowRequestStatus.PENDING, threeDaysAgo);
+
+        for (BorrowRequests request: expiredRequests) {
+            request.setStatus(BorrowRequestStatus.CANCELLED);
+            borrowRequestRepository.save(request);
+
+            Books book = request.getBook();
+            if (book.getBookStatus() == BookStatus.REQUESTED) {
+                boolean otherPendingRequests = borrowRequestRepository
+                                                    .findByBookBookIdAndStatus(book.getBookId(), BorrowRequestStatus.PENDING)
+                                                    .stream()
+                                                    .anyMatch(r -> !r.getBorrowRequestId().equals(request.getBorrowRequestId()));
+                if (!otherPendingRequests) {
+                    book.setBookStatus(BookStatus.AVAILABLE);
+                    book.setEnlisted(true);
+                    booksRepository.save(book);
+                }
+            }
+
+            Users owner = request.getOwner();
+            if (owner!=null) {
+                owner.getBorrowRequestsReceived().remove(request.getBorrowRequestId());
+                userRepository.save(owner);
+            }
+
+            Users requester = request.getRequester();
+            if (requester!=null) {
+                requester.getBorrowRequestsReceived().remove(request.getBorrowRequestId());
+                userRepository.save(requester);
+            }
+        }
     }
 }
