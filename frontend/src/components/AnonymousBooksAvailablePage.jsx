@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify'; 
+import 'react-toastify/dist/ReactToastify.css'; 
 
 const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
   const [allOffers, setAllOffers] = useState([]); 
@@ -28,6 +30,15 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
   const [currentFilteredOffers, setCurrentFilteredOffers] = useState([]);
 
   const navigate = useNavigate();
+  const commonToastOptions = {
+    position: "top-right",
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+  };
 
   const stickyNoteColors = [
     'bg-[#FFEC8B]', // Brighter Light Yellow
@@ -253,10 +264,10 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
         onSelectBookOffer(randomOffer.bookId);
       } else {
         console.warn("Selected random offer has no valid bookId:", randomOffer);
-        alert("Oops! Couldn't find a valid book ID for the surprise selection from the filtered list. Please try again or adjust your filters.");
+        toast.error("Oops! Couldn't find a valid book ID for the surprise selection from the filtered list. Please try again or adjust your filters.", commonToastOptions);
       }
     } else {
-      alert("No offers available with your current filters to surprise you with! Try adjusting your filters.");
+      toast.info("No offers available with your current filters to surprise you with! Try adjusting your filters.", commonToastOptions);
     }
   };
 
@@ -269,192 +280,190 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
     
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-[#171612]">Loading anonymous book offers...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-        <div className="flex items-center justify-center h-full text-red-600">
-            <p>{error}</p>
-        </div>
-    );
-  }
-
   return (
     <div className="p-4">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-[#171612] tracking-wide text-[32px] font-bold leading-tight">
-          Whispers on the Board
-        </h2>
-        <button
-          onClick={handleSurpriseMe}
-          className="flex h-10 shrink-0 items-center justify-center rounded-full bg-[#c2e7a4] px-4 text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#aade85] transition-colors duration-200"
-        >
-          Surprise Me!
-        </button>
-      </div>
+      <ToastContainer /> {/* Placed here to always be rendered */}
 
-      <div className="mb-4 flex flex-wrap items-end gap-4">
-        <div className="flex items-center gap-2">
-          <label htmlFor="state-select" className="text-[#5B400D] font-semibold text-base">State:</label>
-          <select
-            id="state-select"
-            value={selectedState}
-            onChange={(e) => {
-              setSelectedState(e.target.value);
-              setSelectedCity(''); 
-              setSelectedArea(''); 
-              setCurrentPage(1);
-            }}
-            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-40"
-          >
-            <option value="">All</option>
-            {availableStates.map(state => (
-              <option key={state} value={state}>{state}</option>
-            ))}
-          </select>
+      {loading ? (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-[#171612]">Loading anonymous book offers...</p>
         </div>
-
-        <div className="flex items-center gap-2">
-          <label htmlFor="city-select" className="text-[#5B400D] font-semibold text-base">City:</label>
-          <select
-            id="city-select"
-            value={selectedCity}
-            onChange={(e) => {
-              setSelectedCity(e.target.value);
-              setSelectedArea(''); 
-              setCurrentPage(1);
-            }}
-            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-40"
-            disabled={!selectedState || availableCities.length === 0}
-          >
-            <option value="">All</option>
-            {availableCities.map(city => (
-              <option key={city} value={city}>{city}</option>
-            ))}
-          </select>
+      ) : error ? (
+        <div className="flex items-center justify-center h-full text-red-600">
+          <p>{error}</p>
         </div>
-
-        <div className="flex items-center gap-2">
-          <label htmlFor="area-select" className="text-[#5B400D] font-semibold text-base">Area:</label>
-          <select
-            id="area-select"
-            value={selectedArea}
-            onChange={(e) => {
-              setSelectedArea(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-40"
-            disabled={!selectedCity || availableAreas.length === 0}
-          >
-            <option value="">All</option>
-            {availableAreas.map(area => (
-              <option key={area} value={area}>{area}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="mb-6 flex flex-wrap items-end gap-4">
-        <div className="flex items-center gap-2">
-          <label htmlFor="genre-select" className="text-[#5B400D] font-semibold text-base">Genre:</label>
-          <select
-            id="genre-select"
-            value={genreFilter}
-            onChange={(e) => {
-              setGenreFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer"
-          >
-            <option value="All">All</option>
-            {uniqueGenres.filter(g => g !== 'All').map(g => (
-              <option key={g} value={g}>{g}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label htmlFor="author-select" className="text-[#5B400D] font-semibold text-base">Author:</label>
-          <select
-            id="author-select"
-            value={authorFilter}
-            onChange={(e) => {
-              setAuthorFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer"
-          >
-            <option value="All">All</option>
-            {uniqueAuthors.filter(a => a !== 'All').map(a => (
-              <option key={a} value={a}>{a}</option>
-            ))}
-          </select>
-        </div>
-
-        {(genreFilter !== 'All' || authorFilter !== 'All' || selectedState || selectedCity || selectedArea) && (
-          <button
-            onClick={handleClearFilters}
-            className="flex h-10 shrink-0 items-center justify-center rounded-full bg-[#f3ebd2] px-4 text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#e0d8c0] transition-colors duration-200"
-          >
-            Clear Filters
-          </button>
-        )}
-      </div>
-
-      {filteredAndPaginatedOffers.length === 0 ? (
-        <p className="text-[#837c67]">No anonymous notes found matching your criteria.</p>
       ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredAndPaginatedOffers.map(offer => (
-              <div
-                key={offer.id}
-                className={`relative p-6 rounded-lg shadow-lg transition-transform duration-200 ${offer.color} transform ${offer.rotation}
-                             hover:scale-105 hover:shadow-xl cursor-pointer`}
-                style={{ minHeight: '180px', boxShadow: '5px 5px 15px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05)' }}
-                onClick={() => onSelectBookOffer(offer.bookId)}
-              >
-                <div>
-                  <p className="text-[#171612] text-xl font-bold leading-tight mb-1">
-                    {offer.CustomizedTitle || 'Untitled Offer'}
-                  </p>
-                  
-                </div>
-
-                <p className="text-[#171612] text-base leading-normal line-clamp-4 mb-3">
-                  {offer.noteContent || 'No description provided.'}
-                </p>
-                <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-gray-500 rounded-full shadow-inner"></div>
-              </div>
-            ))}
+        <> {/* Fragment to wrap the rest of your content */}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-[#171612] tracking-wide text-[32px] font-bold leading-tight">
+              Whispers on the Board
+            </h2>
+            <button
+              onClick={handleSurpriseMe}
+              className="flex h-10 shrink-0 items-center justify-center rounded-full bg-[#c2e7a4] px-4 text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#aade85] transition-colors duration-200"
+            >
+              Surprise Me!
+            </button>
           </div>
 
-          {totalPagesForFiltered > 1 && (
-            <div className="flex justify-center items-center gap-4 mt-8">
-              <button
-                onClick={handlePrevPage}
-                disabled={currentPage === 1}
-                className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#f3ebd2] text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] disabled:opacity-50 disabled:cursor-not-allowed"
+          <div className="mb-4 flex flex-wrap items-end gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="state-select" className="text-[#5B400D] font-semibold text-base">State:</label>
+              <select
+                id="state-select"
+                value={selectedState}
+                onChange={(e) => {
+                  setSelectedState(e.target.value);
+                  setSelectedCity('');
+                  setSelectedArea('');
+                  setCurrentPage(1);
+                }}
+                className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-40"
               >
-                Previous
-              </button>
-              <span className="text-[#171612] font-medium">
-                Page {currentPage} of {totalPagesForFiltered}
-              </span>
-              <button
-                onClick={handleNextPage}
-                disabled={currentPage === totalPagesForFiltered}
-                className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#f3ebd2] text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
+                <option value="">All</option>
+                {availableStates.map(state => (
+                  <option key={state} value={state}>{state}</option>
+                ))}
+              </select>
             </div>
+
+            <div className="flex items-center gap-2">
+              <label htmlFor="city-select" className="text-[#5B400D] font-semibold text-base">City:</label>
+              <select
+                id="city-select"
+                value={selectedCity}
+                onChange={(e) => {
+                  setSelectedCity(e.target.value);
+                  setSelectedArea('');
+                  setCurrentPage(1);
+                }}
+                className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-40"
+                disabled={!selectedState || availableCities.length === 0}
+              >
+                <option value="">All</option>
+                {availableCities.map(city => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label htmlFor="area-select" className="text-[#5B400D] font-semibold text-base">Area:</label>
+              <select
+                id="area-select"
+                value={selectedArea}
+                onChange={(e) => {
+                  setSelectedArea(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-40"
+                disabled={!selectedCity || availableAreas.length === 0}
+              >
+                <option value="">All</option>
+                {availableAreas.map(area => (
+                  <option key={area} value={area}>{area}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="mb-6 flex flex-wrap items-end gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="genre-select" className="text-[#5B400D] font-semibold text-base">Genre:</label>
+              <select
+                id="genre-select"
+                value={genreFilter}
+                onChange={(e) => {
+                  setGenreFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer"
+              >
+                <option value="All">All</option>
+                {uniqueGenres.filter(g => g !== 'All').map(g => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label htmlFor="author-select" className="text-[#5B400D] font-semibold text-base">Author:</label>
+              <select
+                id="author-select"
+                value={authorFilter}
+                onChange={(e) => {
+                  setAuthorFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer"
+              >
+                <option value="All">All</option>
+                {uniqueAuthors.filter(a => a !== 'All').map(a => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+            </div>
+
+            {(genreFilter !== 'All' || authorFilter !== 'All' || selectedState || selectedCity || selectedArea) && (
+              <button
+                onClick={handleClearFilters}
+                className="flex h-10 shrink-0 items-center justify-center rounded-full bg-[#f3ebd2] px-4 text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#e0d8c0] transition-colors duration-200"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+
+          {filteredAndPaginatedOffers.length === 0 ? (
+            <p className="text-[#837c67]">No anonymous notes found matching your criteria.</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredAndPaginatedOffers.map(offer => (
+                  <div
+                    key={offer.id}
+                    className={`relative p-6 rounded-lg shadow-lg transition-transform duration-200 ${offer.color} transform ${offer.rotation}
+                                 hover:scale-105 hover:shadow-xl cursor-pointer`}
+                    style={{ minHeight: '180px', boxShadow: '5px 5px 15px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05)' }}
+                    onClick={() => onSelectBookOffer(offer.bookId)}
+                  >
+                    <div>
+                      <p className="text-[#171612] text-xl font-bold leading-tight mb-1">
+                        {offer.CustomizedTitle || 'Untitled Offer'}
+                      </p>
+
+                    </div>
+
+                    <p className="text-[#171612] text-base leading-normal line-clamp-4 mb-3">
+                      {offer.noteContent || 'No description provided.'}
+                    </p>
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-gray-500 rounded-full shadow-inner"></div>
+                  </div>
+                ))}
+              </div>
+
+              {totalPagesForFiltered > 1 && (
+                <div className="flex justify-center items-center gap-4 mt-8">
+                  <button
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                    className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#f3ebd2] text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-[#171612] font-medium">
+                    Page {currentPage} of {totalPagesForFiltered}
+                  </span>
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPagesForFiltered}
+                    className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#f3ebd2] text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </>
       )}
