@@ -7,9 +7,11 @@ import com.example.shelfshare.model.BookRequest;
 import com.example.shelfshare.service.BookService;
 import com.example.shelfshare.service.NoteSummarizationService;
 import com.example.shelfshare.service.NotesService;
+
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+
 import com.example.shelfshare.service.CustomTitleService;
 
 import java.security.Principal;
@@ -25,7 +27,10 @@ import com.example.shelfshare.entity.Books;
 import com.example.shelfshare.model.BookCreationResponse;
 import com.example.shelfshare.model.BookLendApprovalRequest;
 import com.example.shelfshare.service.UserService;
+
 import org.springframework.web.bind.annotation.GetMapping;
+
+import com.example.shelfshare.entity.BookStatus;
 
 
 @RestController
@@ -239,5 +244,25 @@ public class BookController {
         return new ResponseEntity<>(bookResponses, HttpStatus.OK);
     }
     
-
+    @PostMapping("/reportBook/{bookId}")
+    public ResponseEntity<MessageResponse> reportBook(@PathVariable Integer bookId, Principal principal) {
+        if (principal == null) {
+            return new ResponseEntity<>(new MessageResponse("User not authorized"), HttpStatus.UNAUTHORIZED);
+        }
+        var userOptional = userService.getUserByUsername(principal.getName());
+        if (userOptional == null) {
+            return new ResponseEntity<>(new MessageResponse("User not found"), HttpStatus.NOT_FOUND);
+        }
+        var bookOptional = bookService.getBookById(bookId);
+        if (bookOptional == null) {
+            return new ResponseEntity<>(new MessageResponse("Book not found"), HttpStatus.NOT_FOUND);
+        }
+        var book = bookOptional.get();
+        var reportStatus = bookService.reportBook(book, userOptional.get());
+        if (!reportStatus) {
+            return new ResponseEntity<>(new MessageResponse("Error while reporting the book."),HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(new MessageResponse("Book reported successfully"), HttpStatus.OK);
+    }
+    
 }

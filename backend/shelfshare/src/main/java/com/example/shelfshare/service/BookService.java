@@ -419,4 +419,22 @@ public class BookService {
             }
         }
     }
+
+    public Boolean reportBook(Books book, Users user) {
+        if (book.getCurrentOwner() != user) {
+            return false;
+        }
+        book.setBookStatus(BookStatus.ARCHIVED);
+        var previousOwners = book.getPreviousOwners();
+        previousOwners.add(book.getCurrentOwner());
+        book.setPreviousOwners(previousOwners);
+
+        var owner = book.getCurrentOwner();
+        owner.getBookOwned().remove(book.getBookId());
+
+        booksRepository.save(book);
+        userRepository.save(owner);
+
+        return true;
+    }
 }
