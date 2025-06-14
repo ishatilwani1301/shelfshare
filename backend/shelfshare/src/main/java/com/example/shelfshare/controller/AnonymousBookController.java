@@ -11,13 +11,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.example.shelfshare.service.CustomTitleService;
 
 
 import com.example.shelfshare.entity.Books;
 import com.example.shelfshare.model.AnonymousBookResponse;
 import com.example.shelfshare.service.BookService;
-import com.example.shelfshare.service.NoteSummarizationService;
 import com.example.shelfshare.service.NotesService;
 
 
@@ -28,17 +26,13 @@ public class AnonymousBookController {
 
     private final BookService bookService;
     private final NotesService notesService;
-    private final NoteSummarizationService noteSummarizationService;
-    private final CustomTitleService customTitleService;
-
+   
 
     @Autowired
-    public AnonymousBookController(BookService bookService, NotesService notesService, NoteSummarizationService noteSummarizationService, CustomTitleService customTitleService) {
+    public AnonymousBookController(BookService bookService, NotesService notesService) {
         this.bookService = bookService;
         this.notesService = notesService;
-        this.noteSummarizationService = noteSummarizationService;
-        this.customTitleService = customTitleService;
-
+        
     }
 
     @GetMapping
@@ -67,9 +61,11 @@ public class AnonymousBookController {
     }
 
     public AnonymousBookResponse buildAnonymousBookResponse(Books book, String message) {
-        var summarizedNoteContent = noteSummarizationService.getSummarizedNoteContent(book.getBookId());
-        String master_title = customTitleService.getMasterCustomTitle(book.getBookId());
+        var summarizedNoteContent = book.getSummarizedNoteContent(); // Get directly from Book
+        String master_title = book.getMasterCustomTitle();
+
         var notes = notesService.getMostRecentNoteForBook(book.getBookId());
+        
         var currentOwner = book.getCurrentOwner();
         return new AnonymousBookResponse(
             book.getBookId(),

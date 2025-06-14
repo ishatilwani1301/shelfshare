@@ -5,9 +5,7 @@ import com.example.shelfshare.model.MessageResponse;
 import com.example.shelfshare.repository.NotesRepository;
 import com.example.shelfshare.model.BookRequest;
 import com.example.shelfshare.service.BookService;
-import com.example.shelfshare.service.NoteSummarizationService;
 import com.example.shelfshare.service.NotesService;
-import com.example.shelfshare.service.CustomTitleService;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -39,17 +37,13 @@ public class BookController {
 
     private final UserService userService;
 
-    private final NoteSummarizationService noteSummarizationService;
 
-    private final CustomTitleService customTitleService;
-
-    public BookController(BookService bookService, NotesRepository noteRepository, NotesService notesService, UserService userService, NoteSummarizationService noteSummarizationService, CustomTitleService customTitleService) {
+    public BookController(BookService bookService, NotesRepository noteRepository, NotesService notesService, UserService userService) {
         this.bookService = bookService;
         this.noteRepository = noteRepository;
         this.notesService = notesService;
         this.userService = userService;
-        this.noteSummarizationService = noteSummarizationService;
-        this.customTitleService = customTitleService;
+ 
     }
     @PostMapping("/enlist/{bookId}")
     public ResponseEntity<MessageResponse> enlistBook(@PathVariable Integer bookId, @RequestBody BookRequest req, Principal principal) {
