@@ -56,6 +56,12 @@ public class Books {
     @CollectionTable(name = "book_notes", joinColumns = @JoinColumn(name = "book_id"))
     @Column(name = "note_id")
     private List<Integer> notesId = new ArrayList<>();
+
+    @Column(columnDefinition = "TEXT") 
+    private String summarizedNoteContent;
+
+    @Column(length = 255) 
+    private String masterCustomTitle;
     
     public Books() {
     }
@@ -153,6 +159,22 @@ public class Books {
 
     public void setNotesId(List<Integer> notesId) {
         this.notesId = notesId;
+    }
+
+    public String getSummarizedNoteContent() {
+        return summarizedNoteContent;
+    }
+
+    public void setSummarizedNoteContent(String summarizedNoteContent) {
+        this.summarizedNoteContent = summarizedNoteContent;
+    }
+
+    public String getMasterCustomTitle() {
+        return masterCustomTitle;
+    }
+
+    public void setMasterCustomTitle(String masterCustomTitle) {
+        this.masterCustomTitle = masterCustomTitle;
     }
     
 }

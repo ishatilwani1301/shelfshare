@@ -7,11 +7,6 @@ import com.example.shelfshare.model.BookRequest;
 import com.example.shelfshare.service.BookService;
 import com.example.shelfshare.service.NoteSummarizationService;
 import com.example.shelfshare.service.NotesService;
-
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-
 import com.example.shelfshare.service.CustomTitleService;
 
 import java.security.Principal;
@@ -27,9 +22,6 @@ import com.example.shelfshare.entity.Books;
 import com.example.shelfshare.model.BookCreationResponse;
 import com.example.shelfshare.model.BookLendApprovalRequest;
 import com.example.shelfshare.service.UserService;
-
-import org.springframework.web.bind.annotation.GetMapping;
-
 import com.example.shelfshare.entity.BookStatus;
 
 
@@ -138,10 +130,10 @@ public class BookController {
         }
         var currentOwner = (book.getCurrentOwner() != null) ? book.getCurrentOwner() : null;
 
-        String summarizedNoteContent = noteSummarizationService.getSummarizedNoteContent(book.getBookId());
-
-        String master_title = customTitleService.getMasterCustomTitle(book.getBookId());
-
+        String summarizedNoteContent = book.getSummarizedNoteContent(); // Get from entity
+    
+        String master_title = book.getMasterCustomTitle();
+        
         return new BookResponse(
             book.getBookId(),
             book.getBookTitle(),

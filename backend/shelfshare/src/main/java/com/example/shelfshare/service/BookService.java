@@ -42,6 +42,12 @@ public class BookService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private NoteSummarizationService noteSummarizationService;
+
+    @Autowired
+    private CustomTitleService customTitleService;
+
     @Transactional
     public Boolean enlistBook(Integer bookId, String username, String noteContent, String customizedTitle) {
         var userOptional = userRepository.findByUsername(username);
@@ -81,6 +87,12 @@ public class BookService {
             }
             updatedNotesArray.add(savedNote.getNoteId());
             book.setNotesId(updatedNotesArray);
+
+            String summarizedContent = noteSummarizationService.getSummarizedNoteContent(book.getBookId());
+            String masterTitle = customTitleService.getMasterCustomTitle(book.getBookId());
+
+            book.setSummarizedNoteContent(summarizedContent);
+            book.setMasterCustomTitle(masterTitle);
         }
 
         booksRepository.save(book);
@@ -129,9 +141,16 @@ public class BookService {
         newNote.setTimestamp(Instant.now());
         
         Notes savedNote = notesRepository.save(newNote);
+
         var updatedNotesArray = savedBook.getNotesId();
         updatedNotesArray.add(savedNote.getNoteId());
         savedBook.setNotesId(updatedNotesArray);
+
+        String summarizedContent = noteSummarizationService.getSummarizedNoteContent(savedBook.getBookId());
+        String masterTitle = customTitleService.getMasterCustomTitle(savedBook.getBookId());
+
+        savedBook.setSummarizedNoteContent(summarizedContent);
+        savedBook.setMasterCustomTitle(masterTitle);
 
         var booksEnlistedForSale = user.getBooksEnlistedForSale();
         booksEnlistedForSale.add(savedBook.getBookId());
