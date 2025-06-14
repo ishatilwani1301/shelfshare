@@ -190,6 +190,7 @@ public class FilterBooksController {
             book.getBookStatus().name(),
             book.getEnlisted(),
             currentOwner != null ? currentOwner.getUsername() : null,
+            currentOwner != null ? currentOwner.getName() : null,
             previousOwners,
             currentOwner != null ? currentOwner.getArea() : null,
             currentOwner != null ? currentOwner.getCity() : null,

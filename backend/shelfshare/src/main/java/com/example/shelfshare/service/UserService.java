@@ -212,7 +212,8 @@ public class UserService {
                 requester.getCity(),
                 requester.getState(),
                 requester.getCountry(),
-                request.getRequestDate().toString()
+                request.getRequestDate().toString(),
+                request.getStatus().toString()
             ));
         }
         return borrowRequests;

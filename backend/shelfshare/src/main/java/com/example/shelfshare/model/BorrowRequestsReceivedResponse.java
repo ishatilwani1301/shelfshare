@@ -12,6 +12,7 @@ public record BorrowRequestsReceivedResponse(Integer bookId,
                                             String requesterCity,
                                             String requesterState,
                                             String requesterCountry,
-                                            String requestDate) {
+                                            String requestDate,
+                                            String borrowRequestStatuString) {
 
 }
