@@ -1,5 +1,6 @@
 package com.example.shelfshare.service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,13 +14,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.example.shelfshare.entity.BookStatus;
+import com.example.shelfshare.entity.Books;
+import com.example.shelfshare.entity.BorrowRequestStatus;
 import com.example.shelfshare.entity.BorrowRequests;
 import com.example.shelfshare.entity.Users;
 import com.example.shelfshare.model.BorrowRequestsReceivedResponse;
 import com.example.shelfshare.model.BorrowRequestsSentResponse;
 import com.example.shelfshare.model.UserAddressResponse;
 import com.example.shelfshare.model.UserDetailsChangeRequest;
+import com.example.shelfshare.repository.BooksRepository;
 import com.example.shelfshare.repository.BorrowRequestRepository;
 import com.example.shelfshare.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -38,6 +44,9 @@ public class UserService {
 
     @Autowired
     private BorrowRequestRepository borrowRequestRepository;
+
+    @Autowired
+    private BooksRepository booksRepository;
 
     @Autowired
     private EmailService emailService;
@@ -237,4 +246,52 @@ public class UserService {
         }
         return answer.equals(securityQuestionsMap.get(question));
     }
+    @Transactional
+    public boolean cancelBorrowRequest(Integer borrowRequestId, String username) {
+    var userOptional = userRepository.findByUsername(username);
+    if (userOptional.isEmpty()) {
+        return false; // User not found
+    }
+    var currentUser = userOptional.get();
+
+    var borrowRequestOptional = borrowRequestRepository.findById(borrowRequestId);
+    if (borrowRequestOptional.isEmpty()) {
+        return false; // Borrow request not found
+    }
+    var borrowRequest = borrowRequestOptional.get();
+
+    if (!borrowRequest.getRequester().getUserId().equals(currentUser.getUserId()) ||
+        borrowRequest.getStatus() != BorrowRequestStatus.PENDING) {
+        return false; // Not the requester or request is not pending
+    }
+
+    // Update the borrow request status
+    borrowRequest.setStatus(BorrowRequestStatus.CANCELLED);
+    //borrowRequest.setCancellationDate(Instant.now()); // Set the cancellation timestamp
+    borrowRequestRepository.save(borrowRequest);
+
+    // Remove the request from the requester's sent requests
+    currentUser.getBorrowRequestsSent().remove(borrowRequestId);
+    userRepository.save(currentUser);
+
+    // Remove the request from the owner's received requests 
+    var owner = borrowRequest.getOwner();
+    owner = userRepository.findById(owner.getUserId()).orElse(owner);
+    owner.getBorrowRequestsReceived().remove(borrowRequestId);
+    userRepository.save(owner);
+
+    // Revert book status if it was set to REQUESTED
+    Books book = borrowRequest.getBook();
+    book = booksRepository.findById(book.getBookId()).orElse(book);
+    if (book.getBookStatus() == BookStatus.REQUESTED) {
+        book.setBookStatus(BookStatus.AVAILABLE);
+        book.setEnlisted(true); // Re-enlist the book
+        booksRepository.save(book);
+    }
+
+    //****to be done: Optional: Send an email notification to the owner
+    // emailService.sendBorrowRequestCancelledEmail(owner.getUserId(), currentUser.getUserId(), book.getBookId());
+
+    return true;
+}
 }

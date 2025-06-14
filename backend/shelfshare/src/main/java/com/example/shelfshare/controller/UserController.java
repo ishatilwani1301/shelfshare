@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,13 +19,14 @@ import com.example.shelfshare.model.UserDetailsResponse;
 import com.example.shelfshare.service.UserService;
 
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping; // <--- ADD THIS IMPORT
+import org.springframework.web.bind.annotation.PutMapping; 
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.example.shelfshare.model.UserPasswordChangeRequest;
 import com.example.shelfshare.model.UserPasswordChangeResponse;
 
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 import com.example.shelfshare.model.BorrowRequestsReceivedResponse;
 import com.example.shelfshare.model.ValidateSecurityQuestionRequest;
@@ -184,6 +186,23 @@ public class UserController {
         }
         return new ResponseEntity<List<BorrowRequestsReceivedResponse>>(borrowRequests, HttpStatus.OK);
     }
-    
+    @DeleteMapping("/cancelBorrowRequest/{borrowRequestId}")
+    public ResponseEntity<MessageResponse> cancelBorrowRequest(@PathVariable Integer borrowRequestId, Principal principal) {    
+    if (principal == null) {
+        return new ResponseEntity<>(new MessageResponse("User not authenticated"), HttpStatus.UNAUTHORIZED);
+    }
+
+    var username = principal.getName();
+    try {
+        boolean cancelled = userService.cancelBorrowRequest(borrowRequestId, username);
+        if (cancelled) {
+            return new ResponseEntity<>(new MessageResponse("Borrow request cancelled successfully"), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new MessageResponse("Failed to cancel borrow request. Request not found, or you are not the requester, or request status is not PENDING."), HttpStatus.BAD_REQUEST);
+        }
+    } catch (Exception e) {
+        return new ResponseEntity<>(new MessageResponse("An error occurred while cancelling the borrow request: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}
 }
 
