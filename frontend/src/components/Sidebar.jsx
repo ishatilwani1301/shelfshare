@@ -1,69 +1,99 @@
-// src/Sidebar.jsx
 import React from 'react';
+// Import icons from react-icons
+import { FaUser, FaBookOpen, FaBook } from 'react-icons/fa'; // Example icons from Font Awesome collection
+// You can also choose icons from other libraries like IoIcons, MdIcons, etc.
+// import { IoBook } from 'react-icons/io5';
+// import { MdOutlineLibraryBooks } from 'react-icons/md';
 
-const Sidebar = ({ activeItem, onNavigate }) => {
+
+const Sidebar = ({ activeItem, onNavigate, isMobileMenuOpen, toggleMobileMenu }) => {
   return (
+    <>
+      {/* Overlay for mobile menu when open */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={toggleMobileMenu}
+        ></div>
+      )}
 
-    <div
-      className="layout-content-container flex flex-col w-80 bg-white shadow-sm md:shadow-md"
-    >
-      <div className="flex h-full flex-col justify-between bg-white p-4 overflow-y-auto">
-        <div className="flex flex-col gap-4">
-          <div
-            onClick={() => onNavigate('profile')}
-            className={`flex items-center gap-3 px-3 py-2 cursor-pointer
-              ${activeItem === 'profile' ? 'rounded-full bg-[#f4f3f1]' : 'hover:rounded-full hover:bg-[#f4f3f1]'}
-            `}
-          >
-            <div className="text-[#171612]" data-icon="User" data-size="24px" data-weight="regular">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path>
+      <div
+        // Responsive classes:
+        // Hidden on mobile by default, shown as a block on medium screens and up
+        // When isMobileMenuOpen is true, it becomes fixed and visible on mobile
+        className={`
+          layout-content-container flex flex-col bg-white shadow-md
+          fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out
+          md:relative md:translate-x-0 md:w-80 md:shadow-sm
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+      >
+        <div className="flex h-full flex-col justify-between bg-white p-4 overflow-y-auto">
+          {/* Close button for mobile */}
+          <div className="md:hidden flex justify-end mb-4">
+            <button onClick={toggleMobileMenu} className="text-gray-600 hover:text-gray-900 focus:outline-none">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </div>
-            <p className="text-[#171612] text-sm font-medium leading-normal">Profile</p>
+            </button>
           </div>
-          <div
-            onClick={() => onNavigate('booksAvailable')}
-            className={`flex items-center gap-3 px-3 py-2 cursor-pointer
-              ${activeItem === 'booksAvailable' ? 'rounded-full bg-[#f4f3f1]' : 'hover:rounded-full hover:bg-[#f4f3f1]'}
-            `}
-          >
-            <div className="text-[#171612]" data-icon="BookOpen" data-size="24px" data-weight="fill">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M240,64V192a16,16,0,0,1-16,16H160a24,24,0,0,0-24,24,8,8,0,0,1-16,0,24,24,0,0,0-24-24H32a16,16,0,0,1-16-16V64A16,16,0,0,1,32,48H88a32,32,0,0,1,32,32v88a8,8,0,0,0,16,0V80a32,32,0,0,1,32-32h56A16,16,0,0,1,240,64Z"></path>
-              </svg>
+
+          <div className="flex flex-col gap-4">
+            {/* Profile */}
+            <div
+              onClick={() => onNavigate('profile')}
+              className={`flex items-center gap-3 px-3 py-2 cursor-pointer
+                ${activeItem === 'profile' ? 'rounded-full bg-[#f4f3f1]' : 'hover:rounded-full hover:bg-[#f4f3f1]'}
+              `}
+            >
+              <div className="text-[#171612]">
+                <FaUser size="24px" /> {/* React Icon */}
+              </div>
+              <p className="text-[#171612] text-sm font-medium leading-normal">Profile</p>
             </div>
-            <p className="text-[#171612] text-sm font-medium leading-normal">Books Available</p>
-          </div>
-          <div
-            onClick={() => onNavigate('anonymousBookOffers')}
-            className={`flex items-center gap-3 px-3 py-2 cursor-pointer
-              ${activeItem === 'anonymousBookOffers' ? 'rounded-full bg-[#f4f3f1]' : 'hover:rounded-full hover:bg-[#f4f3f1]'}
-            `}
-          >
-            <div className="text-[#171612]" data-icon="BookOpen" data-size="24px" data-weight="regular">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M224,48H160a40,40,0,0,0-32,16A40,40,0,0,0,96,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H96a24,24,0,0,1,24,24,8,8,0,0,0,16,0,24,24,0,0,1,24-24h64a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM96,192H32V64H96a24,24,0,0,1,24,24V200A39.81,39.81,0,0,0,96,192Zm128,0H160a39.81,39.81,0,0,0-24,8V88a24,24,0,0,1,24-24h64Z"></path>
-              </svg>
+
+            {/* Books Available */}
+            <div
+              onClick={() => onNavigate('booksAvailable')}
+              className={`flex items-center gap-3 px-3 py-2 cursor-pointer
+                ${activeItem === 'booksAvailable' ? 'rounded-full bg-[#f4f3f1]' : 'hover:rounded-full hover:bg-[#f4f3f1]'}
+              `}
+            >
+              <div className="text-[#171612]">
+                <FaBookOpen size="24px" /> {/* React Icon */}
+              </div>
+              <p className="text-[#171612] text-sm font-medium leading-normal">Books Available</p>
             </div>
-            <p className="text-[#171612] text-sm font-medium leading-normal">Anonymous Books</p>
-          </div>
-          <div
-            onClick={() => onNavigate('myShelf')}
-            className={`flex items-center gap-3 px-3 py-2 cursor-pointer
-              ${activeItem === 'myShelf' ? 'rounded-full bg-[#f4f3f1]' : 'hover:rounded-full hover:bg-[#f4f3f1]'}
-            `}
-          >
-            <div className="text-[#171612]" data-icon="Book" data-size="24px" data-weight="regular">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M208,24H72A32,32,0,0,0,40,56V224a8,8,0,0,0,8,8H192a8,8,0,0,0,0-16H56a16,16,0,0,1,16-16H208a8,8,0,0,0,8-8V32A8,8,0,0,0,208,24Zm-8,160H72a31.82,31.82,0,0,0-16,4.29V56A16,16,0,0,1,72,40H200Z"></path>
-              </svg>
+
+            {/* Anonymous Books */}
+            <div
+              onClick={() => onNavigate('anonymousBookOffers')}
+              className={`flex items-center gap-3 px-3 py-2 cursor-pointer
+                ${activeItem === 'anonymousBookOffers' ? 'rounded-full bg-[#f4f3f1]' : 'hover:rounded-full hover:bg-[#f4f3f1]'}
+              `}
+            >
+              <div className="text-[#171612]">
+                <FaBookOpen size="24px" /> {/* Re-using FaBookOpen, choose a different one if preferred */}
+              </div>
+              <p className="text-[#171612] text-sm font-medium leading-normal">Anonymous Books</p>
             </div>
-            <p className="text-[#171612] text-sm font-medium leading-normal">My Shelf</p>
+
+            {/* My Shelf */}
+            <div
+              onClick={() => onNavigate('myShelf')}
+              className={`flex items-center gap-3 px-3 py-2 cursor-pointer
+                ${activeItem === 'myShelf' ? 'rounded-full bg-[#f4f3f1]' : 'hover:rounded-full hover:bg-[#f4f3f1]'}
+              `}
+            >
+              <div className="text-[#171612]">
+                <FaBook size="24px" /> {/* React Icon */}
+              </div>
+              <p className="text-[#171612] text-sm font-medium leading-normal">My Shelf</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

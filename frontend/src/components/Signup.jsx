@@ -187,7 +187,7 @@ const SignUp = () => {
 
      toast.success(data.message || 'Account created successfully!', {
        position: 'top-right',
-       autoClose: 3000,
+       autoClose: 2000,
        hideProgressBar: false,
        closeOnClick: true,
        pauseOnHover: true,
@@ -202,7 +202,7 @@ const SignUp = () => {
      setError(err.message);
      toast.error(err.message || 'Signup failed. Please try again.', {
        position: 'top-right',
-       autoClose: 3000,
+       autoClose: 2000,
        hideProgressBar: false,
        closeOnClick: true,
        pauseOnHover: true,
