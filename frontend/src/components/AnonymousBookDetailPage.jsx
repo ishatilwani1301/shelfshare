@@ -58,7 +58,8 @@ const AnonymousBookDetailPage = ({  }) => {
           mainTitle: data.CustomizedTitle || 'Untitled Offer',
           note: data.noteContent || 'No description provided.',
           genre: data.bookGenre || 'N/A',
-          keeperName: data.currentOwnerUsername || 'Anonymous User', 
+          keeperUsername: data.currentOwnerUsername || 'Anonymous User', 
+          keeperFullName: data.currentOwnerName || '', 
           userArea: data.userArea || 'N/A',
           userCity: data.userCity || 'N/A',
           userState: data.userState || 'N/A',
@@ -180,8 +181,15 @@ const AnonymousBookDetailPage = ({  }) => {
 
           <h3 className="text-lg font-bold text-gray-800 mb-3">Current Keeper</h3>
           <div className="flex flex-col bg-gray-100 p-3 rounded-lg border border-gray-200 shadow-sm mb-6">
-            <p className="font-bold text-gray-900 text-lg mb-2">{offer.keeperName}</p>
+            {offer.keeperFullName && offer.keeperFullName !== 'N/A' && (
+              <p className="font-bold text-gray-900 text-lg mb-2">
+                {offer.keeperFullName}
+              </p>
+            )}
             <div className="text-gray-700 text-sm space-y-1">
+              {offer.keeperUsername && offer.keeperUsername !== 'Anonymous User' && (
+                <p>Username: <span className="font-semibold">{offer.keeperUsername}</span></p>
+              )}
               {offer.userArea && offer.userArea !== 'N/A' && (
                 <p>Area: <span className="font-semibold">{offer.userArea}</span></p>
               )}
