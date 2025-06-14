@@ -10,6 +10,7 @@ public record BookResponse(
         Integer publicationYear,
         String bookStatus,
         Boolean isEnlisted,
+        String currentOwnerUserName,
         String currentOwnerName,
         List<String> previousOwners,
         String userArea,
@@ -21,6 +22,6 @@ public record BookResponse(
 ) {
 
         public BookResponse(String message) {
-                this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, message);
+                this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, message);
         }
 }

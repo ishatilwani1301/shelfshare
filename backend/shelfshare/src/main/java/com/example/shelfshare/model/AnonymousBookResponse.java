@@ -5,6 +5,7 @@ public record AnonymousBookResponse(
     String bookGenre,
     String bookAuthor,
     String currentOwnerUsername,
+    String currentOwnerName,
     String userArea,
     String userCity,
     String userState,
@@ -14,6 +15,6 @@ public record AnonymousBookResponse(
     String message
 ) {
     public AnonymousBookResponse(String message) {
-        this(null, null, null, null, null, null, null, null, null, null, message);
+        this(null, null, null, null, null, null, null, null, null, null, null, message);
     }
 }
