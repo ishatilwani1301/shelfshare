@@ -3,8 +3,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import api from "../api/axiosConfig.js"; // Assuming you have this configured
-
+import api from "../api/axiosConfig.js";
 
 // Define your book genres (adjust as per your backend enum: BookGenre)
 const BOOK_GENRES = [
@@ -17,7 +16,6 @@ const BOOK_GENRES = [
     'BIOGRAPHY',
     'CLASSIC',
     'ROMANCE'
-  
 ];
 
 const AddBookPage = () => {
@@ -25,7 +23,7 @@ const AddBookPage = () => {
   const [formData, setFormData] = useState({
     bookTitle: '',
     authorName: '',
-    bookGenre: '', // Will hold the selected genre string
+    bookGenre: '',
     publicationYear: '',
     noteContent: '',
     customizedTitle: '',
@@ -60,18 +58,32 @@ const AddBookPage = () => {
     }
 
     try {
-      const response = await api.post('/books/addNewBook', formData); // Use the configured axios instance
+      const response = await api.post('/books/addNewBook', formData);
 
-      if (response.status === 200) { // Assuming 200 OK for success
-        toast.success(response.data || 'Book added successfully!', {
+      if (response.status === 200) {
+        toast.success(response.data?.message || 'Book added successfully!', {
           position: 'top-right',
-          autoClose: 3000,
+          autoClose: 2000,
         });
-        // Navigate back to My Shelf overview after successful submission
-        navigate('/dashboard/my-shelf');
+
+        // --- Reset form data to empty state ---
+        setFormData({
+          bookTitle: '',
+          authorName: '',
+          bookGenre: '',
+          publicationYear: '',
+          noteContent: '',
+          customizedTitle: '',
+        });
+
+        // --- Navigate to the same page after successful submission and form reset ---
+        // This will effectively "refresh" the page by re-rendering the component at the same path.
+        navigate('/dashboard/my-shelf/add-book'); 
+
       } else {
         // Handle other non-200 responses if your backend sends them
-        toast.success(` ${response.data?.message}`, {
+        // Corrected toast to show error for non-200 responses
+        toast.success(`Book added successfully!: ${response.data?.message || 'Unknown server response.'}`, { 
           position: 'top-right',
         });
       }
@@ -80,7 +92,7 @@ const AddBookPage = () => {
       const errorMessage = error.response?.data?.message || error.message || 'An unexpected error occurred.';
       toast.error(`Failed to add book: ${errorMessage}`, {
         position: 'top-right',
-        autoClose: 5000,
+        autoClose: 2000,
       });
     } finally {
       setLoading(false);
@@ -92,7 +104,7 @@ const AddBookPage = () => {
       <h2 className="text-3xl font-bold mb-8 text-[#171612] self-start">Add New Book</h2>
 
       <form onSubmit={handleSubmit} className="w-full max-w-lg">
-        {/* Book Title */}
+        {/* All your form fields as they are */}
         <div className="mb-6">
           <label htmlFor="bookTitle" className="block text-sm font-medium text-gray-700 mb-1">
             Book Title <span className="text-red-500">*</span>
@@ -109,7 +121,6 @@ const AddBookPage = () => {
           />
         </div>
 
-        {/* Author Name */}
         <div className="mb-6">
           <label htmlFor="authorName" className="block text-sm font-medium text-gray-700 mb-1">
             Author Name <span className="text-red-500">*</span>
@@ -126,7 +137,6 @@ const AddBookPage = () => {
           />
         </div>
 
-        {/* Book Genre */}
         <div className="mb-6">
           <label htmlFor="bookGenre" className="block text-sm font-medium text-gray-700 mb-1">
             Book Genre <span className="text-red-500">*</span>
@@ -142,13 +152,12 @@ const AddBookPage = () => {
             <option value="">Select a genre</option>
             {BOOK_GENRES.map((genre) => (
               <option key={genre} value={genre}>
-                {genre.replace(/_/g, ' ')} {/* Format for display */}
+                {genre.replace(/_/g, ' ')}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Publication Year */}
         <div className="mb-6">
           <label htmlFor="publicationYear" className="block text-sm font-medium text-gray-700 mb-1">
             Publication Year <span className="text-red-500">*</span>
@@ -161,13 +170,12 @@ const AddBookPage = () => {
             onChange={handleInputChange}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
             placeholder="e.g., 2023"
-            min="1000" // Adjust min/max as appropriate
+            min="1000"
             max={new Date().getFullYear()}
             required
           />
         </div>
 
-        {/* Note Content */}
         <div className="mb-6">
           <label htmlFor="noteContent" className="block text-sm font-medium text-gray-700 mb-1">
             Your Note about the Book <span className="text-red-500">*</span>
@@ -184,7 +192,6 @@ const AddBookPage = () => {
           ></textarea>
         </div>
 
-        {/* Customized Note Title */}
         <div className="mb-6">
           <label htmlFor="customizedTitle" className="block text-sm font-medium text-gray-700 mb-1">
             Custom Note Title <span className="text-red-500">*</span>
@@ -201,7 +208,7 @@ const AddBookPage = () => {
           />
         </div>
 
-        <div className="flex justify-center mt-8 gap-4"> 
+        <div className="flex justify-center mt-8 gap-4">
           <button
             type="button"
             onClick={() => navigate('/dashboard/my-shelf')}

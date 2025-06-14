@@ -6,12 +6,21 @@ import api from '../api/axiosConfig';
 import BorrowedBooksListPage from './BorrowedBooksListPage';
 import IncomingRequestsListPage from './IncomingRequestsListPage';
 import NotAvailablePage from './NotAvailablePage';
+// Import the new page component
+import SentBorrowRequestsPage from './SentBorrowRequestsPage';
+import myEnlistedBooksImage from '../assets/enlisted.jpg'; // Ejpgxample image
+import borrowedBooksImage from '../assets/borrow1.jpg';     // Example image
+import incomingRequestsImage from '../assets/reuest.jpg'; // Example image
+import sentRequestsImage from '../assets/review.jpg';       // Example image
 
-// Enhanced BookCard component (no change needed here)
-const BookCard = ({ title, description, buttonText, onClick, isLoading }) => (
+// Enhanced BookCard component with optional imreviewage
+const BookCard = ({ title, description, buttonText, onClick, isLoading, imageSrc }) => (
   <div className="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between h-full transform transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
     <div>
       <h3 className="text-[#171612] text-xl font-semibold mb-2">{title}</h3>
+      {imageSrc && (
+        <img src={imageSrc} alt={title} className="w-24 h-24 object-contain mx-auto mb-4" />
+      )}
       {isLoading ? (
         <p className="text-[#837c67] text-base mb-4 animate-pulse">Loading...</p>
       ) : (
@@ -46,10 +55,12 @@ const MyShelf = React.memo(() => {
   const [myEnlistedBooksCount, setMyEnlistedBooksCount] = useState(0);
   const [borrowedBooksCount, setBorrowedBooksCount] = useState(0);
   const [incomingBorrowRequestsCount, setIncomingBorrowRequestsCount] = useState(0);
+  const [sentBorrowRequestsCount, setSentBorrowRequestsCount] = useState(0); // New state for sent requests
 
   const [loadingEnlisted, setLoadingEnlisted] = useState(true);
   const [loadingBorrowed, setLoadingBorrowed] = useState(true);
   const [loadingIncoming, setLoadingIncoming] = useState(true);
+  const [loadingSent, setLoadingSent] = useState(true); // New loading state
 
   const API_BASE_URL = 'http://localhost:1234';
 
@@ -59,6 +70,7 @@ const MyShelf = React.memo(() => {
       setLoadingEnlisted(false);
       setLoadingBorrowed(false);
       setLoadingIncoming(false);
+      setLoadingSent(false); // Make sure to set to false for new state
       return;
     }
 
@@ -99,6 +111,19 @@ const MyShelf = React.memo(() => {
     } finally {
       setLoadingIncoming(false);
     }
+
+    // NEW: Sent Borrow Requests
+    try {
+      setLoadingSent(true);
+      const sentResponse = await api.get(`${API_BASE_URL}/user/borrowRequestsSent`); // Adjust this endpoint if needed
+      console.log('Sent requests response:', sentResponse.data);
+      setSentBorrowRequestsCount(sentResponse.data.length);
+    } catch (err) {
+      console.error('Error fetching sent requests count:', err);
+      setSentBorrowRequestsCount(0);
+    } finally {
+      setLoadingSent(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -116,11 +141,13 @@ const MyShelf = React.memo(() => {
   const handleViewBorrowedBooks = async () => {
     setLoadingBorrowed(true);
     try {
-      await api.get(`${API_BASE_URL}//books/booksBorrowed`);
+      await api.get(`${API_BASE_URL}/books/booksBorrowed`); // Pre-fetch to ensure data is there or catch error
       navigate('borrowed');
     } catch (err) {
       console.error('Error viewing borrowed books details:', err);
-      navigate('not-available-books');
+      // Removed the direct navigation to not-available-books here, as the BorrowedBooksListPage
+      // should handle showing "no books" if the data is empty.
+      navigate('borrowed'); // Still navigate to the page, it will handle the empty state.
     } finally {
       setLoadingBorrowed(false);
     }
@@ -129,19 +156,34 @@ const MyShelf = React.memo(() => {
   const handleViewIncomingRequests = async () => {
     setLoadingIncoming(true);
     try {
-      await api.get(`${API_BASE_URL}/user/borrowRequestsReceived`);
+      await api.get(`${API_BASE_URL}/user/borrowRequestsReceived`); // Pre-fetch
       navigate('requests');
     } catch (err) {
       console.error('Error viewing incoming requests details:', err);
-      navigate('not-available-request');
+      // Similar to borrowed books, the list page should handle empty state.
+      navigate('requests');
     } finally {
       setLoadingIncoming(false);
     }
   };
 
+  // NEW: Handler for Sent Borrow Requests
+  const handleViewSentRequests = async () => {
+    setLoadingSent(true);
+    try {
+      await api.get(`${API_BASE_URL}/user/borrowRequestsSent`); // Pre-fetch
+      navigate('sent-requests'); // Navigate to the new page
+    } catch (err) {
+      console.error('Error viewing sent requests details:', err);
+      navigate('sent-requests'); // Navigate to the page, it will handle the empty state.
+    } finally {
+      setLoadingSent(false);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-start h-full text-center p-8 bg-gray-100 min-h-screen font-sans">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-6xl"> {/* Increased max-w-xl to accommodate 4 columns better */}
         <Routes>
           <Route
             index
@@ -159,13 +201,14 @@ const MyShelf = React.memo(() => {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full"> {/* Adjusted grid for 4 columns */}
                   <BookCard
                     title="My Enlisted Books"
                     description={`You have ${myEnlistedBooksCount} books currently listed.`}
                     buttonText="View All"
                     onClick={handleViewEnlistedBooks}
                     isLoading={loadingEnlisted}
+                    imageSrc={myEnlistedBooksImage} // Add image
                   />
                   <BookCard
                     title="Borrowed Books"
@@ -173,6 +216,7 @@ const MyShelf = React.memo(() => {
                     buttonText="View All"
                     onClick={handleViewBorrowedBooks}
                     isLoading={loadingBorrowed}
+                    imageSrc={borrowedBooksImage} // Add image
                   />
                   <BookCard
                     title="Incoming Borrow Requests"
@@ -180,6 +224,16 @@ const MyShelf = React.memo(() => {
                     buttonText="Review Requests"
                     onClick={handleViewIncomingRequests}
                     isLoading={loadingIncoming}
+                    imageSrc={incomingRequestsImage} // Add image
+                  />
+                  {/* NEW: Sent Borrow Requests Card */}
+                  <BookCard
+                    title="Sent Borrow Requests"
+                    description={`You have ${sentBorrowRequestsCount} requests sent.`}
+                    buttonText="View Status"
+                    onClick={handleViewSentRequests}
+                    isLoading={loadingSent}
+                    imageSrc={sentRequestsImage} // Add image
                   />
                 </div>
               </>
@@ -189,8 +243,9 @@ const MyShelf = React.memo(() => {
           <Route path="enlisted" element={<MyEnlistedBooksPage onBookAction={fetchCounts} />} />
           <Route path="borrowed" element={<BorrowedBooksListPage />} />
           <Route path="requests" element={<IncomingRequestsListPage />} />
-          <Route path="not-available-request" element={<NotAvailablePage message="There are no incoming borrow requests at the moment." />} />
-          <Route path="not-available-books" element={<NotAvailablePage message="You have not borrowed any books yet." />} />
+          {/* NEW: Route for Sent Borrow Requests Page */}
+          <Route path="sent-requests" element={<SentBorrowRequestsPage />} />
+          {/* Removed specific "not-available" routes, let the list pages handle empty states */}
           <Route path="*" element={<p className="text-[#837c67] text-center py-8">My Shelf Sub-Page Not Found</p>} />
         </Routes>
       </div>
