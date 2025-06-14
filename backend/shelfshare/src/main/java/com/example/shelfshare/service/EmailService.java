@@ -123,4 +123,98 @@ public class EmailService {
         content.append("</body></html>");
         return content.toString();
     }
+
+    public void sendBorrowRequestAcceptedEmail(Integer ownerUserId, Integer requesterUserId, Integer bookId) {
+        var owner = userRepository.findById(ownerUserId).get();
+        var requester = userRepository.findById(requesterUserId).get();
+        var book = booksRepository.findById(bookId).get();
+
+        // Email to the Requester
+        try {
+            MimeMessage messageToRequester = mailSender.createMimeMessage();
+            MimeMessageHelper helperToRequester = new MimeMessageHelper(messageToRequester, true, "UTF-8");
+
+            helperToRequester.setFrom(senderEmail);
+            helperToRequester.setTo(requester.getUserEmail());
+            helperToRequester.setSubject("Your Borrow Request for '" + book.getBookTitle() + "' has been Accepted!");
+
+            String htmlContentRequester = buildBorrowRequestAcceptedEmailContentForRequester(
+                requester.getName(),
+                owner.getName(),
+                owner.getUserEmail(), // Pass owner's email to requester
+                book.getBookTitle()
+            );
+            helperToRequester.setText(htmlContentRequester, true);
+            mailSender.send(messageToRequester);
+
+            System.out.println("Borrow request accepted email sent to requester: " + requester.getUserEmail());
+        } catch (Exception e) {
+            System.err.println("Failed to send borrow request accepted email to requester: " + requester.getUserEmail());
+            e.printStackTrace();
+        }
+
+        // Email to the Owner
+        try {
+            MimeMessage messageToOwner = mailSender.createMimeMessage();
+            MimeMessageHelper helperToOwner = new MimeMessageHelper(messageToOwner, true, "UTF-8");
+
+            helperToOwner.setFrom(senderEmail);
+            helperToOwner.setTo(owner.getUserEmail());
+            helperToOwner.setSubject("Your have accepted the Borrow Request for '" + book.getBookTitle() + "' !");
+
+            String htmlContentOwner = buildBorrowRequestAcceptedEmailContentForOwner(
+                owner.getName(),
+                requester.getName(),
+                requester.getUserEmail(), // Pass requester's email to owner
+                book.getBookTitle()
+            );
+            helperToOwner.setText(htmlContentOwner, true);
+            mailSender.send(messageToOwner);
+
+            System.out.println("Borrow request accepted email sent to owner: " + owner.getUserEmail());
+        } catch (Exception e) {
+            System.err.println("Failed to send borrow request accepted email to owner: " + owner.getUserEmail());
+            e.printStackTrace(); // It's good practice to print the stack trace for debugging
+        }
+    }
+
+    private String buildBorrowRequestAcceptedEmailContentForRequester(String requesterName, String ownerName, String ownerEmail, String bookTitle) {
+        StringBuilder content = new StringBuilder();
+        content.append("<html><body>");
+        content.append("<p>Dear ").append(requesterName).append(",</p>");
+        content.append("<p>Great news! Your request to borrow <strong>").append(bookTitle).append("</strong> from ").append(ownerName).append(" has been ACCEPTED!</p>");
+        content.append("<p>You can now connect with ").append(ownerName).append(" to arrange the exchange of the book.</p>");
+        content.append("<p>Here's how to connect:</p>");
+        content.append("<ul>");
+        content.append("<li><strong>Owner's Email:</strong> <a href=\"mailto:").append(ownerEmail).append("\">").append(ownerEmail).append("</a></li>");
+        content.append("<li><strong>Google Chat:</strong> You can reach them via Google Chat using their email address. Just open Google Chat and start a new conversation with ").append(ownerEmail).append(".</li>");
+        content.append("</ul>");
+        content.append("<p>Please coordinate with ").append(ownerName).append(" directly regarding the pickup/delivery of the book.</p>");
+        content.append("<p>Happy Reading!</p>");
+        content.append("<p>Best regards,</p>");
+        content.append("<p>The ShelfShare Team</p>");
+        content.append("<p><small>This is an automated email, please do not reply.</small></p>");
+        content.append("</body></html>");
+        return content.toString();
+    }
+
+    private String buildBorrowRequestAcceptedEmailContentForOwner(String ownerName, String requesterName, String requesterEmail, String bookTitle) {
+        StringBuilder content = new StringBuilder();
+        content.append("<html><body>");
+        content.append("<p>Dear ").append(ownerName).append(",</p>");
+        content.append("<p>You've successfully accepted the borrow request for your book <strong>").append(bookTitle).append("</strong> from ").append(requesterName).append(".</p>");
+        content.append("<p>You can now connect with ").append(requesterName).append(" to arrange the exchange of the book.</p>");
+        content.append("<p>Here's how to connect:</p>");
+        content.append("<ul>");
+        content.append("<li><strong>Requester's Email:</strong> <a href=\"mailto:").append(requesterEmail).append("\">").append(requesterEmail).append("</a></li>");
+        content.append("<li><strong>Google Chat:</strong> You can reach them via Google Chat using their email address. Just open Google Chat and start a new conversation with ").append(requesterEmail).append(".</li>");
+        content.append("</ul>");
+        content.append("<p>Please coordinate with ").append(requesterName).append(" directly regarding the pickup/delivery of the book.</p>");
+        content.append("<p>Thank you for sharing!</p>");
+        content.append("<p>Best regards,</p>");
+        content.append("<p>The ShelfShare Team</p>");
+        content.append("<p><small>This is an automated email, please do not reply.</small></p>");
+        content.append("</body></html>");
+        return content.toString();
+    }
 }

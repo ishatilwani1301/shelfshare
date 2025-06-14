@@ -282,6 +282,8 @@ public class BookService {
 
         booksRepository.save(book);
 
+        emailService.sendBorrowRequestAcceptedEmail(owner.getUserId(), requester.getUserId(), book.getBookId());
+
         // Update the borrow request status
         BorrowRequests borrowRequest = borrowRequestRepository.findFirstByBookBookIdAndRequesterUserIdAndOwnerUserIdAndStatusOrderByRequestDateAsc(book.getBookId(), requester.getUserId(), owner.getUserId(), BorrowRequestStatus.PENDING);
         if (borrowRequest != null) {
@@ -418,5 +420,23 @@ public class BookService {
                 userRepository.save(requester);
             }
         }
+    }
+
+    public Boolean reportBook(Books book, Users user) {
+        if (book.getCurrentOwner() != user) {
+            return false;
+        }
+        book.setBookStatus(BookStatus.ARCHIVED);
+        var previousOwners = book.getPreviousOwners();
+        previousOwners.add(book.getCurrentOwner());
+        book.setPreviousOwners(previousOwners);
+
+        var owner = book.getCurrentOwner();
+        owner.getBookOwned().remove(book.getBookId());
+
+        booksRepository.save(book);
+        userRepository.save(owner);
+
+        return true;
     }
 }

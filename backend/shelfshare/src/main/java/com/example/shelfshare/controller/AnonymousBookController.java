@@ -76,6 +76,7 @@ public class AnonymousBookController {
             book.getBookGenre().name(),
             book.getAuthorName(),
             currentOwner.getUsername(),
+            currentOwner.getName(),
             currentOwner.getArea(),
             currentOwner.getCity(),
             currentOwner.getState(),
