@@ -282,6 +282,8 @@ public class BookService {
 
         booksRepository.save(book);
 
+        emailService.sendBorrowRequestAcceptedEmail(owner.getUserId(), requester.getUserId(), book.getBookId());
+
         // Update the borrow request status
         BorrowRequests borrowRequest = borrowRequestRepository.findFirstByBookBookIdAndRequesterUserIdAndOwnerUserIdAndStatusOrderByRequestDateAsc(book.getBookId(), requester.getUserId(), owner.getUserId(), BorrowRequestStatus.PENDING);
         if (borrowRequest != null) {
