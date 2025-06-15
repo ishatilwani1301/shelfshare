@@ -4,58 +4,78 @@ import api from '../api/axiosConfig'; // Assuming your axios instance is here
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const API_BASE_URL = 'http://localhost:1234';
+const API_BASE_URL = 'http://localhost:1234'; // Ensure this matches your backend API URL
 
 const SentBorrowRequestsPage = () => {
   const navigate = useNavigate();
   const [sentRequests, setSentRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [requestIdToCancel, setRequestIdToCancel] = useState(null); // State to hold the ID of the request to cancel
 
+  // Fetches the list of sent borrow requests from the backend
   const fetchSentRequests = useCallback(async () => {
     setLoading(true);
-    setError('');
+    setError(''); // Clear any previous errors
     try {
       const response = await api.get(`${API_BASE_URL}/user/borrowRequestsSent`);
-      // Ensure the data structure matches what's expected.
-      // If response.data is an array, use it directly.
+
       if (Array.isArray(response.data)) {
         setSentRequests(response.data);
+      } else if (response.data && Array.isArray(response.data.requests)) {
+        setSentRequests(response.data.requests);
       } else {
-        // If the backend sends an object with a list, adapt it.
-        // Example: { requests: [...] }
-        setSentRequests(response.data.requests || []);
+        console.warn('Unexpected data format for sent borrow requests:', response.data);
+        setSentRequests([]);
       }
+      // toast.success('Sent requests loaded successfully!', { position: 'top-right', autoClose: 1500 });
     } catch (err) {
       console.error('Error fetching sent borrow requests:', err);
-      setError(err.response?.data?.message || 'Failed to load sent requests. Please try again.');
-      setSentRequests([]);
+      const errorMessage = err.response?.data?.message || 'Failed to load sent requests. Please check your connection or try again.';
+      setError(errorMessage);
+      setSentRequests([]); // Clear requests on error
+      toast.error(errorMessage, { position: 'top-right', autoClose: 3000 });
     } finally {
-      setLoading(false);
+      setLoading(false); // Always set loading to false after the request
     }
   }, []);
 
+  // Effect hook to fetch requests when the component mounts
   useEffect(() => {
     fetchSentRequests();
   }, [fetchSentRequests]);
 
-  // IMPORTANT: For handleCancelRequest to work, your backend MUST provide a unique 'requestId'
-  // in the sentRequests array. If not, cancellation won't work correctly.
-  const handleCancelRequest = async (requestId) => { // This 'requestId' must come from the fetched data
-    if (!window.confirm('Are you sure you want to cancel this borrow request?')) {
-      return;
-    }
+  // Handler to open the confirmation modal
+  const handleOpenCancelModal = (borrowRequestId) => {
+    setRequestIdToCancel(borrowRequestId);
+    setShowConfirmModal(true);
+  };
+
+  // Handler to close the confirmation modal
+  const handleCloseCancelModal = () => {
+    setShowConfirmModal(false);
+    setRequestIdToCancel(null);
+  };
+
+  // Handles cancelling a borrow request after confirmation
+  const handleConfirmCancelRequest = async () => {
+    if (!requestIdToCancel) return; // Should not happen if modal logic is correct
+
+    handleCloseCancelModal(); // Close the modal immediately
 
     try {
-      await api.post(`${API_BASE_URL}/user/borrowRequests/${requestId}/cancel`);
-      toast.success('Borrow request cancelled successfully!', { position: 'top-right' });
-      fetchSentRequests(); // Refresh the list to reflect the cancellation
+      await api.delete(`${API_BASE_URL}/user/cancelBorrowRequest/${requestIdToCancel}`);
+      toast.success('Borrow request cancelled successfully!', { position: 'top-right', autoClose: 2000 });
+      fetchSentRequests(); // Refresh the list to show the updated status
     } catch (err) {
       console.error('Error cancelling borrow request:', err);
-      toast.error(err.response?.data?.message || 'Failed to cancel request.', { position: 'top-right' });
+      const errorMessage = err.response?.data?.message || 'Failed to cancel request. Please ensure it is pending and you are the requester.';
+      toast.error(errorMessage, { position: 'top-right', autoClose: 3000 });
     }
   };
 
+  // --- Loading State ---
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -65,12 +85,13 @@ const SentBorrowRequestsPage = () => {
     );
   }
 
+  // --- Error State ---
   if (error) {
     return (
       <div className="text-center p-8">
         <p className="text-red-500 text-lg mb-4">{error}</p>
         <button
-          onClick={fetchSentRequests}
+          onClick={fetchSentRequests} // Allows user to retry fetching
           className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors"
         >
           Retry
@@ -81,7 +102,8 @@ const SentBorrowRequestsPage = () => {
 
   return (
     <div className="p-8 bg-gray-100 min-h-screen font-sans">
-      <ToastContainer />
+      <ToastContainer /> {/* Component for displaying toast notifications */}
+
       <div className="flex justify-between items-center mb-8 border-b pb-4 border-gray-200">
         <h2 className="text-[#171612] tracking-wide text-[32px] font-extrabold leading-tight">
           Sent Borrow Requests
@@ -100,44 +122,37 @@ const SentBorrowRequestsPage = () => {
         </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sentRequests.map((request, index) => (
-            // Using index as key is generally not recommended if order can change,
-            // but necessary if backend doesn't provide a unique ID in this response.
-            // Ideally, your backend would include a 'requestId'.
-            <div key={request.bookName + index} className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-[#171612] text-xl font-semibold mb-2">{request.bookName}</h3> {/* Changed from bookTitle */}
+          {sentRequests.map((request) => (
+            <div key={request.borrowRequestId} className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-[#171612] text-xl font-semibold mb-2">{request.bookName}</h3>
+              {/* <p className="text-[#837c67] text-base mb-2">
+                Requested By: <span className="font-medium">{request.requestedFromUsername}</span>
+              </p> */}
               <p className="text-[#837c67] text-base mb-2">
-                Requested from: <span className="font-medium">{request.requestedFromUsername}</span> {/* Changed from ownerUsername */}
-              </p>
-              <p className="text-[#837c67] text-base mb-2">
-                Author: <span className="font-medium">{request.author}</span> {/* Added author */}
+                Author: <span className="font-medium">{request.author}</span>
               </p>
               <p className="text-[#837c67] text-base mb-2">
                 Request Date:{' '}
                 <span className="font-medium">
-                  {new Date(request.requestedDate).toLocaleDateString()} {/* Changed from requestDate */}
+                  {new Date(request.requestedDate).toLocaleDateString()}
                 </span>
               </p>
               <p className="text-[#171612] text-lg font-bold mb-4">
-                Status:{' '}
+                Status:{' '} 
                 <span
                   className={`
-                    ${request.acceptanceStatus === 'PENDING' ? 'text-yellow-600' : ''} {/* Changed from status */}
+                    ${request.acceptanceStatus === 'PENDING' ? 'text-yellow-600' : ''}
                     ${request.acceptanceStatus === 'ACCEPTED' ? 'text-green-600' : ''}
                     ${request.acceptanceStatus === 'REJECTED' ? 'text-red-600' : ''}
                     ${request.acceptanceStatus === 'CANCELLED' ? 'text-gray-600' : ''}
                   `}
                 >
-                  {request.acceptanceStatus} {/* Changed from status */}
+                  {request.acceptanceStatus}
                 </span>
               </p>
-              {request.acceptanceStatus === 'PENDING' && ( // Check acceptanceStatus for button
-                // Placeholder for requestId. If backend does not provide it,
-                // cancellation for specific requests won't work reliably without
-                // another API call to get the ID based on other details.
-                // It's crucial for the backend to return requestId.
+              {request.acceptanceStatus === 'PENDING' && (
                 <button
-                  onClick={() => handleCancelRequest(request.requestId)} // This requestId must be available
+                  onClick={() => handleOpenCancelModal(request.borrowRequestId)} // Open modal on click
                   className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75"
                 >
                   Cancel Request
@@ -145,6 +160,32 @@ const SentBorrowRequestsPage = () => {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-96">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Confirm Cancellation</h3>
+            <p className="text-gray-700 mb-6">
+              Are you sure you want to cancel this borrow request? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={handleCloseCancelModal}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors"
+              >
+                No, Keep It
+              </button>
+              <button
+                onClick={handleConfirmCancelRequest}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

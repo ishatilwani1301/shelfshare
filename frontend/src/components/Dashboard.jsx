@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, Routes, Route } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import users from '../assets/users.png'; // Make sure this path is correct
 
 // Import components
 import Header from './Header';
@@ -13,9 +12,9 @@ import AnonymousBooksAvailablePage from './AnonymousBooksAvailablePage';
 import AnonymousBookDetailPage from './AnonymousBookDetailPage';
 import BookDetailPage from './BookDetailPage';
 import MyShelf from './Myshelf';
-import AddBookPage from './AddBookPage'; // Keep for consistency, MyShelf can handle its own routing now
+import UserAvatar from '../services/UserAvatar'; // Adjust the import path as necessary
 
-// --- InputField component (remains the same) ---
+// --- InputField component (remains the same, but note label/name change for fullName) ---
 const InputField = React.memo(
   ({
     label,
@@ -51,11 +50,11 @@ const InputField = React.memo(
   )
 );
 
-// Component for the welcome message (remains the same)
-const WelcomeContent = React.memo(({ username, handleSidebarNavigate }) => (
+// Component for the welcome message (updated to use fullName)
+const WelcomeContent = React.memo(({ fullName, handleSidebarNavigate }) => (
   <div className="flex flex-col items-center justify-center h-full text-center p-8">
     <h2 className="text-[#171612] tracking-light text-[28px] font-bold leading-tight mb-4">
-      Welcome, {username}!
+      Welcome, {fullName}!
     </h2>
     <p className="text-[#837c67] text-lg leading-normal max-w-lg">
       Dive into your literary world. You can explore new books, manage your shelf, and connect with other readers.
@@ -69,7 +68,82 @@ const WelcomeContent = React.memo(({ username, handleSidebarNavigate }) => (
   </div>
 ));
 
-// Component for the profile page (remains the same)
+// PasswordChangeModal component
+const PasswordChangeModal = React.memo(({ isOpen, onClose, onChangePassword, username }) => {
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmNewPassword) {
+      toast.error("New password and confirm password don't match.");
+      return;
+    }
+    if (newPassword.length < 6) { // Example: Basic password strength check
+        toast.error("Password must be at least 6 characters long.");
+        return;
+    }
+    onChangePassword(username, newPassword);
+    setNewPassword('');
+    setConfirmNewPassword('');
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+        <h3 className="text-2xl font-bold mb-6 text-[#171612]">Change Password</h3>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              New Password
+            </label>
+            <input
+              type="password"
+              id="newPassword"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+              required
+            />
+          </div>
+          <div className="mb-6">
+            <label htmlFor="confirmNewPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              Confirm New Password
+            </label>
+            <input
+              type="password"
+              id="confirmNewPassword"
+              value={confirmNewPassword}
+              onChange={(e) => setConfirmNewPassword(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+              required
+            />
+          </div>
+          <div className="flex justify-end space-x-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-75 transition-colors"
+            >
+              Change Password
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+});
+
+// Component for the profile page (updated for fullName and UserAvatar)
 const ProfileContent = React.memo(
   ({
     formData,
@@ -79,22 +153,25 @@ const ProfileContent = React.memo(
     handleEditProfileClick,
     handleSaveProfile,
     handleCancelEdit,
-    username,
     availableAreas,
+    handleChangePasswordClick, // New prop for password change
   }) => {
     return (
-      <div className="flex flex-col items-center w-full p-8 bg-white rounded-lg shadow-md"> {/* Added rounded-lg and shadow-md */}
+      <div className="flex flex-col items-center w-full p-8 bg-white rounded-lg shadow-md">
         <h2 className="text-3xl font-bold mb-10 self-start text-[#171612]">Profile Dashboard</h2>
         <div className="flex flex-col items-center mb-8">
-          <img src={users} alt="Profile" className="w-24 h-24 rounded-full mb-4 object-cover border border-gray-200" /> {/* Added border */}
-          <h3 className="text-xl font-semibold text-gray-800">{username || 'Name'}</h3>
+          <UserAvatar username={formData.fullName || formData.email} size="w-24 h-24" />
+          <h3 className="text-xl font-semibold text-gray-800 mt-4">
+            {formData.fullName || 'Full Name'}
+          </h3>
+          <p className="text-sm text-gray-500">{formData.username || 'Email'}</p>
         </div>
         <div className="w-full max-w-md">
           <InputField
-            label="Username"
-            name="username"
-            value={formData.username}
-            placeholder="Enter your username"
+            label="Full Name"
+            name="fullName"
+            value={formData.fullName}
+            placeholder="Enter your full name"
             onChange={handleInputChange}
             isEditingProfile={isEditingProfile}
           />
@@ -116,7 +193,6 @@ const ProfileContent = React.memo(
             onChange={handleInputChange}
             isEditingProfile={isEditingProfile}
           />
-          {/* Custom rendering for Area field */}
           <div className="mb-6">
             <label htmlFor="area" className="block text-sm font-medium text-gray-700 mb-1">
               Area
@@ -144,7 +220,6 @@ const ProfileContent = React.memo(
               </p>
             )}
           </div>
-          {/* City, State, Country remain as disabled InputFields */}
           <InputField
             label="City"
             name="city"
@@ -191,13 +266,22 @@ const ProfileContent = React.memo(
                 </button>
               </>
             ) : (
-              <button
-                type="button"
-                onClick={handleEditProfileClick}
-                className="px-6 py-2 bg-[#f3ebd2] text-[#171612] font-semibold rounded-lg shadow-md hover:bg-[#e0d6c4] focus:outline-none focus:ring-2 focus:ring-[#f3ebd2] focus:ring-opacity-75 transition-colors"
-              >
-                Update Info
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={handleEditProfileClick}
+                  className="px-6 py-2 bg-[#f3ebd2] text-[#171612] font-semibold rounded-lg shadow-md hover:bg-[#e0d6c4] focus:outline-none focus:ring-2 focus:ring-[#f3ebd2] focus:ring-opacity-75 transition-colors"
+                >
+                  Update Info
+                </button>
+                <button
+                  type="button"
+                  onClick={handleChangePasswordClick}
+                  className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition-colors"
+                >
+                  Change Password
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -218,23 +302,24 @@ function Dashboard() {
     if (path.includes('/dashboard/my-shelf')) return 'myShelf';
     if (path.includes('/dashboard/profile')) return 'profile';
     if (path.includes('/dashboard/anonymousbooks')) return 'anonymousBookOffers';
-    return null; // Default to null or a welcome/home item
+    return null;
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBookOfferId, setSelectedBookOfferId] = useState(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // State for mobile sidebar
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false); // New state for password modal
 
-  // Height of the Header component (adjust if your Header's actual height changes)
-  const HEADER_HEIGHT_PX = 72; // Based on default py-3 (12px top/bottom) + element height
+  const HEADER_HEIGHT_PX = 72;
 
   const [formData, setFormData] = useState({
-    username: '',
+    fullName: '',
     email: '',
     pincode: '',
     area: '',
     city: '',
     state: '',
     country: '',
+    username: '', // Added username to formData for password change
   });
   const [availableAreas, setAvailableAreas] = useState([]);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -260,8 +345,10 @@ function Dashboard() {
         throw new Error(errorData.message || 'Failed to fetch user details');
       }
       const data = await response.json();
+      console.log('User details:', data);
       setUserData(data);
       setFormData({
+        fullName: data.name || '',
         username: data.username || '',
         email: data.email || '',
         pincode: data.pincode || '',
@@ -291,7 +378,7 @@ function Dashboard() {
       if (
         error.message.includes('Unauthorized') ||
         error.message.includes('Failed to fetch') ||
-        error.message.includes('Network Error') // Add network error check
+        error.message.includes('Network Error')
       ) {
         localStorage.removeItem('accessToken');
         setUserData(null);
@@ -335,7 +422,7 @@ function Dashboard() {
           setAvailableAreas(fetchedAreas);
           setFormData((prevData) => ({
             ...prevData,
-            area: fetchedAreas.length > 0 ? fetchedAreas[0] : '', // Automatically select first area if available
+            area: fetchedAreas.length > 0 ? fetchedAreas[0] : '',
             city: data.city || '',
             state: data.state || '',
             country: data.country || '',
@@ -361,7 +448,7 @@ function Dashboard() {
           }));
           setAvailableAreas([]);
         }
-      } else if (name === 'pincode' && value.length < 6 && value.length > 0) { // Clear if incomplete
+      } else if (name === 'pincode' && value.length < 6 && value.length > 0) {
         setFormData((prevData) => ({
           ...prevData,
           area: '',
@@ -399,8 +486,7 @@ function Dashboard() {
       navigate('/login');
       return;
     }
-    // Basic validation for required fields before saving
-    if (!formData.username || !formData.email || !formData.pincode || !formData.area) {
+    if (!formData.fullName || !formData.email || !formData.pincode || !formData.area) {
       toast.error('Please fill all required profile fields.', { position: 'top-right' });
       return;
     }
@@ -412,7 +498,7 @@ function Dashboard() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${AccessToken}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, name: formData.fullName }),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -420,8 +506,7 @@ function Dashboard() {
       }
       const result = await response.json();
       console.log('Update result:', result);
-      // Update local userData state with new formData values
-      setUserData(formData);
+      setUserData((prev) => ({ ...prev, ...formData, name: formData.fullName }));
       toast.success(result.message || 'Profile updated successfully!', {
         position: 'top-right',
         autoClose: 3000,
@@ -448,8 +533,9 @@ function Dashboard() {
 
   const handleCancelEdit = useCallback(() => {
     setIsEditingProfile(false);
-    // Revert formData to the original userData values
+    // Revert formData to the original userData values, using 'name' for fullName
     setFormData({
+      fullName: userData?.name || '',
       username: userData?.username || '',
       email: userData?.email || '',
       pincode: userData?.pincode || '',
@@ -458,7 +544,6 @@ function Dashboard() {
       state: userData?.state || '',
       country: userData?.country || '',
     });
-    // Reset availableAreas as well, unless the original user data had multiple areas
     if (userData?.area) {
         setAvailableAreas([userData.area]);
     } else {
@@ -469,6 +554,71 @@ function Dashboard() {
       autoClose: 2000,
     });
   }, [userData]);
+
+  // New: Handle opening the password change modal
+  const handleChangePasswordClick = useCallback(() => {
+    setIsPasswordModalOpen(true);
+  }, []);
+
+  // New: Handle closing the password change modal
+  const handleClosePasswordModal = useCallback(() => {
+    setIsPasswordModalOpen(false);
+  }, []);
+
+  // New: Handle password change API call
+  const handlePasswordChange = useCallback(async (username, newPassword) => {
+    if (!AccessToken) {
+      toast.error('Authentication required to change password. Please log in.', {
+        position: 'top-right',
+      });
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:1234/user/changeUserPassword', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${AccessToken}`,
+        },
+        body: JSON.stringify({ username, newPassword }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to change password');
+      }
+
+      const result = await response.json();
+      toast.success(result.message || 'Password changed successfully! Please log in with your new password.', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      handleClosePasswordModal(); // Close modal on success
+      localStorage.removeItem('accessToken'); // Clear the old token
+      setTimeout(() => {
+        navigate('/login'); // Navigate to login page after a short delay for toast to be seen
+      }, 3000); // 3 seconds delay
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error(`Failed to change password: ${error.message}`, {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    }
+  }, [AccessToken, navigate, handleClosePasswordModal]);
+
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('accessToken');
@@ -485,7 +635,6 @@ function Dashboard() {
       setActiveSidebarItem(item);
       setSearchQuery('');
       setSelectedBookOfferId(null);
-      // Close mobile menu when navigating from sidebar
       if (isMobileMenuOpen) {
           setIsMobileMenuOpen(false);
       }
@@ -498,10 +647,10 @@ function Dashboard() {
       } else if (item === 'anonymousBookOffers') {
         navigate('/dashboard/anonymousbooks');
       } else {
-        navigate('/dashboard'); // Fallback to welcome/home
+        navigate('/dashboard');
       }
     },
-    [navigate, isMobileMenuOpen] // Add isMobileMenuOpen to dependencies
+    [navigate, isMobileMenuOpen]
   );
 
   const handleSearchChange = useCallback((query) => {
@@ -530,7 +679,7 @@ function Dashboard() {
   if (error) {
     return (
       <div
-        className="relative flex min-h-screen flex-col bg-gray-100 group/design-root" // Changed bg-white to bg-gray-100 for consistency
+        className="relative flex min-h-screen flex-col bg-gray-100 group/design-root"
         style={{ fontFamily: '"Plus Jakarta Sans", "Noto Sans", sans-serif' }}
       >
         <Header
@@ -538,7 +687,7 @@ function Dashboard() {
           onLogout={handleLogout}
           onSearchChange={handleSearchChange}
           searchQuery={searchQuery}
-          toggleMobileMenu={toggleMobileMenu} // Pass toggleMobileMenu
+          toggleMobileMenu={toggleMobileMenu}
         />
         <main
           className="flex-grow flex items-center justify-center p-4 md:p-8"
@@ -560,37 +709,36 @@ function Dashboard() {
     );
   }
 
-  const username = userData?.username || 'Guest';
+  const displayFullName = userData?.name || 'Guest';
 
   return (
     <div
-      className="relative flex min-h-screen flex-col bg-gray-100 group/design-root" // Changed bg-white to bg-gray-100 for consistency
+      className="relative flex min-h-screen flex-col bg-gray-100 group/design-root"
       style={{ fontFamily: '"Plus Jakarta Sans", "Noto Sans", sans-serif' }}
     >
       <ToastContainer />
       <Header
-        username={username}
+        username={displayFullName}
         onLogout={handleLogout}
         onSearchChange={handleSearchChange}
         searchQuery={searchQuery}
-        toggleMobileMenu={toggleMobileMenu} // Pass toggleMobileMenu
+        toggleMobileMenu={toggleMobileMenu}
       />
       <div className="flex flex-1" style={{ paddingTop: `${HEADER_HEIGHT_PX}px` }}>
-        {/* Pass mobile menu state and toggle function to Sidebar */}
         <Sidebar
           activeItem={activeSidebarItem}
           onNavigate={handleSidebarNavigate}
-          isMobileMenuOpen={isMobileMenuOpen} // Pass the state
-          toggleMobileMenu={toggleMobileMenu} // Pass the toggle function
+          isMobileMenuOpen={isMobileMenuOpen}
+          toggleMobileMenu={toggleMobileMenu}
         />
-        <main className="flex-1 overflow-y-auto px-4 py-5 md:px-6"> {/* Adjusted padding for mobile */}
+        <main className="flex-1 overflow-y-auto px-4 py-5 md:px-6">
           <div className="layout-content-container flex flex-col max-w-[960px] mx-auto flex-1">
             <Routes>
               <Route
                 path="/"
                 element={
                   <WelcomeContent
-                    username={username}
+                    fullName={displayFullName}
                     handleSidebarNavigate={handleSidebarNavigate}
                   />
                 }
@@ -606,8 +754,8 @@ function Dashboard() {
                     handleEditProfileClick={handleEditProfileClick}
                     handleSaveProfile={handleSaveProfile}
                     handleCancelEdit={handleCancelEdit}
-                    username={username}
                     availableAreas={availableAreas}
+                    handleChangePasswordClick={handleChangePasswordClick} // Pass the new handler
                   />
                 }
               />
@@ -621,11 +769,7 @@ function Dashboard() {
                 }
               />
               <Route path="books/:bookId" element={<BookDetailPage />} />
-              {/* MyShelf now handles its own sub-routes */}
               <Route path="my-shelf/*" element={<MyShelf />} />
-              
-              {/* REMOVED: <Route path="/add-book" element={<AddBookPage />} /> - MyShelf handles this */}
-              
               <Route
                 path="anonymousbooks"
                 element={
@@ -654,6 +798,13 @@ function Dashboard() {
         </main>
       </div>
       <Footer />
+      {/* Password Change Modal */}
+      <PasswordChangeModal
+        isOpen={isPasswordModalOpen}
+        onClose={handleClosePasswordModal}
+        onChangePassword={handlePasswordChange}
+        username={formData.username} // Pass the username to the modal
+      />
     </div>
   );
 }

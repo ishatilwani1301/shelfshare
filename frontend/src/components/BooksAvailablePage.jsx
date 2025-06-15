@@ -9,7 +9,6 @@ const BooksAvailablePage = ({ searchQuery }) => {
   const [genres, setGenres] = useState([]);
   const [authors, setAuthors] = useState([]);
 
-
   const [availableAreas, setAvailableAreas] = useState([]);
   const [availableCities, setAvailableCities] = useState([]);
   const [availableStates, setAvailableStates] = useState([]);
@@ -47,7 +46,7 @@ const BooksAvailablePage = ({ searchQuery }) => {
 
         const uniqueGenres = new Set();
         const uniqueAuthors = new Set();
-        const map = {}; 
+        const map = {};
 
         data.forEach(book => {
           if (book.bookGenre && book.bookGenre.trim() !== '') {
@@ -88,7 +87,8 @@ const BooksAvailablePage = ({ searchQuery }) => {
     };
 
     fetchInitialFilterData();
-  }, []); 
+  }, []);
+
   useEffect(() => {
     if (selectedState && stateCityAreaMap[selectedState]) {
       const citiesForState = Object.keys(stateCityAreaMap[selectedState]).sort();
@@ -103,7 +103,7 @@ const BooksAvailablePage = ({ searchQuery }) => {
     }
   }, [selectedState, stateCityAreaMap]);
 
- 
+
   useEffect(() => {
     if (selectedState && selectedCity && stateCityAreaMap[selectedState]?.[selectedCity]) {
       const areasForCity = Array.from(stateCityAreaMap[selectedState][selectedCity]).sort();
@@ -144,7 +144,7 @@ const BooksAvailablePage = ({ searchQuery }) => {
 
         const matchesAuthor = !selectedAuthor || authorName.toLowerCase() === selectedAuthor.toLowerCase();
 
-        let matchesLocation = true; 
+        let matchesLocation = true;
 
         if (selectedState) {
           matchesLocation = matchesLocation && userState.toLowerCase() === selectedState.toLowerCase();
@@ -159,7 +159,7 @@ const BooksAvailablePage = ({ searchQuery }) => {
         return matchesSearch && matchesGenre && matchesAuthor && matchesLocation;
       });
 
-      setBooks(filteredBooks); 
+      setBooks(filteredBooks);
 
     } catch (e) {
       console.error("Failed to fetch or filter books:", e);
@@ -167,12 +167,13 @@ const BooksAvailablePage = ({ searchQuery }) => {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedGenre, selectedAuthor, selectedState, selectedCity, selectedArea]); 
+  }, [searchQuery, selectedGenre, selectedAuthor, selectedState, selectedCity, selectedArea]);
 
-  
+
   useEffect(() => {
     fetchAndFilterBooks();
-  }, [fetchAndFilterBooks]); 
+  }, [fetchAndFilterBooks]);
+
   const handleStateChange = (e) => {
     const state = e.target.value;
     setSelectedState(state);
@@ -212,29 +213,30 @@ const BooksAvailablePage = ({ searchQuery }) => {
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold text-[#171612] mb-6">Available Books</h1>
+    <div className="p-4 sm:p-6"> {/* Adjusted padding for smaller screens */}
+      <h1 className="text-2xl sm:text-3xl font-bold text-[#171612] mb-4 sm:mb-6">Available Books</h1> {/* Responsive text size */}
 
       {(selectedGenre || selectedAuthor || selectedState || selectedCity || selectedArea) && (
         <div className="flex justify-end mb-4">
           <button
             onClick={handleClearFilters}
-            className="flex h-11 shrink-0 items-center justify-center rounded-md bg-[#f3ebd2] pl-4 pr-4 text-[#5B400D] text-base font-bold leading-normal tracking-[0.015em] hover:bg-[#e0d8c0] transition-colors duration-200"
+            className="flex h-10 sm:h-11 shrink-0 items-center justify-center rounded-md bg-[#f3ebd2] px-3 sm:px-4 text-[#5B400D] text-sm sm:text-base font-bold leading-normal tracking-[0.015em] hover:bg-[#e0d8c0] transition-colors duration-200"
           >
             Clear Filters
           </button>
         </div>
       )}
 
-      <div className="flex flex-wrap items-end gap-4 mb-4">
+      {/* Filter section with enhanced responsiveness */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"> {/* Changed to grid for better stacking on small screens */}
         {/* State Filter */}
-        <div className="flex items-center gap-2">
-          <label htmlFor="state-select" className="text-[#5B400D] font-semibold text-base">State:</label>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2"> {/* Stack on small, row on medium+ */}
+          <label htmlFor="state-select" className="text-[#5B400D] font-semibold text-base whitespace-nowrap">State:</label>
           <select
             id="state-select"
             value={selectedState}
             onChange={handleStateChange}
-            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-40"
+            className="p-2 sm:p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-full sm:w-40" 
           >
             <option value="">All</option>
             {availableStates.map(state => (
@@ -243,13 +245,13 @@ const BooksAvailablePage = ({ searchQuery }) => {
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label htmlFor="city-select" className="text-[#5B400D] font-semibold text-base">City:</label>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+          <label htmlFor="city-select" className="text-[#5B400D] font-semibold text-base whitespace-nowrap">City:</label>
           <select
             id="city-select"
             value={selectedCity}
             onChange={handleCityChange}
-            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-40"
+            className="p-2 sm:p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-full sm:w-40"
             disabled={!selectedState || availableCities.length === 0}
           >
             <option value="">All</option>
@@ -259,13 +261,13 @@ const BooksAvailablePage = ({ searchQuery }) => {
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label htmlFor="area-select" className="text-[#5B400D] font-semibold text-base">Area:</label>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+          <label htmlFor="area-select" className="text-[#5B400D] font-semibold text-base whitespace-nowrap">Area:</label>
           <select
             id="area-select"
             value={selectedArea}
             onChange={handleAreaChange}
-            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-40"
+            className="p-2 sm:p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-full sm:w-40"
             disabled={!selectedCity || availableAreas.length === 0}
           >
             <option value="">All</option>
@@ -274,16 +276,14 @@ const BooksAvailablePage = ({ searchQuery }) => {
             ))}
           </select>
         </div>
-      </div>
 
-      <div className="flex flex-wrap items-end gap-4 mb-6">
-        <div className="flex items-center gap-2">
-          <label htmlFor="author-select" className="text-[#5B400D] font-semibold text-base">Author:</label>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+          <label htmlFor="author-select" className="text-[#5B400D] font-semibold text-base whitespace-nowrap">Author:</label>
           <select
             id="author-select"
             value={selectedAuthor}
             onChange={(e) => setSelectedAuthor(e.target.value)}
-            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer"
+            className="p-2 sm:p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-full sm:w-auto" 
           >
             <option value="">All</option>
             {authors.map(a => (
@@ -292,13 +292,13 @@ const BooksAvailablePage = ({ searchQuery }) => {
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label htmlFor="genre-select" className="text-[#5B400D] font-semibold text-base">Genre:</label>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+          <label htmlFor="genre-select" className="text-[#5B400D] font-semibold text-base whitespace-nowrap">Genre:</label>
           <select
             id="genre-select"
             value={selectedGenre}
             onChange={(e) => setSelectedGenre(e.target.value)}
-            className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer"
+            className="p-2 sm:p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-full sm:w-auto"
           >
             <option value="">All</option>
             {genres.map(g => (
@@ -308,7 +308,7 @@ const BooksAvailablePage = ({ searchQuery }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {books.length > 0 ? (
           books.map((book, index) => (
             <Link
