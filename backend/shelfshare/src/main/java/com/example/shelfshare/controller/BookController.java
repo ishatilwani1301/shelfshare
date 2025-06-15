@@ -84,7 +84,7 @@ public class BookController {
         return new ResponseEntity<>(bookResponses, HttpStatus.OK);
     }
 
-    @GetMapping("/my-books")
+    @GetMapping("/my-books") //will only send those books which are enlisted by user
     public ResponseEntity<List<BookResponse>> getMyBooks(Principal principal) {
         if (principal == null) {
             return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
