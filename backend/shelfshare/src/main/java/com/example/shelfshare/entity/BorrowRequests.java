@@ -39,6 +39,10 @@ public class BorrowRequests {
     @Column(nullable = false)
     private BorrowRequestStatus status;
 
+    //optional: cancellation date
+    //@Column(nullable = false)
+    //private Instant cancellationDate;
+
     public BorrowRequests() {
     }
 
@@ -99,4 +103,12 @@ public class BorrowRequests {
     public void setStatus(BorrowRequestStatus status) {
         this.status = status;
     }
+    //optional
+    //public Instant getCancellationDate() {
+    //    return cancellationDate;
+    //}
+    
+    //public void setCancellationDate(Instant cancellationDate) {
+    //    this.cancellationDate = cancellationDate;
+    //}
 }

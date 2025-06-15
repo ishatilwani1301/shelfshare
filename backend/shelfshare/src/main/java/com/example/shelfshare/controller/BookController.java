@@ -5,14 +5,7 @@ import com.example.shelfshare.model.MessageResponse;
 import com.example.shelfshare.repository.NotesRepository;
 import com.example.shelfshare.model.BookRequest;
 import com.example.shelfshare.service.BookService;
-import com.example.shelfshare.service.NoteSummarizationService;
 import com.example.shelfshare.service.NotesService;
-
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-
-import com.example.shelfshare.service.CustomTitleService;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -27,9 +20,6 @@ import com.example.shelfshare.entity.Books;
 import com.example.shelfshare.model.BookCreationResponse;
 import com.example.shelfshare.model.BookLendApprovalRequest;
 import com.example.shelfshare.service.UserService;
-
-import org.springframework.web.bind.annotation.GetMapping;
-
 import com.example.shelfshare.entity.BookStatus;
 
 
@@ -47,17 +37,13 @@ public class BookController {
 
     private final UserService userService;
 
-    private final NoteSummarizationService noteSummarizationService;
 
-    private final CustomTitleService customTitleService;
-
-    public BookController(BookService bookService, NotesRepository noteRepository, NotesService notesService, UserService userService, NoteSummarizationService noteSummarizationService, CustomTitleService customTitleService) {
+    public BookController(BookService bookService, NotesRepository noteRepository, NotesService notesService, UserService userService) {
         this.bookService = bookService;
         this.noteRepository = noteRepository;
         this.notesService = notesService;
         this.userService = userService;
-        this.noteSummarizationService = noteSummarizationService;
-        this.customTitleService = customTitleService;
+ 
     }
     @PostMapping("/enlist/{bookId}")
     public ResponseEntity<MessageResponse> enlistBook(@PathVariable Integer bookId, @RequestBody BookRequest req, Principal principal) {
@@ -138,10 +124,10 @@ public class BookController {
         }
         var currentOwner = (book.getCurrentOwner() != null) ? book.getCurrentOwner() : null;
 
-        String summarizedNoteContent = noteSummarizationService.getSummarizedNoteContent(book.getBookId());
-
-        String master_title = customTitleService.getMasterCustomTitle(book.getBookId());
-
+        String summarizedNoteContent = book.getSummarizedNoteContent(); // Get from entity
+    
+        String master_title = book.getMasterCustomTitle();
+        
         return new BookResponse(
             book.getBookId(),
             book.getBookTitle(),
