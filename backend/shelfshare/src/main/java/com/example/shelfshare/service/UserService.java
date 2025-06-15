@@ -189,7 +189,10 @@ public class UserService {
         List<BorrowRequestsSentResponse> borrowRequests = new ArrayList<>();
         List<BorrowRequests> requests = borrowRequestRepository.findAllByRequesterId(user.getUserId());
         for (BorrowRequests request : requests) {
-            borrowRequests.add(new BorrowRequestsSentResponse(request.getBook().getBookTitle(),
+            borrowRequests.add(new BorrowRequestsSentResponse(
+                                                            request.getBorrowRequestId(),
+                                                            request.getBook().getBookId(),
+                                                            request.getBook().getBookTitle(),
                                                             request.getBook().getAuthorName(),
                                                             request.getRequestDate().toString(),
                                                             request.getOwner().getUsername(),
