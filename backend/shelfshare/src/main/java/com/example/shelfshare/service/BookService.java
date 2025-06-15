@@ -165,8 +165,7 @@ public class BookService {
     public List<Books> getMyBooks(String username) {
         var user = userRepository.findByUsername(username)
             .orElseThrow(() -> new NoSuchElementException("User not found"));
-        var myBooks = booksRepository.findByCurrentOwner_Username(username);
-        return myBooks;
+            var myBooks = booksRepository.findByCurrentOwner_UsernameAndEnlistedAndBookStatus(username, true, BookStatus.AVAILABLE);        return myBooks;
     }
 
     public Optional<Books> getBookById(Integer bookId) {

@@ -12,7 +12,9 @@ public interface BooksRepository extends CrudRepository<Books, Integer> {
     List<Books> findByCurrentOwner_Username(String username);
     
     List<Books> findByBookStatus(BookStatus bookStatus);
-    
+
+    List<Books> findByCurrentOwner_UsernameAndEnlistedAndBookStatus(String username, boolean enlisted, BookStatus bookStatus);
+
     List<Books> findByCurrentOwner_StateIgnoreCase(String state);
     
     List<Books> findByCurrentOwner_CountryIgnoreCase(String country);
