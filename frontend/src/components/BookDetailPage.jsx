@@ -10,6 +10,8 @@ const BookDetailPage = () => {
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Add state to control the borrow button's disabled state
+  const [isBorrowing, setIsBorrowing] = useState(false); 
 
   const commonToastOptions = {
     position: "top-right",
@@ -82,14 +84,18 @@ const BookDetailPage = () => {
   }, [bookId]); 
 
   const handleBorrowBook = async () => {
+    // Prevent multiple clicks while a borrow request is in progress
+    if (isBorrowing) return;
+
+    setIsBorrowing(true); // Disable the button
     try {
       const response = await fetch(`http://localhost:1234/books/borrow/${bookId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          authorization: `Bearer ${localStorage.getItem('accessToken') || ''}`, // Use token from localStorage
+          authorization: `Bearer ${localStorage.getItem('accessToken') || ''}`, 
         },
-        credentials: 'include', // Include cookies for authentication if needed
+        credentials: 'include', 
       });
 
       if (!response.ok) {
@@ -99,10 +105,24 @@ const BookDetailPage = () => {
 
       const result = await response.json();
       console.log('Borrow request response:', result);
-      toast.success(result.message || 'Borrow request sent successfully', commonToastOptions);
+      toast.success(result.message || 'Borrow request sent successfully!', commonToastOptions);
+      
+      // Update book status to 'BORROWED' and disable the borrow button
+      setBook(prevBook => ({
+        ...prevBook,
+        status: 'BORROWED' // Assuming 'BORROWED' is the new status after a successful borrow
+      }));
+
+      // Navigate back to the available page after a short delay for the toast to be seen
+      setTimeout(() => {
+        navigate('/dashboard/books'); 
+      }, commonToastOptions.autoClose); // Use toast autoClose time for navigation delay
+
     } catch (error) {
       console.error('Error sending borrow request:', error);
       toast.error(error.message || 'An unexpected error occurred while sending the borrow request.', commonToastOptions);
+    } finally {
+      setIsBorrowing(false); // Re-enable the button if an error occurred
     }
   };
 
@@ -119,7 +139,7 @@ const BookDetailPage = () => {
       <div className="p-4 text-center text-red-700 text-sm">
         <p>{error}</p>
         <button
-          onClick={() => navigate('/dashboard/books')} // Navigate back to the list
+          onClick={() => navigate('/dashboard/books')} 
           className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
         >
           Back to Books
@@ -233,7 +253,13 @@ const BookDetailPage = () => {
             {book.status === 'AVAILABLE' ? (
               <button
               onClick={handleBorrowBook} 
-              className="px-6 py-3 border border-transparent text-base font-bold rounded-full shadow-md text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-300 transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-2"
+              // Disable the button based on the isBorrowing state
+              disabled={isBorrowing} 
+              className={`px-6 py-3 border border-transparent text-base font-bold rounded-full shadow-md text-gray-900 ${
+                isBorrowing 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-300 transition-all duration-300 transform hover:scale-105 active:scale-95'
+              } flex items-center space-x-2`}
             >
               <svg
                 className="w-5 h-5"
@@ -249,7 +275,7 @@ const BookDetailPage = () => {
                   d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253"
                 ></path>
               </svg>
-              <span>Borrow This Book</span>
+              <span>{isBorrowing ? 'Processing Request...' : 'Borrow This Book'}</span>
             </button>
             ) : (
               <p className="px-6 py-3 text-base font-bold text-gray-600 bg-gray-200 rounded-full">

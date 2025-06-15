@@ -5,15 +5,15 @@ import MyEnlistedBooksPage from './MyEnlistedBooksPage';
 import api from '../api/axiosConfig';
 import BorrowedBooksListPage from './BorrowedBooksListPage';
 import IncomingRequestsListPage from './IncomingRequestsListPage';
-import NotAvailablePage from './NotAvailablePage';
+import NotAvailablePage from './NotAvailablePage'; // Keep if you still use it elsewhere, though for list pages, empty states are preferred.
 // Import the new page component
 import SentBorrowRequestsPage from './SentBorrowRequestsPage';
-import myEnlistedBooksImage from '../assets/enlisted.jpg'; // Ejpgxample image
+import myEnlistedBooksImage from '../assets/enlisted.jpg'; // Example image
 import borrowedBooksImage from '../assets/borrow1.jpg';     // Example image
 import incomingRequestsImage from '../assets/reuest.jpg'; // Example image
 import sentRequestsImage from '../assets/review.jpg';       // Example image
 
-// Enhanced BookCard component with optional imreviewage
+// Enhanced BookCard component with optional image
 const BookCard = ({ title, description, buttonText, onClick, isLoading, imageSrc }) => (
   <div className="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between h-full transform transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
     <div>
@@ -77,7 +77,9 @@ const MyShelf = React.memo(() => {
     // Enlisted Books
     try {
       setLoadingEnlisted(true);
-      const enlistedResponse = await api.get(`${API_BASE_URL}/books/my-books`);
+      const enlistedResponse = await api.get(`${API_BASE_URL}/books/my-books`, {
+        headers: { Authorization: `Bearer ${AccessToken}` }
+      });
       setMyEnlistedBooksCount(enlistedResponse.data.length);
     } catch (err) {
       console.error('Error fetching my enlisted books:', err);
@@ -89,8 +91,12 @@ const MyShelf = React.memo(() => {
     // Borrowed Books
     try {
       setLoadingBorrowed(true);
-      const borrowedResponse = await api.get(`${API_BASE_URL}/books/booksBorrowed`);
+      const borrowedResponse = await api.get(`${API_BASE_URL}/books/booksBorrowed`, {
+        headers: { Authorization: `Bearer ${AccessToken}` }
+      });
       console.log('Borrowed books response:', borrowedResponse.data);
+      // Assuming borrowedResponse.data is an array. If it's an array wrapped in an array, adjust here.
+      // E.g., if it's [[book1, book2]], use borrowedResponse.data[0]?.length || 0
       setBorrowedBooksCount(borrowedResponse.data.length);
     } catch (err) {
       console.error('Error fetching borrowed books count:', err);
@@ -102,9 +108,17 @@ const MyShelf = React.memo(() => {
     // Incoming Requests
     try {
       setLoadingIncoming(true);
-      const incomingResponse = await api.get(`${API_BASE_URL}/user/borrowRequestsReceived`);
+      const incomingResponse = await api.get(`${API_BASE_URL}/user/borrowRequestsReceived`, {
+        headers: { Authorization: `Bearer ${AccessToken}` }
+      });
       console.log('Incoming requests response:', incomingResponse.data);
-      setIncomingBorrowRequestsCount(incomingResponse.data.length);
+
+      // Corrected filter: `request.borrowRequestStatusString` must be checked against each value.
+      const pendingOrRequested = incomingResponse.data.filter(
+        (request) => request.borrowRequestStatusString === 'PENDING' || request.borrowRequestStatusString === 'REQUESTED'
+      );
+
+      setIncomingBorrowRequestsCount(pendingOrRequested.length);
     } catch (err) {
       console.error('Error fetching incoming requests count:', err);
       setIncomingBorrowRequestsCount(0);
@@ -115,7 +129,9 @@ const MyShelf = React.memo(() => {
     // NEW: Sent Borrow Requests
     try {
       setLoadingSent(true);
-      const sentResponse = await api.get(`${API_BASE_URL}/user/borrowRequestsSent`); // Adjust this endpoint if needed
+      const sentResponse = await api.get(`${API_BASE_URL}/user/borrowRequestsSent`, {
+        headers: { Authorization: `Bearer ${AccessToken}` }
+      });
       console.log('Sent requests response:', sentResponse.data);
       setSentBorrowRequestsCount(sentResponse.data.length);
     } catch (err) {
@@ -124,11 +140,11 @@ const MyShelf = React.memo(() => {
     } finally {
       setLoadingSent(false);
     }
-  }, []);
+  }, []); // Dependencies: empty array, as it doesn't depend on external props/state beyond initial mount.
 
   useEffect(() => {
     fetchCounts();
-  }, [fetchCounts]);
+  }, [fetchCounts]); // Re-run when fetchCounts changes (should be stable due to useCallback)
 
   const handleAddBookClick = () => {
     navigate('add-book');
@@ -141,13 +157,18 @@ const MyShelf = React.memo(() => {
   const handleViewBorrowedBooks = async () => {
     setLoadingBorrowed(true);
     try {
-      await api.get(`${API_BASE_URL}/books/booksBorrowed`); // Pre-fetch to ensure data is there or catch error
+      // It's generally better to navigate and let the target component fetch its own data.
+      // Pre-fetching here can be redundant or cause race conditions.
+      // If the purpose is just to check for an error *before* navigating, keep it,
+      // but ensure the error handling doesn't block navigation unnecessarily.
+      await api.get(`${API_BASE_URL}/books/booksBorrowed`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+      });
       navigate('borrowed');
     } catch (err) {
-      console.error('Error viewing borrowed books details:', err);
-      // Removed the direct navigation to not-available-books here, as the BorrowedBooksListPage
-      // should handle showing "no books" if the data is empty.
-      navigate('borrowed'); // Still navigate to the page, it will handle the empty state.
+      console.error('Error checking borrowed books status before navigation:', err);
+      // Navigate anyway, let BorrowedBooksListPage handle no data/error display
+      navigate('borrowed');
     } finally {
       setLoadingBorrowed(false);
     }
@@ -156,11 +177,12 @@ const MyShelf = React.memo(() => {
   const handleViewIncomingRequests = async () => {
     setLoadingIncoming(true);
     try {
-      await api.get(`${API_BASE_URL}/user/borrowRequestsReceived`); // Pre-fetch
+      await api.get(`${API_BASE_URL}/user/borrowRequestsReceived`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+      });
       navigate('requests');
     } catch (err) {
-      console.error('Error viewing incoming requests details:', err);
-      // Similar to borrowed books, the list page should handle empty state.
+      console.error('Error checking incoming requests status before navigation:', err);
       navigate('requests');
     } finally {
       setLoadingIncoming(false);
@@ -171,19 +193,26 @@ const MyShelf = React.memo(() => {
   const handleViewSentRequests = async () => {
     setLoadingSent(true);
     try {
-      await api.get(`${API_BASE_URL}/user/borrowRequestsSent`); // Pre-fetch
+      await api.get(`${API_BASE_URL}/user/borrowRequestsSent`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+      });
       navigate('sent-requests'); // Navigate to the new page
     } catch (err) {
-      console.error('Error viewing sent requests details:', err);
+      console.error('Error checking sent requests status before navigation:', err);
       navigate('sent-requests'); // Navigate to the page, it will handle the empty state.
     } finally {
       setLoadingSent(false);
     }
   };
 
+  // Callback function to refresh counts after a book action (like adding)
+  const handleBookAction = () => {
+    fetchCounts();
+  };
+
   return (
     <div className="flex flex-col items-center justify-start h-full text-center p-8 bg-gray-100 min-h-screen font-sans">
-      <div className="w-full max-w-6xl"> {/* Increased max-w-xl to accommodate 4 columns better */}
+      <div className="w-full max-w-6xl">
         <Routes>
           <Route
             index
@@ -201,14 +230,14 @@ const MyShelf = React.memo(() => {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full"> {/* Adjusted grid for 4 columns */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
                   <BookCard
                     title="My Enlisted Books"
                     description={`You have ${myEnlistedBooksCount} books currently listed.`}
                     buttonText="View All"
                     onClick={handleViewEnlistedBooks}
                     isLoading={loadingEnlisted}
-                    imageSrc={myEnlistedBooksImage} // Add image
+                    imageSrc={myEnlistedBooksImage}
                   />
                   <BookCard
                     title="Borrowed Books"
@@ -216,7 +245,7 @@ const MyShelf = React.memo(() => {
                     buttonText="View All"
                     onClick={handleViewBorrowedBooks}
                     isLoading={loadingBorrowed}
-                    imageSrc={borrowedBooksImage} // Add image
+                    imageSrc={borrowedBooksImage}
                   />
                   <BookCard
                     title="Incoming Borrow Requests"
@@ -224,28 +253,27 @@ const MyShelf = React.memo(() => {
                     buttonText="Review Requests"
                     onClick={handleViewIncomingRequests}
                     isLoading={loadingIncoming}
-                    imageSrc={incomingRequestsImage} // Add image
+                    imageSrc={incomingRequestsImage}
                   />
-                  {/* NEW: Sent Borrow Requests Card */}
                   <BookCard
                     title="Sent Borrow Requests"
                     description={`You have ${sentBorrowRequestsCount} requests sent.`}
                     buttonText="View Status"
                     onClick={handleViewSentRequests}
                     isLoading={loadingSent}
-                    imageSrc={sentRequestsImage} // Add image
+                    imageSrc={sentRequestsImage}
                   />
                 </div>
               </>
             }
           />
           <Route path="add-book" element={<AddBookPage />} />
-          <Route path="enlisted" element={<MyEnlistedBooksPage onBookAction={fetchCounts} />} />
+          <Route path="enlisted" element={<MyEnlistedBooksPage onBookAction={handleBookAction} />} />
           <Route path="borrowed" element={<BorrowedBooksListPage />} />
           <Route path="requests" element={<IncomingRequestsListPage />} />
-          {/* NEW: Route for Sent Borrow Requests Page */}
           <Route path="sent-requests" element={<SentBorrowRequestsPage />} />
-          {/* Removed specific "not-available" routes, let the list pages handle empty states */}
+          {/* Keep NotAvailablePage if it serves a purpose outside of list components showing empty states. */}
+          {/* <Route path="not-available-books" element={<NotAvailablePage />} /> */}
           <Route path="*" element={<p className="text-[#837c67] text-center py-8">My Shelf Sub-Page Not Found</p>} />
         </Routes>
       </div>

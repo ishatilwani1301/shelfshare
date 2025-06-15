@@ -44,7 +44,7 @@ const Login = () => {
 
       localStorage.setItem('accessToken', data.jwt);
 
-      toast.success(data.message || 'Login successful!', {
+      toast.success('Login successful!', {
         position: 'top-right',
         autoClose: 3000,
         hideProgressBar: false,
