@@ -130,6 +130,9 @@ public class BookService {
         newBook.setBookStatus(BookStatus.AVAILABLE);
         newBook.setEnlisted(true);
         newBook.setNotesId(new ArrayList<Integer>());
+        newBook.setSummarizedNoteContent(request.noteContent());
+        newBook.setMasterCustomTitle(request.customizedTitle());
+
 
         var savedBook = booksRepository.save(newBook);
 
@@ -145,12 +148,6 @@ public class BookService {
         var updatedNotesArray = savedBook.getNotesId();
         updatedNotesArray.add(savedNote.getNoteId());
         savedBook.setNotesId(updatedNotesArray);
-
-        String summarizedContent = noteSummarizationService.getSummarizedNoteContent(savedBook.getBookId());
-        String masterTitle = customTitleService.getMasterCustomTitle(savedBook.getBookId());
-
-        savedBook.setSummarizedNoteContent(summarizedContent);
-        savedBook.setMasterCustomTitle(masterTitle);
 
         var booksEnlistedForSale = user.getBooksEnlistedForSale();
         booksEnlistedForSale.add(savedBook.getBookId());
