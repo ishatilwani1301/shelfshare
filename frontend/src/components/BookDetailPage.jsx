@@ -39,6 +39,13 @@ const BookDetailPage = () => {
 
         const backendBook = await response.json();
 
+        if (!backendBook || !backendBook.id) { 
+          setError('Book not found for the provided ID or data is incomplete.');
+          setBook(null);
+          toast.error('Book not found or data is incomplete.', commonToastOptions);
+          return;
+        }
+
         const transformedBook = {
           id: backendBook.bookId,
           name: backendBook.bookTitle,
@@ -50,7 +57,8 @@ const BookDetailPage = () => {
           status: backendBook.bookStatus, 
           enlisted: backendBook.isEnlisted, 
           owner: {
-            name: backendBook.currentOwnerName,
+            username: backendBook.currentOwnerUserName || 'N/A', 
+            name: backendBook.currentOwnerName || 'Unknown',
             area: backendBook.userArea,
             city: backendBook.userCity,
             state: backendBook.userState,
@@ -191,11 +199,28 @@ const BookDetailPage = () => {
  
           <h3 className="text-lg font-bold text-gray-800 mb-3">Current Keeper</h3>
           <div className="flex flex-col bg-gray-100 p-3 rounded-lg border border-gray-200 shadow-sm mb-6">
-            <p className="font-bold text-gray-900 text-lg mb-2">{book.owner.name || 'Unknown'}</p>
+            <p className="font-bold text-gray-900 text-lg mb-2">
+              {book.owner.name || 'Unknown'}
+            </p>
             <div className="text-gray-700 text-sm space-y-1">
-              {book.owner.area && <p>Area: <span className="font-semibold">{book.owner.area}</span></p>}
-              {book.owner.city && <p>City: <span className="font-semibold">{book.owner.city}</span></p>}
-              {book.owner.state && <p>State: <span className="font-semibold">{book.owner.state}</span></p>}
+              {book.owner.username && book.owner.username !== 'N/A' && (
+                <p>Username: <span className="font-semibold">{book.owner.username}</span></p>
+              )}
+              {book.owner.area && book.owner.area !== 'N/A' && (
+                <p>Area: <span className="font-semibold">{book.owner.area}</span></p>
+              )}
+              {book.owner.city && book.owner.city !== 'N/A' && (
+                <p>City: <span className="font-semibold">{book.owner.city}</span></p>
+              )}
+              {book.owner.state && book.owner.state !== 'N/A' && (
+                <p>State: <span className="font-semibold">{book.owner.state}</span></p>
+              )}
+              {(!book.owner.username || book.owner.username === 'N/A') &&
+               (!book.owner.area || book.owner.area === 'N/A') &&
+               (!book.owner.city || book.owner.city === 'N/A') &&
+               (!book.owner.state || book.owner.state === 'N/A') && (
+                <p>Location/User Info: <span className="font-semibold">N/A</span></p>
+              )}
             </div>
           </div>
 
@@ -207,7 +232,7 @@ const BookDetailPage = () => {
           <div className="mt-8 flex justify-center lg:justify-start">
             {book.status === 'AVAILABLE' ? (
               <button
-              onClick={handleBorrowBook} // Attach the handler here
+              onClick={handleBorrowBook} 
               className="px-6 py-3 border border-transparent text-base font-bold rounded-full shadow-md text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-300 transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-2"
             >
               <svg
