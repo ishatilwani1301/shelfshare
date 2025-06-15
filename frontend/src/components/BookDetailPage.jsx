@@ -110,7 +110,7 @@ const BookDetailPage = () => {
       // Update book status to 'BORROWED' and disable the borrow button
       setBook(prevBook => ({
         ...prevBook,
-        status: 'BORROWED' // Assuming 'BORROWED' is the new status after a successful borrow
+        status: 'REQUESTED' // Assuming 'BORROWED' is the new status after a successful borrow
       }));
 
       // Navigate back to the available page after a short delay for the toast to be seen
