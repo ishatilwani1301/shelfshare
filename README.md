@@ -32,6 +32,8 @@ Shelfshare is an **open-source, full-stack application** designed to revolutioni
 * ✅ **Anonymous Book Sharing:** Share books **without revealing personal details**.
 * ✅ **Advanced Search & Filter:** Efficiently browse books by **genre, author, state, city, or area**.
 * ✅ **Borrow Request Management:** Users can **send, accept, or approve** book borrow requests.
+* ✅ **AI-Powered Note Summarization:** Automatically generates concise summaries of book notes.
+* ✅ **Smart Master Title Generation:** Creates intelligent, unified titles from user-defined book titles.
 
 ---
 
@@ -52,6 +54,10 @@ Shelfshare is built with a robust full-stack architecture, comprising a powerful
 3.  **Frontend (React.js):**
     * Provides an **enhanced User Experience (UX)** and an **intuitive User Interface (UI)**.
 
+4. **Notes Summarization API (Python Flask):**
+    * Provides AI services for summarizing book notes and generating master titles.
+    * Utilizes Hugging Face models for natural language processing tasks.
+
 ---
 
 ## 🛠️ Technologies Used
@@ -61,6 +67,11 @@ Shelfshare is built with a robust full-stack architecture, comprising a powerful
     * Spring Boot 3.x
     * Spring Data JPA
     * Gradle (build automation)
+* **Notes Summarization API:**
+    * Python 3.x
+    * Flask
+    * Hugging Face Hub (`huggingface_hub`)
+    * python-dotenv`
 * **Database:**
     * PostgreSQL
 * **Deployment (for production/demo - *future consideration*):**
@@ -151,6 +162,32 @@ Before you begin, ensure you have the following installed on your system:
     ```
     The frontend application will usually open in your browser at `http://localhost:5173` (or a similar port).
 
+### 4. Notes Summarization API Setup
+
+The Notes Summarization API is a separate Python Flask application.
+
+**Prerequisites:**
+* Python 3.x
+* `pip` (Python package installer)
+
+1.  **Navigate into the `note-summarization` directory:**
+    ```bash
+    cd shelfshare/note-summarization
+    ```
+2.  **Install Python dependencies:**
+    ```bash
+    pip install -r requirements.txt 
+    ```
+3.  **Set your Hugging Face API Token:**
+    ```
+    HF_TOKEN="YOUR_HUGGING_FACE_API_TOKEN"
+    ```
+4.  **Run the Flask application:**
+    ```bash
+    python app.py
+    ```
+    The API will typically run on `http://localhost:5000`.
+
 ---
 
 ## 📂 Folder Structure
@@ -175,6 +212,8 @@ The backend handles all API requests, business logic, and interactions with the 
 * Provides **RESTful API endpoints** for all features.
 * Seamless **integration with PostgreSQL** for data management.
 * Uses **Gradle** for efficient dependency management and build automation.
+* **Sends transactional emails** (e.g., welcome, borrow request notifications).
+* **Automated** cleanup of **expired borrow requests** via a scheduled task.
 
 ---
 
