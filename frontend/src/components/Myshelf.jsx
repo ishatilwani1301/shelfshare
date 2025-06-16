@@ -115,7 +115,7 @@ const MyShelf = React.memo(() => {
 
       // Corrected filter: `request.borrowRequestStatusString` must be checked against each value.
       const pendingOrRequested = incomingResponse.data.filter(
-        (request) => request.borrowRequestStatusString === 'PENDING' || request.borrowRequestStatusString === 'REQUESTED'
+        (request) => request.borrowRequestStatuString === 'PENDING' || request.borrowRequestStatusString === 'REQUESTED'
       );
 
       setIncomingBorrowRequestsCount(pendingOrRequested.length);

@@ -1,16 +1,17 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify'; 
-import 'react-toastify/dist/ReactToastify.css'; 
+import { ToastContainer, toast } from 'react-toastify';
+// import 'react-toastify/dist/Reactify.css';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
-  const [allOffers, setAllOffers] = useState([]); 
-  const [filteredAndPaginatedOffers, setFilteredAndPaginatedOffers] = useState([]); 
+  const [allOffers, setAllOffers] = useState([]);
+  const [filteredAndPaginatedOffers, setFilteredAndPaginatedOffers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [authorFilter, setAuthorFilter] = useState('All'); 
+  const [authorFilter, setAuthorFilter] = useState('All');
   const [genreFilter, setGenreFilter] = useState('All');
-  
+
   const [uniqueAuthors, setUniqueAuthors] = useState(['All']);
   const [uniqueGenres, setUniqueGenres] = useState(['All']);
 
@@ -23,9 +24,9 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
   const [availableAreas, setAvailableAreas] = useState([]);
 
   const [stateCityAreaMap, setStateCityAreaMap] = useState({});
- 
+
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9; 
+  const itemsPerPage = 9;
 
   const [currentFilteredOffers, setCurrentFilteredOffers] = useState([]);
 
@@ -62,12 +63,8 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
     'rotate-1', '-rotate-1', 'rotate-2', '-rotate-2', 'rotate-3', '-rotate-3', 'rotate-0'
   ];
 
-
   const getRandomColor = () => stickyNoteColors[Math.floor(Math.random() * stickyNoteColors.length)];
   const getRandomRotation = () => stickyNoteRotations[Math.floor(Math.random() * stickyNoteRotations.length)];
-
-
-  
 
   useEffect(() => {
     const fetchAnonymousOffers = async () => {
@@ -84,7 +81,7 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
 
         const uniqueGenresSet = new Set(['All']);
         const uniqueAuthorsSet = new Set(['All']);
-        const map = {}; 
+        const map = {};
 
         const processedOffers = data.map(backendOffer => {
           const genre = backendOffer.bookGenre && backendOffer.bookGenre.trim() !== '' ? backendOffer.bookGenre.trim() : '';
@@ -114,7 +111,7 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
           if (author) {
             uniqueAuthorsSet.add(author);
           }
-          
+
           if (Array.isArray(backendOffer.tags)) {
             backendOffer.tags.forEach(tag => {
               if (tag && tag.trim() !== '') {
@@ -132,9 +129,9 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
             datePosted: backendOffer.datePosted || 'N/A',
             condition: backendOffer.condition || 'N/A',
             bookId: backendOffer.bookId,
-            userState: state, 
-            userCity: city,   
-            userArea: area    
+            userState: state,
+            userCity: city,
+            userArea: area
           };
         });
         setAllOffers(processedOffers);
@@ -160,8 +157,8 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
     if (selectedState && stateCityAreaMap[selectedState]) {
       const citiesForState = Object.keys(stateCityAreaMap[selectedState]).sort();
       setAvailableCities(citiesForState);
-      setSelectedCity(''); 
-      setSelectedArea(''); 
+      setSelectedCity('');
+      setSelectedArea('');
     } else {
       setAvailableCities([]);
       setAvailableAreas([]);
@@ -170,12 +167,12 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
     }
   }, [selectedState, stateCityAreaMap]);
 
-   
+
   useEffect(() => {
     if (selectedState && selectedCity && stateCityAreaMap[selectedState]?.[selectedCity]) {
       const areasForCity = Array.from(stateCityAreaMap[selectedState][selectedCity]).sort();
       setAvailableAreas(areasForCity);
-      setSelectedArea(''); 
+      setSelectedArea('');
     } else {
       setAvailableAreas([]);
       setSelectedArea('');
@@ -226,10 +223,8 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
     });
 
     setCurrentFilteredOffers(tempFilteredOffers);
-    setCurrentPage(1); 
+    setCurrentPage(1);
   }, [allOffers, searchQuery, genreFilter, authorFilter, selectedState, selectedCity, selectedArea]);
-  
-
 
 
   useEffect(() => {
@@ -237,7 +232,6 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     setFilteredAndPaginatedOffers(currentFilteredOffers.slice(indexOfFirstItem, indexOfLastItem));
   }, [currentFilteredOffers, currentPage, itemsPerPage]);
-  
 
 
   const currentFilteredCount = currentFilteredOffers.length;
@@ -277,11 +271,10 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
     setSelectedState('');
     setSelectedCity('');
     setSelectedArea('');
-    
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 sm:p-6 lg:p-8"> {/* Adjusted padding for better spacing */}
       <ToastContainer /> {/* Placed here to always be rendered */}
 
       {loading ? (
@@ -293,22 +286,23 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
           <p>{error}</p>
         </div>
       ) : (
-        <> {/* Fragment to wrap the rest of your content */}
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-[#171612] tracking-wide text-[32px] font-bold leading-tight">
+        <>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
+            <h2 className="text-[#171612] tracking-wide text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight"> {/* Responsive text size */}
               Whispers on the Board
             </h2>
             <button
               onClick={handleSurpriseMe}
-              className="flex h-10 shrink-0 items-center justify-center rounded-full bg-[#c2e7a4] px-4 text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#aade85] transition-colors duration-200"
+              className="flex h-10 sm:h-11 shrink-0 items-center justify-center rounded-full bg-[#c2e7a4] px-4 text-[#171612] text-sm sm:text-base font-bold leading-normal tracking-[0.015em] hover:bg-[#aade85] transition-colors duration-200 w-full sm:w-auto" 
             >
               Surprise Me!
             </button>
           </div>
 
-          <div className="mb-4 flex flex-wrap items-end gap-4">
-            <div className="flex items-center gap-2">
-              <label htmlFor="state-select" className="text-[#5B400D] font-semibold text-base">State:</label>
+          <div className="mb-6 flex flex-wrap items-end gap-4 sm:gap-6"> {/* Unified filter container with wrapping */}
+            {/* State Filter */}
+            <div className="flex flex-col gap-2">
+              <label htmlFor="state-select" className="text-[#5B400D] font-semibold text-base whitespace-nowrap">State:</label>
               <select
                 id="state-select"
                 value={selectedState}
@@ -318,7 +312,7 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
                   setSelectedArea('');
                   setCurrentPage(1);
                 }}
-                className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-40"
+                className="p-2 sm:p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-full sm:w-40 lg:w-48"
               >
                 <option value="">All</option>
                 {availableStates.map(state => (
@@ -327,8 +321,9 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
               </select>
             </div>
 
-            <div className="flex items-center gap-2">
-              <label htmlFor="city-select" className="text-[#5B400D] font-semibold text-base">City:</label>
+            {/* City Filter */}
+            <div className="flex flex-col gap-2">
+              <label htmlFor="city-select" className="text-[#5B400D] font-semibold text-base whitespace-nowrap">City:</label>
               <select
                 id="city-select"
                 value={selectedCity}
@@ -337,7 +332,7 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
                   setSelectedArea('');
                   setCurrentPage(1);
                 }}
-                className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-40"
+                className="p-2 sm:p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-full sm:w-40 lg:w-48"
                 disabled={!selectedState || availableCities.length === 0}
               >
                 <option value="">All</option>
@@ -347,8 +342,9 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
               </select>
             </div>
 
-            <div className="flex items-center gap-2">
-              <label htmlFor="area-select" className="text-[#5B400D] font-semibold text-base">Area:</label>
+            {/* Area Filter */}
+            <div className="flex flex-col gap-2">
+              <label htmlFor="area-select" className="text-[#5B400D] font-semibold text-base whitespace-nowrap">Area:</label>
               <select
                 id="area-select"
                 value={selectedArea}
@@ -356,7 +352,7 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
                   setSelectedArea(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-40"
+                className="p-2 sm:p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-full sm:w-40 lg:w-48"
                 disabled={!selectedCity || availableAreas.length === 0}
               >
                 <option value="">All</option>
@@ -365,11 +361,10 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
                 ))}
               </select>
             </div>
-          </div>
 
-          <div className="mb-6 flex flex-wrap items-end gap-4">
-            <div className="flex items-center gap-2">
-              <label htmlFor="genre-select" className="text-[#5B400D] font-semibold text-base">Genre:</label>
+            {/* Genre Filter */}
+            <div className="flex flex-col gap-2">
+              <label htmlFor="genre-select" className="text-[#5B400D] font-semibold text-base whitespace-nowrap">Genre:</label>
               <select
                 id="genre-select"
                 value={genreFilter}
@@ -377,7 +372,7 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
                   setGenreFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer"
+                className="p-2 sm:p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-full sm:w-40 lg:w-48"
               >
                 <option value="All">All</option>
                 {uniqueGenres.filter(g => g !== 'All').map(g => (
@@ -386,8 +381,9 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
               </select>
             </div>
 
-            <div className="flex items-center gap-2">
-              <label htmlFor="author-select" className="text-[#5B400D] font-semibold text-base">Author:</label>
+            {/* Author Filter */}
+            <div className="flex flex-col gap-2">
+              <label htmlFor="author-select" className="text-[#5B400D] font-semibold text-base whitespace-nowrap">Author:</label>
               <select
                 id="author-select"
                 value={authorFilter}
@@ -395,7 +391,7 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
                   setAuthorFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer"
+                className="p-2 sm:p-3 border border-[#d8c3a5] rounded-full bg-white text-[#171612] text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#f8e0a1] cursor-pointer w-full sm:w-40 lg:w-48"
               >
                 <option value="All">All</option>
                 {uniqueAuthors.filter(a => a !== 'All').map(a => (
@@ -404,37 +400,39 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
               </select>
             </div>
 
+            {/* Clear Filters Button */}
             {(genreFilter !== 'All' || authorFilter !== 'All' || selectedState || selectedCity || selectedArea) && (
-              <button
-                onClick={handleClearFilters}
-                className="flex h-10 shrink-0 items-center justify-center rounded-full bg-[#f3ebd2] px-4 text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#e0d8c0] transition-colors duration-200"
-              >
-                Clear Filters
-              </button>
+              <div className="w-full sm:w-auto mt-4 sm:mt-0 flex justify-end">
+                <button
+                  onClick={handleClearFilters}
+                  className="flex h-10 sm:h-11 shrink-0 items-center justify-center rounded-md bg-[#f3ebd2] px-3 sm:px-4 text-[#171612] text-sm sm:text-base font-bold leading-normal tracking-[0.015em] hover:bg-[#e0d8c0] transition-colors duration-200"
+                >
+                  Clear Filters
+                </button>
+              </div>
             )}
           </div>
 
           {filteredAndPaginatedOffers.length === 0 ? (
-            <p className="text-[#837c67]">No anonymous notes found matching your criteria.</p>
+            <p className="text-[#837c67] col-span-full text-center py-8">No anonymous notes found matching your criteria.</p>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"> {/* Responsive grid columns and spacing */}
                 {filteredAndPaginatedOffers.map(offer => (
                   <div
                     key={offer.id}
-                    className={`relative p-6 rounded-lg shadow-lg transition-transform duration-200 ${offer.color} transform ${offer.rotation}
+                    className={`relative p-6 sm:p-5 rounded-lg shadow-lg transition-transform duration-200 ${offer.color} transform ${offer.rotation}
                                  hover:scale-105 hover:shadow-xl cursor-pointer`}
                     style={{ minHeight: '180px', boxShadow: '5px 5px 15px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05)' }}
                     onClick={() => onSelectBookOffer(offer.bookId)}
                   >
                     <div>
-                      <p className="text-[#171612] text-xl font-bold leading-tight mb-1">
+                      <p className="text-[#171612] text-base sm:text-lg font-bold leading-tight mb-1 line-clamp-2"> {/* Responsive text size and line clamping */}
                         {offer.CustomizedTitle || 'Untitled Offer'}
                       </p>
-
                     </div>
 
-                    <p className="text-[#171612] text-base leading-normal line-clamp-4 mb-3">
+                    <p className="text-[#171612] text-sm sm:text-base leading-normal line-clamp-4 mb-3"> {/* Responsive text size and line clamping */}
                       {offer.noteContent || 'No description provided.'}
                     </p>
                     <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-gray-500 rounded-full shadow-inner"></div>
@@ -447,17 +445,17 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
                   <button
                     onClick={handlePrevPage}
                     disabled={currentPage === 1}
-                    className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#f3ebd2] text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#f3ebd2] text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#e0d8c0] transition-colors duration-200"
                   >
                     Previous
                   </button>
-                  <span className="text-[#171612] font-medium">
+                  <span className="text-[#171612] font-medium text-sm sm:text-base"> {/* Responsive text size */}
                     Page {currentPage} of {totalPagesForFiltered}
                   </span>
                   <button
                     onClick={handleNextPage}
                     disabled={currentPage === totalPagesForFiltered}
-                    className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#f3ebd2] text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#f3ebd2] text-[#171612] text-sm font-bold leading-normal tracking-[0.015em] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#e0d8c0] transition-colors duration-200"
                   >
                     Next
                   </button>
@@ -470,4 +468,5 @@ const AnonymousBooksAvailablePage = ({ searchQuery, onSelectBookOffer }) => {
     </div>
   );
 };
+
 export default AnonymousBooksAvailablePage;

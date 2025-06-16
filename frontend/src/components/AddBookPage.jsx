@@ -42,7 +42,7 @@ const AddBookPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setLoading(false);
 
     // Basic validation
     if (!formData.bookTitle || !formData.authorName || !formData.bookGenre || !formData.publicationYear || !formData.noteContent || !formData.customizedTitle) {
@@ -72,6 +72,7 @@ const AddBookPage = () => {
           autoClose: 2000,
         });
 
+
         // --- Reset form data to empty state ---
         setFormData({
           bookTitle: '',
@@ -81,7 +82,7 @@ const AddBookPage = () => {
           noteContent: '',
           customizedTitle: '',
         });
-
+        
         // OPTION 1: Navigate to a different page and then back (if you want a "fresh" render)
         // This is generally not needed if you reset state, but some devs prefer it.
         // navigate('/dashboard/my-shelf'); // Go to my shelf
@@ -92,11 +93,14 @@ const AddBookPage = () => {
         // No navigate call needed here if you want to stay on the same page with cleared fields.
 
       } else {
+        // setLoading(true);
         // This block should ideally not be reached if backend sends proper HTTP status codes.
         // If your backend returns 200 for errors, adjust your backend or parse 'response.data.success' etc.
-        toast.error(`Book addition failed: ${response.data?.message || 'Unknown server response.'}`, {
+        toast.error(`Book added successfully!: ${response.data?.message || 'Unknown server response.'}`, {
           position: 'top-right',
+
         });
+        setLoading(true);
       }
     } catch (error) {
       console.error('Error adding book:', error);

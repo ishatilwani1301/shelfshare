@@ -11,7 +11,8 @@ const IncomingRequestsListPage = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [processingRequestId, setProcessingRequestId] = useState(null);
+  // No longer need processingRequestId, as we'll manage processing state per item.
+  // const [processingRequestId, setProcessingRequestId] = useState(null);
 
   // States for confirmation modals
   const [showApproveModal, setShowApproveModal] = useState(false);
@@ -37,14 +38,26 @@ const IncomingRequestsListPage = () => {
         },
       });
 
-      // Filter requests to show only PENDING ones.
-      // The borrowRequestStatuString is directly available, no need to fetch 'borrowStatus'.
-      const pendingRequests = response.data.filter(
-        (request) => request.borrowRequestStatuString === 'PENDING'
-      );
-      setRequests(pendingRequests);
-      console.log('Incoming PENDING requests:', pendingRequests);
+      let incomingData = [];
+      if (Array.isArray(response.data)) {
+        incomingData = response.data;
+      } else if (response.data && Array.isArray(response.data[0])) {
+        incomingData = response.data[0];
+      } else {
+        console.warn('Received unexpected data format for incoming requests:', response.data);
+        incomingData = [];
+      }
 
+      // Filter requests to show only PENDING ones and add `isProcessing` flag
+      const pendingRequests = incomingData
+        .filter((request) => request.borrowRequestStatuString === 'PENDING')
+        .map((request) => ({
+          ...request,
+          isProcessing: false, // Initialize a new flag for each request
+        }));
+
+      setRequests(pendingRequests);
+      console.log('Incoming PENDING requests with processing state:', pendingRequests);
     } catch (err) {
       console.error('Error fetching incoming requests:', err);
       setError(err.response?.data?.message || 'Failed to load incoming requests. Please try again.');
@@ -52,11 +65,11 @@ const IncomingRequestsListPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // Dependencies: empty array, as it doesn't depend on external props/state.
+  }, []);
 
   useEffect(() => {
     fetchIncomingRequests();
-  }, [fetchIncomingRequests]); // Re-run when fetchIncomingRequests changes (should be stable due to useCallback)
+  }, [fetchIncomingRequests]);
 
   // --- Handlers for opening modals ---
   const handleOpenApproveModal = (request) => {
@@ -69,18 +82,29 @@ const IncomingRequestsListPage = () => {
     setShowRejectModal(true);
   };
 
+  // --- Utility function to update the processing state of a specific request ---
+  const updateRequestProcessingStatus = (requestId, status) => {
+    setRequests((prevRequests) =>
+      prevRequests.map((req) =>
+        req.borrowRequestId === requestId ? { ...req, isProcessing: status } : req
+      )
+    );
+  };
+
   // --- Handlers for confirming actions within modals ---
   const confirmApproveRequest = async () => {
     if (!selectedRequest) return;
 
     const { bookId, requesterUserId, borrowRequestId } = selectedRequest;
-    setProcessingRequestId(borrowRequestId);
+
+    updateRequestProcessingStatus(borrowRequestId, true); // Set isProcessing to true for this request
     setShowApproveModal(false); // Close the modal immediately
+    setSelectedRequest(null); // Clear selected request after closing modal
 
     const AccessToken = localStorage.getItem('accessToken');
     if (!AccessToken) {
       toast.error('Access token not found. Please log in.', { position: 'top-right' });
-      setProcessingRequestId(null);
+      updateRequestProcessingStatus(borrowRequestId, false); // Reset processing status on error
       return;
     }
 
@@ -101,27 +125,27 @@ const IncomingRequestsListPage = () => {
       setRequests((prevRequests) =>
         prevRequests.filter((req) => req.borrowRequestId !== borrowRequestId)
       );
-
     } catch (err) {
       console.error('Error approving request:', err);
       toast.error(err.response?.data?.message || 'Failed to approve the request. Please try again.', { position: 'top-right' });
-    } finally {
-      setProcessingRequestId(null);
-      setSelectedRequest(null);
+      updateRequestProcessingStatus(borrowRequestId, false); // Reset processing status on error
     }
+    // No finally block needed here for processing status, as it's either removed or reset in catch.
   };
 
   const confirmRejectRequest = async () => {
     if (!selectedRequest) return;
 
     const { bookId, requesterUserId, borrowRequestId } = selectedRequest;
-    setProcessingRequestId(borrowRequestId);
+
+    updateRequestProcessingStatus(borrowRequestId, true); // Set isProcessing to true for this request
     setShowRejectModal(false); // Close the modal immediately
+    setSelectedRequest(null); // Clear selected request after closing modal
 
     const AccessToken = localStorage.getItem('accessToken');
     if (!AccessToken) {
       toast.error('Access token not found. Please log in.', { position: 'top-right' });
-      setProcessingRequestId(null);
+      updateRequestProcessingStatus(borrowRequestId, false); // Reset processing status on error
       return;
     }
 
@@ -142,14 +166,12 @@ const IncomingRequestsListPage = () => {
       setRequests((prevRequests) =>
         prevRequests.filter((req) => req.borrowRequestId !== borrowRequestId)
       );
-
     } catch (err) {
       console.error('Error rejecting request:', err);
       toast.error(err.response?.data?.message || 'Failed to reject the request. Please try again.', { position: 'top-right' });
-    } finally {
-      setProcessingRequestId(null);
-      setSelectedRequest(null);
+      updateRequestProcessingStatus(borrowRequestId, false); // Reset processing status on error
     }
+    // No finally block needed here for processing status, as it's either removed or reset in catch.
   };
 
   // --- Render Logic ---
@@ -210,18 +232,9 @@ const IncomingRequestsListPage = () => {
               <p className="text-[#837c67] text-base mb-1">
                 <span className="font-medium">Email:</span> {request.requesterEmail}
               </p>
-              {/* <p className="text-[#837c67] text-base mb-1">
-                <span className="font-medium">Location:</span>{' '}
-                {`${request.requesterArea}, ${request.requesterCity}, ${request.requesterState}, ${request.requesterCountry} - ${request.requesterPincode}`}
-              </p> */}
-              {/* <p className="text-[#837c67] text-base mb-4">
-                <span className="font-medium">Requested On:</span>{' '}
-                {new Date(request.requestDate).toLocaleDateString()}
-              </p> */}
-              {/* --- Display Borrow Status directly from request object --- */}
               <p className="text-[#171612] text-base mb-4">
                 <span className="font-bold text-lg">Request Status:</span>{' '}
-                <span className={`font-semibold ${request.borrowRequestStatuString === 'BORROWED' ? 'text-red-600' : 'text-blue-600'}`}>
+                <span className={`font-semibold ${request.borrowRequestStatuString === 'PENDING' ? 'text-blue-600' : 'text-gray-600'}`}>
                   {request.borrowRequestStatuString}
                 </span>
               </p>
@@ -229,18 +242,18 @@ const IncomingRequestsListPage = () => {
                 <button
                   className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75"
                   onClick={() => handleOpenApproveModal(request)}
-                  // Disable if currently processing or if the request status isn't PENDING
-                  disabled={processingRequestId === request.borrowRequestId || request.borrowRequestStatuString !== 'PENDING'}
+                  // Use request.isProcessing for this specific button
+                  disabled={request.isProcessing || request.borrowRequestStatuString !== 'PENDING'}
                 >
-                  {processingRequestId === request.borrowRequestId ? 'Approving...' : 'Approve'}
+                  {request.isProcessing ? 'Approving...' : 'Approve'}
                 </button>
                 <button
                   className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75"
                   onClick={() => handleOpenRejectModal(request)}
-                  // Disable if currently processing or if the request status isn't PENDING
-                  disabled={processingRequestId === request.borrowRequestId || request.borrowRequestStatuString !== 'PENDING'}
+                  // Use request.isProcessing for this specific button
+                  disabled={request.isProcessing || request.borrowRequestStatuString !== 'PENDING'}
                 >
-                  {processingRequestId === request.borrowRequestId ? 'Rejecting...' : 'Reject'}
+                  {request.isProcessing ? 'Rejecting...' : 'Reject'}
                 </button>
               </div>
             </li>
@@ -260,7 +273,10 @@ const IncomingRequestsListPage = () => {
             </p>
             <div className="flex justify-center gap-4">
               <button
-                onClick={() => setShowApproveModal(false)}
+                onClick={() => {
+                  setShowApproveModal(false);
+                  setSelectedRequest(null); // Clear selected request on cancel
+                }}
                 className="bg-gray-300 text-gray-800 py-2 px-4 rounded-md text-base font-medium hover:bg-gray-400 transition-colors duration-200"
               >
                 Cancel
@@ -288,7 +304,10 @@ const IncomingRequestsListPage = () => {
             </p>
             <div className="flex justify-center gap-4">
               <button
-                onClick={() => setShowRejectModal(false)}
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setSelectedRequest(null); // Clear selected request on cancel
+                }}
                 className="bg-gray-300 text-gray-800 py-2 px-4 rounded-md text-base font-medium hover:bg-gray-400 transition-colors duration-200"
               >
                 Cancel

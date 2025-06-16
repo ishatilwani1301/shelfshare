@@ -277,7 +277,7 @@ const ProfileContent = React.memo(
                 <button
                   type="button"
                   onClick={handleChangePasswordClick}
-                  className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition-colors"
+                  className="px-6 py-2 bg-[#f3ebd2] text-[#171612] font-semibold rounded-lg shadow-md hover:bg-[#e0d6c4] focus:outline-none focus:ring-2 focus:ring-[#f3ebd2] focus:ring-opacity-75 transition-colors"
                 >
                   Change Password
                 </button>
