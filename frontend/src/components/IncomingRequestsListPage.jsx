@@ -6,13 +6,12 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const API_BASE_URL = 'http://localhost:1234';
 
-const IncomingRequestsListPage = () => {
+// Highlight: Accept onShelfUpdate as a prop
+const IncomingRequestsListPage = ({ onShelfUpdate }) => {
   const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // No longer need processingRequestId, as we'll manage processing state per item.
-  // const [processingRequestId, setProcessingRequestId] = useState(null);
 
   // States for confirmation modals
   const [showApproveModal, setShowApproveModal] = useState(false);
@@ -125,6 +124,12 @@ const IncomingRequestsListPage = () => {
       setRequests((prevRequests) =>
         prevRequests.filter((req) => req.borrowRequestId !== borrowRequestId)
       );
+
+      // Highlight: Call onShelfUpdate after successful approval
+      if (onShelfUpdate) {
+        onShelfUpdate();
+      }
+
     } catch (err) {
       console.error('Error approving request:', err);
       toast.error(err.response?.data?.message || 'Failed to approve the request. Please try again.', { position: 'top-right' });
@@ -166,6 +171,12 @@ const IncomingRequestsListPage = () => {
       setRequests((prevRequests) =>
         prevRequests.filter((req) => req.borrowRequestId !== borrowRequestId)
       );
+
+      // Highlight: Call onShelfUpdate after successful rejection
+      if (onShelfUpdate) {
+        onShelfUpdate();
+      }
+
     } catch (err) {
       console.error('Error rejecting request:', err);
       toast.error(err.response?.data?.message || 'Failed to reject the request. Please try again.', { position: 'top-right' });

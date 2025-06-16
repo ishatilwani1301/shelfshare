@@ -2,9 +2,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify'; // Import toast
-// Assuming ToastContainer is already in your App.jsx or main layout.
-// If not, you'd add: import { ToastContainer, toast } from 'react-toastify'; and <ToastContainer /> in this component's return.
+import { toast } from 'react-toastify';
 import api from "../api/axiosConfig.js";
 
 // Define your book genres (adjust as per your backend enum: BookGenre)
@@ -20,7 +18,8 @@ const BOOK_GENRES = [
     'ROMANCE'
 ];
 
-const AddBookPage = () => {
+// Accept onBookAdded as a prop
+const AddBookPage = ({ onShelfUpdate }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     bookTitle: '',
@@ -42,21 +41,20 @@ const AddBookPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(false);
+    setLoading(true); // Start loading
 
     // Basic validation
     if (!formData.bookTitle || !formData.authorName || !formData.bookGenre || !formData.publicationYear || !formData.noteContent || !formData.customizedTitle) {
       toast.error('Please fill in all required fields.', { position: 'top-right' });
-      setLoading(false);
+      setLoading(false); // Stop loading on validation error
       return;
     }
 
     // Validate publicationYear is a valid number and within a reasonable range
     const year = parseInt(formData.publicationYear, 10);
-    // Check if it's NaN OR outside reasonable bounds
-    if (isNaN(year) || year < 1000 || year > new Date().getFullYear() + 1) { // Added +1 to current year for future proofing if books from current year are allowed.
+    if (isNaN(year) || year < 1000 || year > new Date().getFullYear() + 1) {
       toast.error('Please enter a valid publication year (e.g., 2023).', { position: 'top-right' });
-      setLoading(false);
+      setLoading(false); // Stop loading on validation error
       return;
     }
 
@@ -64,16 +62,13 @@ const AddBookPage = () => {
       const response = await api.post('/books/addNewBook', formData);
       console.log('Response from backend:', response);
 
-      // Backend typically returns 200 OK for success.
-      // If your backend consistently returns 200 and a 'message', use that.
-      if (response.status === 200 || 201) {
+      if (response.status === 200 || response.status === 201) {
         toast.success(response.data?.message || 'Book added successfully!', {
           position: 'top-right',
           autoClose: 2000,
         });
 
-
-        // --- Reset form data to empty state ---
+        // Reset form data to empty state
         setFormData({
           bookTitle: '',
           authorName: '',
@@ -82,25 +77,19 @@ const AddBookPage = () => {
           noteContent: '',
           customizedTitle: '',
         });
-        
-        // OPTION 1: Navigate to a different page and then back (if you want a "fresh" render)
-        // This is generally not needed if you reset state, but some devs prefer it.
-        // navigate('/dashboard/my-shelf'); // Go to my shelf
-        // setTimeout(() => navigate('/dashboard/my-shelf/add-book'), 50); // Then immediately come back
 
-        // OPTION 2: Simply rely on state reset (which you're already doing)
-        // The fields should clear because formData is updated.
-        // No navigate call needed here if you want to stay on the same page with cleared fields.
+        // *** IMPORTANT: Call the onBookAdded callback to trigger MyShelf refresh ***
+        if (onShelfUpdate) {
+          onShelfUpdate();
+        }
+
+        // Navigate back to My Shelf after successful addition and refresh trigger
+        navigate('/dashboard/my-shelf');
 
       } else {
-        // setLoading(true);
-        // This block should ideally not be reached if backend sends proper HTTP status codes.
-        // If your backend returns 200 for errors, adjust your backend or parse 'response.data.success' etc.
-        toast.error(`Book added successfully!: ${response.data?.message || 'Unknown server response.'}`, {
+        toast.error(`Failed to add book: ${response.data?.message || 'Unknown server response.'}`, {
           position: 'top-right',
-
         });
-        setLoading(true);
       }
     } catch (error) {
       console.error('Error adding book:', error);
@@ -110,17 +99,26 @@ const AddBookPage = () => {
         autoClose: 2000,
       });
     } finally {
-      setLoading(true);
+      setLoading(false); // Always stop loading, regardless of success or error
     }
   };
 
   return (
     <div className="flex flex-col items-center w-full p-8 bg-white rounded-lg shadow-md">
-      {/* Ensure ToastContainer is rendered somewhere in your app, usually in App.js or a Layout.
-          If it's NOT in App.js, uncomment the line below: */}
-      {/* <ToastContainer /> */}
+      <div className="flex justify-between items-center mb-8 border-b pb-4 border-gray-200 w-full">
+        <h2 className="text-[#171612] tracking-wide text-[32px] font-extrabold leading-tight">
+          Add Book
+        </h2>
+        <button
+          onClick={() => navigate('/dashboard/my-shelf')}
+          className="bg-[#f3ebd2] text-[#171612] py-2 px-4 rounded-md text-base font-medium hover:bg-[#e0d6c4] transition-colors duration-200 shadow-md"
+        >
+          &larr; Back to My Shelf
+        </button>
+      </div>
 
-      <h2 className="text-3xl font-bold mb-8 text-[#171612] self-start">Add New Book</h2>
+      {/* You had a duplicate H2 here previously. It's often good to remove it if the header covers it. */}
+      {/* <h2 className="text-3xl font-bold mb-8 text-[#171612] self-start">Add New Book</h2> */}
 
       <form onSubmit={handleSubmit} className="w-full max-w-lg">
         {/* All your form fields */}
@@ -190,7 +188,7 @@ const AddBookPage = () => {
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
             placeholder="e.g., 2023"
             min="1000"
-            max={new Date().getFullYear() + 1} // Allow current year + 1 for future books
+            max={new Date().getFullYear() + 1}
             required
           />
         </div>
@@ -241,7 +239,7 @@ const AddBookPage = () => {
             className="px-6 py-2 bg-[#f3ebd2] text-[#171612] font-semibold rounded-lg shadow-md hover:bg-[#e0d6c4] focus:outline-none focus:ring-2 focus:ring-[#f3ebd2] focus:ring-opacity-75"
             disabled={loading}
           >
-            {loading ? 'Add Book' : 'Add Book'}
+            {loading ? 'Adding Book...' : 'Add Book'}
           </button>
         </div>
       </form>

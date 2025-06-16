@@ -6,7 +6,8 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const API_BASE_URL = 'http://localhost:1234'; // Ensure this matches your backend API URL
 
-const SentBorrowRequestsPage = () => {
+// Highlight: Accept onShelfUpdate as a prop
+const SentBorrowRequestsPage = ({ onShelfUpdate }) => {
   const navigate = useNavigate();
   const [sentRequests, setSentRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +20,13 @@ const SentBorrowRequestsPage = () => {
     setLoading(true);
     setError(''); // Clear any previous errors
     try {
-      const response = await api.get(`${API_BASE_URL}/user/borrowRequestsSent`);
+      const AccessToken = localStorage.getItem('accessToken');
+      if (!AccessToken) {
+        throw new Error("Access token not found. Please log in.");
+      }
+      const response = await api.get(`${API_BASE_URL}/user/borrowRequestsSent`, {
+        headers: { Authorization: `Bearer ${AccessToken}` }
+      });
 
       if (Array.isArray(response.data)) {
         setSentRequests(response.data);
@@ -29,7 +36,6 @@ const SentBorrowRequestsPage = () => {
         console.warn('Unexpected data format for sent borrow requests:', response.data);
         setSentRequests([]);
       }
-      // toast.success('Sent requests loaded successfully!', { position: 'top-right', autoClose: 1500 });
     } catch (err) {
       console.error('Error fetching sent borrow requests:', err);
       const errorMessage = err.response?.data?.message || 'Failed to load sent requests. Please check your connection or try again.';
@@ -39,7 +45,7 @@ const SentBorrowRequestsPage = () => {
     } finally {
       setLoading(false); // Always set loading to false after the request
     }
-  }, []);
+  }, [API_BASE_URL]); // Add API_BASE_URL to dependency array for useCallback
 
   // Effect hook to fetch requests when the component mounts
   useEffect(() => {
@@ -65,9 +71,21 @@ const SentBorrowRequestsPage = () => {
     handleCloseCancelModal(); // Close the modal immediately
 
     try {
-      await api.delete(`${API_BASE_URL}/user/cancelBorrowRequest/${requestIdToCancel}`);
+      const AccessToken = localStorage.getItem('accessToken');
+      if (!AccessToken) {
+        throw new Error("Access token not found. Please log in.");
+      }
+      await api.delete(`${API_BASE_URL}/user/cancelBorrowRequest/${requestIdToCancel}`, {
+        headers: { Authorization: `Bearer ${AccessToken}` }
+      });
       toast.success('Borrow request cancelled successfully!', { position: 'top-right', autoClose: 2000 });
-      fetchSentRequests(); // Refresh the list to show the updated status
+
+      fetchSentRequests(); // Refresh the list on this page to show the updated status
+
+      // Highlight: Call onShelfUpdate after successful cancellation
+      if (onShelfUpdate) {
+        onShelfUpdate(); // Notify parent (MyShelf) to refresh its counts
+      }
     } catch (err) {
       console.error('Error cancelling borrow request:', err);
       const errorMessage = err.response?.data?.message || 'Failed to cancel request. Please ensure it is pending and you are the requester.';
@@ -78,7 +96,7 @@ const SentBorrowRequestsPage = () => {
   // --- Loading State ---
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-64 bg-gray-100">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#171612]"></div>
         <p className="ml-4 text-lg text-[#171612]">Loading sent borrow requests...</p>
       </div>
@@ -88,13 +106,13 @@ const SentBorrowRequestsPage = () => {
   // --- Error State ---
   if (error) {
     return (
-      <div className="text-center p-8">
+      <div className="text-center p-8 bg-gray-100 min-h-screen font-sans">
         <p className="text-red-500 text-lg mb-4">{error}</p>
         <button
           onClick={fetchSentRequests} // Allows user to retry fetching
-          className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors"
+          className="bg-[#f3ebd2] text-[#171612] py-2 px-4 rounded-md text-base font-medium hover:bg-[#e0d6c4] transition-colors duration-200 shadow-md"
         >
-          Retry
+          Try Again
         </button>
       </div>
     );
@@ -125,9 +143,6 @@ const SentBorrowRequestsPage = () => {
           {sentRequests.map((request) => (
             <div key={request.borrowRequestId} className="bg-white rounded-lg shadow-md p-6">
               <h3 className="text-[#171612] text-xl font-semibold mb-2">{request.bookName}</h3>
-              {/* <p className="text-[#837c67] text-base mb-2">
-                Requested By: <span className="font-medium">{request.requestedFromUsername}</span>
-              </p> */}
               <p className="text-[#837c67] text-base mb-2">
                 Author: <span className="font-medium">{request.author}</span>
               </p>
@@ -138,7 +153,7 @@ const SentBorrowRequestsPage = () => {
                 </span>
               </p>
               <p className="text-[#171612] text-lg font-bold mb-4">
-                Status:{' '} 
+                Status:{' '}
                 <span
                   className={`
                     ${request.acceptanceStatus === 'PENDING' ? 'text-yellow-600' : ''}
