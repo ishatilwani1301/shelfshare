@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import toast, { Toaster } from 'react-hot-toast';
 
-const BorrowedBooksListPage = () => {
+// Accept onShelfUpdate as a prop
+const BorrowedBooksListPage = ({ onShelfUpdate }) => {
   const navigate = useNavigate();
   const [borrowedBooks, setBorrowedBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,28 +18,40 @@ const BorrowedBooksListPage = () => {
   const [showReportConfirmModal, setShowReportConfirmModal] = useState(false);
   const [bookToReport, setBookToReport] = useState(null);
 
-  useEffect(() => {
-    const fetchBorrowedBooks = async () => {
-      try {
-        const response = await api.get('http://localhost:1234/books/booksBorrowed');
-        if (Array.isArray(response.data)) {
-          setBorrowedBooks(response.data);
-        } else if (response.data && response.data[0]) {
-          setBorrowedBooks(response.data[0]);
-        } else {
-          setBorrowedBooks([]);
-        }
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching borrowed books:', err);
-        setError('Failed to load borrowed books. Please try again.');
-        toast.error('Failed to load borrowed books. Please try again.');
-        setLoading(false);
+  // Define fetchBorrowedBooks outside useEffect to make it reusable
+  const fetchBorrowedBooks = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const AccessToken = localStorage.getItem('accessToken');
+      if (!AccessToken) {
+        throw new Error("Access token not found. Please log in again.");
       }
-    };
+      const response = await api.get('http://localhost:1234/books/booksBorrowed', {
+        headers: { Authorization: `Bearer ${AccessToken}` }
+      });
 
+      // Your existing logic to handle potential array wrapping
+      if (Array.isArray(response.data)) {
+        setBorrowedBooks(response.data);
+      } else if (response.data && response.data[0] && Array.isArray(response.data[0])) {
+        // If the data is like [[{book1}, {book2}]]
+        setBorrowedBooks(response.data[0]);
+      } else {
+        setBorrowedBooks([]);
+      }
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching borrowed books:', err);
+      setError(err.response?.data?.message || 'Failed to load borrowed books. Please try again.');
+      toast.error(err.response?.data?.message || 'Failed to load borrowed books. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchBorrowedBooks();
-  }, []);
+  }, []); // Fetch on component mount
 
   const handleEnlistClick = (book) => {
     setCurrentBookToEnlist(book);
@@ -50,7 +63,6 @@ const BorrowedBooksListPage = () => {
   const handleEnlistSubmit = async () => {
     if (!currentBookToEnlist) return;
 
-    // --- NEW VALIDATION: Check if customizedTitle is empty or just whitespace ---
     if (!customizedTitle.trim()) {
       toast.error('Customized Title is compulsory before enlisting.', {
         position: 'top-center',
@@ -59,7 +71,6 @@ const BorrowedBooksListPage = () => {
       return;
     }
 
-    // --- EXISTING VALIDATION: Check if noteContent is empty or just whitespace ---
     if (!noteContent.trim()) {
       toast.error('Note Content is compulsory before enlisting.', {
         position: 'top-center',
@@ -69,14 +80,27 @@ const BorrowedBooksListPage = () => {
     }
 
     const loadingToastId = toast.loading('Enlisting book...');
-
     try {
+      const AccessToken = localStorage.getItem('accessToken');
+      if (!AccessToken) {
+        throw new Error("Access token not found.");
+      }
       const response = await api.post(`http://localhost:1234/books/enlist/${currentBookToEnlist.id}`, {
         noteContent,
         customizedTitle,
+      }, {
+        headers: { Authorization: `Bearer ${AccessToken}` }
       });
       toast.success(response.data.message || 'Book enlisted successfully!', { id: loadingToastId });
+
+      // After successful enlistment:
+      // 1. Remove the book from the local state to update the list immediately
       setBorrowedBooks(prevBooks => prevBooks.filter(book => book.id !== currentBookToEnlist.id));
+      // 2. Trigger the onShelfUpdate callback to refresh counts on MyShelf
+      if (onShelfUpdate) {
+        onShelfUpdate();
+      }
+
     } catch (err) {
       console.error('Error enlisting book:', err);
       toast.error(err.response?.data?.message || 'Failed to enlist book.', { id: loadingToastId });
@@ -96,9 +120,22 @@ const BorrowedBooksListPage = () => {
 
     const loadingToastId = toast.loading('Reporting book...');
     try {
-      const response = await api.post(`http://localhost:1234/books/reportBook/${bookToReport.id}`);
+      const AccessToken = localStorage.getItem('accessToken');
+      if (!AccessToken) {
+        throw new Error("Access token not found.");
+      }
+      const response = await api.post(`http://localhost:1234/books/reportBook/${bookToReport.id}`, {}, {
+        headers: { Authorization: `Bearer ${AccessToken}` }
+      });
       toast.success(response.data.message || 'Book reported successfully!', { id: loadingToastId });
+
+      // After successful report:
+      // 1. Remove the book from the local state to update the list immediately
       setBorrowedBooks(prevBooks => prevBooks.filter(book => book.id !== bookToReport.id));
+      // 2. Trigger the onShelfUpdate callback to refresh counts on MyShelf
+      if (onShelfUpdate) {
+        onShelfUpdate();
+      }
     } catch (err) {
       console.error('Error reporting book:', err);
       toast.error(err.response?.data?.message || 'Failed to report book.', { id: loadingToastId });
@@ -159,7 +196,7 @@ const BorrowedBooksListPage = () => {
               <p className="text-[#837c67] text-base mb-1">
                 <span className="font-medium">Author:</span> {book.authorName}
               </p>
-              
+
               <p className="text-[#837c67] text-base mb-1">
                 <span className="font-medium">Genre:</span> {book.bookGenre}
               </p>
@@ -172,8 +209,7 @@ const BorrowedBooksListPage = () => {
                   {book.previousOwners.join(', ')}
                 </p>
               )}
-              
-              
+
 
               <div className="flex justify-center gap-3 mt-4">
                 <button

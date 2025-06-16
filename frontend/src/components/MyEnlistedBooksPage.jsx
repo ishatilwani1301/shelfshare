@@ -1,15 +1,14 @@
-// src/components/MyEnlistedBooksPage.jsx
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from 'react-toastify'; // Ensure ToastContainer is rendered in your App.jsx or main layout
 import api from '../api/axiosConfig'; // Your configured Axios instance
 
 // Default image if no book image is available
-const DEFAULT_BOOK_IMAGE = 'https://picsum.photos/200/300'; 
+const DEFAULT_BOOK_IMAGE = 'https://picsum.photos/200/300';
 // You can replace this with a more branded placeholder if you have one
 
-const MyEnlistedBooksPage = ({ onBookAction }) => {
+// Highlight: Accept onShelfUpdate as a prop
+const MyEnlistedBooksPage = ({ onShelfUpdate }) => { // Changed prop name from onBookAction
   const navigate = useNavigate();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +20,13 @@ const MyEnlistedBooksPage = ({ onBookAction }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.get(`${API_BASE_URL}/my-books`);
+      const AccessToken = localStorage.getItem('accessToken');
+      if (!AccessToken) {
+        throw new Error("Access token not found. Please log in.");
+      }
+      const response = await api.get(`${API_BASE_URL}/my-books`, {
+        headers: { Authorization: `Bearer ${AccessToken}` }
+      });
       setBooks(response.data);
       console.log("Fetched Enlisted Books:", response.data);
     } catch (err) {
@@ -36,29 +41,14 @@ const MyEnlistedBooksPage = ({ onBookAction }) => {
 
   useEffect(() => {
     fetchEnlistedBooks();
-  }, []);
+  }, []); // Fetch on component mount
 
-  const handleDeleteBook = async (bookId, bookTitle) => {
-    console.log(`Attempting to delete book with ID: ${bookId}, Title: ${bookTitle}`);
-    if (!window.confirm(`Are you sure you want to delete "${bookTitle}"?`)) {
-      return;
-    }
-    try {
-      await api.delete(`${API_BASE_URL}/${bookId}`);
-      toast.success(`"${bookTitle}" deleted successfully!`);
-      fetchEnlistedBooks(); // Refresh the list
-      onBookAction(); // Notify parent to refresh counts
-    } catch (err) {
-      console.error('Error deleting book:', err);
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to delete book.';
-      toast.error(`Error deleting book: ${errorMessage}`);
-    }
-  };
+  
 
   if (loading) {
     return (
-      <div className="flex flex-col justify-center items-center h-64 text-center p-8">
-        <svg className="animate-spin h-10 w-10 text-[#f3ebd2] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <div className="flex flex-col justify-center items-center h-64 text-center p-8 bg-gray-100">
+        <svg className="animate-spin h-10 w-10 text-[#171612] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -75,7 +65,6 @@ const MyEnlistedBooksPage = ({ onBookAction }) => {
           <p className="mb-4">{error}</p>
           <button
             onClick={fetchEnlistedBooks}
-            // Applying new button styles
             className="bg-[#f3ebd2] text-[#171612] py-2 px-4 rounded-md hover:bg-[#e0d6c4] transition-colors duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f3ebd2] focus:ring-opacity-75"
           >
             Try Again
@@ -85,8 +74,6 @@ const MyEnlistedBooksPage = ({ onBookAction }) => {
     );
   }
 
-  // ... (imports and other code remain the same)
-
   return (
     <div className="w-full p-8 bg-gray-100 min-h-screen font-sans">
       <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-200">
@@ -95,7 +82,7 @@ const MyEnlistedBooksPage = ({ onBookAction }) => {
           onClick={() => navigate('/dashboard/my-shelf')}
           className="bg-[#f3ebd2] text-[#171612] py-2 px-6 rounded-md text-lg font-medium hover:bg-[#e0d6c4] transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-[#f3ebd2] focus:ring-opacity-75"
         >
-          Back to My Shelf
+          &larr; Back to My Shelf
         </button>
       </div>
 
@@ -106,22 +93,22 @@ const MyEnlistedBooksPage = ({ onBookAction }) => {
             onClick={() => navigate('/dashboard/my-shelf/add-book')}
             className="bg-[#f3ebd2] text-[#171612] py-2 px-6 rounded-md text-lg font-medium hover:bg-[#e0d6c4] transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-[#f3ebd2] focus:ring-opacity-75"
           >
-            Add Your First Book
+            + Add Your First Book
           </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {books.map((book) => (
-            <div 
-              key={book.id} 
+            <div
+              key={book.id}
               className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             >
               {/* Book Image - Fixed small height with object-cover for consistency */}
-              <img 
-                src={book.bookImageUrl || DEFAULT_BOOK_IMAGE} 
-                alt={book.bookTitle} 
+              <img
+                src={book.bookImageUrl || DEFAULT_BOOK_IMAGE}
+                alt={book.bookTitle}
                 className="w-full h-48 object-cover border-b border-gray-200" // h-48 makes it "small"
-                onError={(e) => { e.target.onerror = null; e.target.src=DEFAULT_BOOK_IMAGE }} 
+                onError={(e) => { e.target.onerror = null; e.target.src=DEFAULT_BOOK_IMAGE }}
               />
               <div className="p-4 flex flex-col flex-grow"> {/* Reduced padding slightly for more compact info */}
                 {/* Book Title */}
@@ -134,7 +121,7 @@ const MyEnlistedBooksPage = ({ onBookAction }) => {
                 <p className="text-[#837c67] text-xs mb-2">
                     <span className="font-medium">Genre:</span> {book.bookGenre.replace(/_/g, ' ')} | <span className="font-medium">Published:</span> {book.publicationYear}
                 </p>
-                
+
                 {/* Note Content - If available */}
                 {book.noteContent && (
                   <div className="bg-gray-50 p-2 rounded-md mb-3 border border-gray-100 flex-grow overflow-hidden"> {/* Reduced padding for note, flex-grow to push buttons down */}
@@ -144,8 +131,7 @@ const MyEnlistedBooksPage = ({ onBookAction }) => {
                 )}
                 {!book.noteContent && <div className="flex-grow"></div>} {/* Spacer if no note */}
 
-                {/* Action Buttons - At the bottom */}
-               
+                
               </div>
             </div>
           ))}
