@@ -194,12 +194,35 @@ const Login = () => {
     <div className="min-h-screen flex flex-col bg-gray-100 font-sans">
       <ToastContainer />
 
-      <header className="py-4 px-6 md:px-10 bg-white shadow-sm">
-        <nav className="flex justify-between items-center max-w-7xl mx-auto">
-          <a href="/" className="text-2xl font-bold text-gray-800 tracking-tight">
+      <header className="border-b bg-white shadow-sm">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          {/* Logo */}
+          <div
+            className="text-3xl font-bold text-gray-800 cursor-pointer"
+            onClick={() => navigate("/")} // Navigate to home or dashboard
+          >
+
             ShelfShare
-          </a>
-        </nav>
+          </div>
+
+          {/* Navigation Links and Buttons */}
+          <nav className="space-x-4 sm:space-x-6 flex items-center">
+            
+          
+            <button
+              onClick={() => navigate("/signup")} // Navigate to Signup page
+              className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded text-sm sm:text-base transition-colors"
+            >
+              Sign Up
+            </button>
+            <button
+              onClick={() => navigate("/login")} // Navigate to Login page
+              className="text-gray-600 hover:text-yellow-500 font-semibold py-2 px-4 text-sm sm:text-base transition-colors"
+            >
+              Login
+            </button>
+          </nav>
+        </div>
       </header>
 
       <main className="flex-grow flex items-center justify-center p-4">
@@ -344,7 +367,7 @@ const Login = () => {
                 {!isSecurityQuestionValidated && (
                   <button
                     onClick={handleValidateSecurityAnswer}
-                    className="w-full bg-green-500 text-white font-semibold py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-3 focus:ring-green-300 transition duration-300 ease-in-out"
+                    className="w-full bg-yellow-500 text-white font-semibold py-2 rounded-lg hover:bg-yellow-600 focus:outline-none focus:ring-3 focus:ring-green-300 transition duration-300 ease-in-out"
                   >
                     Validate Answer
                   </button>

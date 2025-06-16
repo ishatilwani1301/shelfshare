@@ -14,7 +14,6 @@ const BorrowedBooksListPage = () => {
   const [noteContent, setNoteContent] = useState('');
   const [customizedTitle, setCustomizedTitle] = useState('');
 
-  // New states for report confirmation modal
   const [showReportConfirmModal, setShowReportConfirmModal] = useState(false);
   const [bookToReport, setBookToReport] = useState(null);
 
@@ -51,6 +50,24 @@ const BorrowedBooksListPage = () => {
   const handleEnlistSubmit = async () => {
     if (!currentBookToEnlist) return;
 
+    // --- NEW VALIDATION: Check if customizedTitle is empty or just whitespace ---
+    if (!customizedTitle.trim()) {
+      toast.error('Customized Title is compulsory before enlisting.', {
+        position: 'top-center',
+        duration: 3000,
+      });
+      return;
+    }
+
+    // --- EXISTING VALIDATION: Check if noteContent is empty or just whitespace ---
+    if (!noteContent.trim()) {
+      toast.error('Note Content is compulsory before enlisting.', {
+        position: 'top-center',
+        duration: 3000,
+      });
+      return;
+    }
+
     const loadingToastId = toast.loading('Enlisting book...');
 
     try {
@@ -59,8 +76,7 @@ const BorrowedBooksListPage = () => {
         customizedTitle,
       });
       toast.success(response.data.message || 'Book enlisted successfully!', { id: loadingToastId });
-      // Optionally, refresh the list or remove the book from borrowed list if enlisted
-      // setBorrowedBooks(prevBooks => prevBooks.filter(book => book.id !== currentBookToEnlist.id));
+      setBorrowedBooks(prevBooks => prevBooks.filter(book => book.id !== currentBookToEnlist.id));
     } catch (err) {
       console.error('Error enlisting book:', err);
       toast.error(err.response?.data?.message || 'Failed to enlist book.', { id: loadingToastId });
@@ -70,13 +86,11 @@ const BorrowedBooksListPage = () => {
     }
   };
 
-  // Modified handleReportClick to open modal
   const handleReportClick = (book) => {
-    setBookToReport(book); // Store the book object
-    setShowReportConfirmModal(true); // Open the confirmation modal
+    setBookToReport(book);
+    setShowReportConfirmModal(true);
   };
 
-  // New function for confirming report within the modal
   const confirmReport = async () => {
     if (!bookToReport) return;
 
@@ -84,17 +98,15 @@ const BorrowedBooksListPage = () => {
     try {
       const response = await api.post(`http://localhost:1234/books/reportBook/${bookToReport.id}`);
       toast.success(response.data.message || 'Book reported successfully!', { id: loadingToastId });
-      // Optionally, refresh the list or remove the reported book
-      // setBorrowedBooks(prevBooks => prevBooks.filter(book => book.id !== bookToReport.id));
+      setBorrowedBooks(prevBooks => prevBooks.filter(book => book.id !== bookToReport.id));
     } catch (err) {
       console.error('Error reporting book:', err);
       toast.error(err.response?.data?.message || 'Failed to report book.', { id: loadingToastId });
     } finally {
-      setShowReportConfirmModal(false); // Close the modal
-      setBookToReport(null); // Clear the book
+      setShowReportConfirmModal(false);
+      setBookToReport(null);
     }
   };
-
 
   if (loading) {
     return (
@@ -147,49 +159,23 @@ const BorrowedBooksListPage = () => {
               <p className="text-[#837c67] text-base mb-1">
                 <span className="font-medium">Author:</span> {book.authorName}
               </p>
-              {/* <p className="text-[#837c67] text-base mb-1">
-                <span className="font-medium">Borrowed From:</span> {book.currentOwnerName}
-              </p> */}
-              {/* <p className="text-[#837c67] text-base mb-1">
+              
+              <p className="text-[#837c67] text-base mb-1">
                 <span className="font-medium">Genre:</span> {book.bookGenre}
               </p>
               <p className="text-[#837c67] text-base mb-1">
                 <span className="font-medium">Published:</span> {book.publicationYear}
-              </p> */}
-              {/* {book.customizedTitle && (
-                <p className="text-[#837c67] text-base mb-1">
-                  <span className="font-medium">Your Note Title:</span> {book.customizedTitle}
-                </p>
-              )}
-              {book.noteContent && (
-                <p className="text-[#837c67] text-base mb-1">
-                  <span className="font-medium">Your Note:</span> {book.noteContent}
-                </p>
-              )} */}
-              {/* <p className="text-[#171612] text-lg font-bold mt-3 mb-1">
-                Status:{' '}
-                <span className={`
-                  ${book.bookStatus === 'BORROWED' ? 'text-blue-600' : 'text-gray-600'}
-                `}>
-                  {book.bookStatus}
-                </span>
-              </p> */}
+              </p>
               {book.previousOwners && book.previousOwners.length > 0 && (
                 <p className="text-[#837c67] text-sm mt-2">
                   <span className="font-medium">Previous Owners:</span>{' '}
                   {book.previousOwners.join(', ')}
                 </p>
               )}
-              {/* <p className="text-[#837c67] text-sm mt-2">
-                <span className="font-medium">Location:</span> {book.userArea}, {book.userCity}, {book.userState}
-              </p> */}
-              {/* {book.message && typeof book.message === 'string' && book.message.trim() !== '' && (
-                <p className="text-[#837c67] text-sm mt-3 italic bg-gray-50 p-3 rounded-md border border-gray-200">
-                  {book.message}
-                </p>
-              )} */}
+              
+              
 
-              <div className="flex justify-end gap-3 mt-4">
+              <div className="flex justify-center gap-3 mt-4">
                 <button
                   onClick={() => handleEnlistClick(book)}
                   className="bg-blue-500 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-blue-600 transition-colors duration-200 shadow-md"
@@ -197,7 +183,7 @@ const BorrowedBooksListPage = () => {
                   Enlist Book
                 </button>
                 <button
-                  onClick={() => handleReportClick(book)} 
+                  onClick={() => handleReportClick(book)}
                   className="bg-red-500 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-red-600 transition-colors duration-200 shadow-md"
                 >
                   Report Book
@@ -208,14 +194,14 @@ const BorrowedBooksListPage = () => {
         </ul>
       )}
 
-      {/* Enlist Book Modal (remains the same) */}
+      {/* Enlist Book Modal */}
       {showEnlistModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-96">
             <h3 className="text-lg font-bold mb-4">Enlist "{currentBookToEnlist?.bookTitle}"</h3>
             <div className="mb-4">
               <label htmlFor="customizedTitle" className="block text-sm font-medium text-gray-700">
-                Customized Title (Optional)
+                Customized Title <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -223,11 +209,12 @@ const BorrowedBooksListPage = () => {
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                 value={customizedTitle}
                 onChange={(e) => setCustomizedTitle(e.target.value)}
+                required
               />
             </div>
             <div className="mb-4">
               <label htmlFor="noteContent" className="block text-sm font-medium text-gray-700">
-                Note Content (Optional)
+                Note Content <span className="text-red-500">*</span>
               </label>
               <textarea
                 id="noteContent"
@@ -235,6 +222,7 @@ const BorrowedBooksListPage = () => {
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                 value={noteContent}
                 onChange={(e) => setNoteContent(e.target.value)}
+                required
               ></textarea>
             </div>
             <div className="flex justify-end gap-3">

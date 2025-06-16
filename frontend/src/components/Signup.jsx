@@ -187,7 +187,7 @@ const SignUp = () => {
 
      toast.success(data.message || 'Account created successfully!', {
        position: 'top-right',
-       autoClose: 2000,
+       autoClose: 1000,
        hideProgressBar: false,
        closeOnClick: true,
        pauseOnHover: true,
@@ -197,7 +197,7 @@ const SignUp = () => {
 
      setTimeout(() => {
        navigate('/login');
-     }, 2000);
+     }, 1000);
    } catch (err) {
      setError(err.message);
      toast.error(err.message || 'Signup failed. Please try again.', {
@@ -216,15 +216,38 @@ const SignUp = () => {
    <div className="min-h-screen flex flex-col bg-gray-100 font-sans">
      <ToastContainer />
 
-     <header className="py-4 px-6 md:px-10 bg-white shadow-sm">
-       <nav className="flex justify-between items-center max-w-7xl mx-auto">
-         <a href="/" className="text-2xl font-bold text-gray-800 tracking-tight">
-           ShelfShare
-         </a>
-       </nav>
-     </header>
+     <header className="border-b bg-white shadow-sm">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          {/* Logo */}
+          <div
+            className="text-3xl font-bold text-gray-800 cursor-pointer"
+            onClick={() => navigate("/")} // Navigate to home or dashboard
+          >
 
-     <main className="flex-grow flex items-center justify-center p-4">
+            ShelfShare
+          </div>
+
+          {/* Navigation Links and Buttons */}
+          <nav className="space-x-4 sm:space-x-6 flex items-center">
+            
+          
+            <button
+              onClick={() => navigate("/signup")} // Navigate to Signup page
+              className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded text-sm sm:text-base transition-colors"
+            >
+              Sign Up
+            </button>
+            <button
+              onClick={() => navigate("/login")} // Navigate to Login page
+              className="text-gray-600 hover:text-yellow-500 font-semibold py-2 px-4 text-sm sm:text-base transition-colors"
+            >
+              Login
+            </button>
+          </nav>
+        </div>
+      </header>
+
+     <main className="flex-grow flex items-center justify-center p-3">
        <div className="bg-white rounded-xl shadow-2xl flex max-w-3xl w-full overflow-hidden transform transition-all duration-300 ease-in-out">
          <div className="w-1/2 bg-white flex flex-col items-center justify-center p-6 relative text-center">
            <div className="relative z-10 flex flex-col items-center">
