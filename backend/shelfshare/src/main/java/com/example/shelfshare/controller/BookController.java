@@ -46,12 +46,12 @@ public class BookController {
  
     }
     @PostMapping("/enlist/{bookId}")
-    public ResponseEntity<MessageResponse> enlistBook(@PathVariable Integer bookId, @RequestBody BookRequest req, Principal principal) {
+    public ResponseEntity<MessageResponse> enlistBook(@PathVariable Integer bookId, @RequestBody BookRequest req, @RequestParam(required = false) Integer ratings, Principal principal) {
         if (principal == null) {
             return new ResponseEntity<>(new MessageResponse("User not authenticated"), HttpStatus.UNAUTHORIZED);
         }
 
-        boolean enlistmentStatus = bookService.enlistBook(bookId, principal.getName(), req.noteContent(), req.customizedTitle());
+        boolean enlistmentStatus = bookService.enlistBook(bookId, principal.getName(), req.noteContent(), req.customizedTitle(), ratings);
 
         if (!enlistmentStatus) {
             return new ResponseEntity<>(new MessageResponse("Failed to enlist book. Book not found, user not owner, or book is already enlisted."), HttpStatus.BAD_REQUEST);

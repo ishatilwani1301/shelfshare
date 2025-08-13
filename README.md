@@ -47,7 +47,7 @@ Shelfshare is built with a robust full-stack architecture, comprising a powerful
     * Serves as the **main API** for managing books and user interactions.
     * Handles **data persistence** to the PostgreSQL database.
 
-2.  **Database (PostgreSQL):**
+2.  **Database (MySQL):**
     * Stores all **`Books` information**.
     * Manages **`Users` data** and their associations.
 
@@ -73,7 +73,7 @@ Shelfshare is built with a robust full-stack architecture, comprising a powerful
     * Hugging Face Hub (`huggingface_hub`)
     * python-dotenv`
 * **Database:**
-    * PostgreSQL
+    * MySQL
 * **Deployment (for production/demo - *future consideration*):**
     * Cloud Providers (e.g., AWS, GCP, DigitalOcean)
     * Docker (optional, for containerization)
@@ -102,17 +102,21 @@ Before you begin, ensure you have the following installed on your system:
     ```properties
     spring.application.name=shelfshare
     server.port=1234
-    spring.datasource.url=jdbc:postgresql://localhost:5432/shelfshare
+
+    spring.datasource.url=jdbc:mysql://google/Shelfshare?cloudSqlInstance=senseai-apprentices-25-26:us-central1:astana-toolbox-demo-mysql&socketFactory=com.google.cloud.sql.mysql.SocketFactory&useSSL=fals
+    
     spring.datasource.username=<your_db_username>
     spring.datasource.password=<your_db_password>
     spring.jpa.show-sql=true
     spring.jpa.hibernate.format_sql=true
     spring.jpa.hibernate.highlight_sql=true
     spring.jpa.hibernate.ddl-auto=update
+    
+
 
     logging.level.org.springframework.security=DEBUG
     ```
-    *Replace `<your_db_username>` and `<your_db_password>` with your actual PostgreSQL credentials.*
+    *Replace `<your_db_username>` and `<your_db_password>` with your actual MySQL credentials.*
 
 ### 2. Spring Boot Backend Setup
 

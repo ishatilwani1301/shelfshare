@@ -53,8 +53,9 @@ public class Users {
 
     @ElementCollection
     @CollectionTable(name = "user_enlisted_books", joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "book_id")
-    private List<Integer> booksEnlistedForSale = new ArrayList<>();
+    @MapKeyColumn(name = "book_id")
+    @Column(name = "ratings")
+    private Map<Integer, Integer> booksEnlistedForSale = new HashMap<>();
 
     @ElementCollection
     @CollectionTable(name = "user_received_requests", joinColumns = @JoinColumn(name = "user_id"))
@@ -187,11 +188,11 @@ public class Users {
         this.bookOwned = bookOwned;
     }
 
-    public List<Integer> getBooksEnlistedForSale() {
+    public Map<Integer, Integer> getBooksEnlistedForSale() {
         return booksEnlistedForSale;
     }
 
-    public void setBooksEnlistedForSale(List<Integer> booksEnlistedForSale) {
+    public void setBooksEnlistedForSale(Map<Integer, Integer> booksEnlistedForSale) {
         this.booksEnlistedForSale = booksEnlistedForSale;
     }
 

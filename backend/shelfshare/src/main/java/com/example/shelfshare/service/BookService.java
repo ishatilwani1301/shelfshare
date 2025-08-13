@@ -49,7 +49,7 @@ public class BookService {
     private CustomTitleService customTitleService;
 
     @Transactional
-    public Boolean enlistBook(Integer bookId, String username, String noteContent, String customizedTitle) {
+    public Boolean enlistBook(Integer bookId, String username, String noteContent, String customizedTitle, Integer ratings) {
         var userOptional = userRepository.findByUsername(username);
         var bookOptional = booksRepository.findById(bookId);
 
@@ -104,10 +104,8 @@ public class BookService {
         }
 
         var userBooksEnlistedForSale = user.getBooksEnlistedForSale();
-        if (!userBooksEnlistedForSale.contains(bookId)) {
-            userBooksEnlistedForSale.add(bookId);
-            user.setBooksEnlistedForSale(userBooksEnlistedForSale);
-        }
+        userBooksEnlistedForSale.put(bookId, ratings != null ? ratings : 0);
+        user.setBooksEnlistedForSale(userBooksEnlistedForSale);
         userRepository.save(user);
 
         return true;
@@ -150,7 +148,8 @@ public class BookService {
         savedBook.setNotesId(updatedNotesArray);
 
         var booksEnlistedForSale = user.getBooksEnlistedForSale();
-        booksEnlistedForSale.add(savedBook.getBookId());
+        // booksEnlistedForSale.add(savedBook.getBookId());
+        // No need to add to the map here, as enlistBook now handles it with ratings
         user.setBooksEnlistedForSale(booksEnlistedForSale);
         booksRepository.save(savedBook);
         userRepository.save(user);
